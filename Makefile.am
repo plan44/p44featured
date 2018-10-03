@@ -137,6 +137,8 @@ lethd_SOURCES = \
   src/lethdapi.hpp \
   src/light.cpp \
   src/light.hpp \
+  src/hermel.cpp \
+  src/hermel.hpp \
   src/neuron.cpp \
   src/neuron.hpp \
   src/dispmatrix.cpp \

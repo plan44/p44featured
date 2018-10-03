@@ -29,6 +29,7 @@
 
 #include "light.hpp"
 #include "neuron.hpp"
+#include "hermel.hpp"
 #include "dispmatrix.hpp"
 
 
@@ -85,17 +86,8 @@ class LEthD : public CmdLineApp
   AnalogIoPtr sensor0;
   AnalogIoPtr sensor1;
   AnalogIoPtr pwmDimmer;
-
-//  ViewScrollerPtr dispView;
-//  TextViewPtr message;
-//  MLMicroSeconds starttime;
-//  // FIXME: factor out
-//  int numScrollSteps;
-//  double scrollStepX;
-//  double scrollStepY;
-//  MLMicroSeconds scrollStepInterval;
-
-//  MLTicket sampleTicket;
+  AnalogIoPtr pwmLeft;
+  AnalogIoPtr pwmRight;
 
   LethdApiPtr lethdApi;
 
@@ -112,6 +104,8 @@ public:
       "Usage: %1$s [options]\n";
     const CmdLineOptionDescriptor options[] = {
       { 0  , "pwmdimmer",      true,  "pinspec;PWM dimmer output pin" },
+      { 0  , "pwmleft",        true,  "pinspec;PWM left bumper output pin" },
+      { 0  , "pwmright",       true,  "pinspec;PWM right bumper output pin" },
       { 0  , "sensor0",        true,  "pinspec;analog sensor0 input to use" },
       { 0  , "sensor1",        true,  "pinspec;analog sensor1 input to use" },
       { 0  , "ledchain1",      true,  "devicepath;ledchain1 device to use" },
@@ -120,6 +114,7 @@ public:
       { 0  , "lethdapiport",   true,  "port;server port number for lETHd JSON API (default=none)" },
       { 0  , "neuron",         true,  "mvgAvgCnt,threshold,nAxonLeds,nBodyLeds;start neuron" },
       { 0  , "light",          false, "start light" },
+      { 0  , "hermel",         false, "start hermel" },
       { 0  , "dispmatrix",     true,  "numcols;start display matrix" },
       { 0  , "jsonapiport",    true,  "port;server port number for JSON API (default=none)" },
       { 0  , "jsonapinonlocal",false, "allow JSON API from non-local clients" },
@@ -168,8 +163,12 @@ public:
       // create sensor input(s)
       sensor0 =  AnalogIoPtr(new AnalogIo(getOption("sensor0","missing"), false, 0));
       sensor1 =  AnalogIoPtr(new AnalogIo(getOption("sensor1","missing"), false, 0));
-      // create PWM output
+      // create PWM output for light
       pwmDimmer = AnalogIoPtr(new AnalogIo(getOption("pwmdimmer","missing"), true, 0)); // off to begin with
+
+      // create PWM outputs for bumpers
+      pwmLeft = AnalogIoPtr(new AnalogIo(getOption("pwmleft","missing"), true, 0)); // off to begin with
+      pwmRight = AnalogIoPtr(new AnalogIo(getOption("pwmright","missing"), true, 0)); // off to begin with
 
       // create API
       lethdApi = LethdApiPtr(new LethdApi);
@@ -177,6 +176,10 @@ public:
       // - light
       lethdApi->addFeature(FeaturePtr(new Light(
         pwmDimmer
+      )));
+      // - hermel
+      lethdApi->addFeature(FeaturePtr(new HermelShoot(
+        pwmLeft, pwmRight
       )));
       // - neuron
       lethdApi->addFeature(FeaturePtr(new Neuron(

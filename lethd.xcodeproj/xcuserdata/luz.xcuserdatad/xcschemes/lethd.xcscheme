@@ -96,11 +96,11 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--dispmatrix 74,7"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--light"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--button sim.button --redled sim.redled --greenled sim.greenled"

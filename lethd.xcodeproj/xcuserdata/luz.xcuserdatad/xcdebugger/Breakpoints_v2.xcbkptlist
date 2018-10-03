@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/view.cpp"
-            timestampString = "557708116.725239"
+            timestampString = "558556900.024353"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "297"
-            endingLineNumber = "297"
+            startingLineNumber = "346"
+            endingLineNumber = "346"
             landmarkName = "p44::mixinPixel(PixelColor &amp;aMainPixel, PixelColor aOutsidePixel, uint8_t aAmountOutside)"
             landmarkType = "7">
          </BreakpointContent>
@@ -24,46 +24,47 @@
          <BreakpointContent
             shouldBeEnabled = "No"
             ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "src/dispmatrix.cpp"
-            timestampString = "557708116.726004"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "189"
-            endingLineNumber = "189"
-            landmarkName = "DispPanel::loadScene(const string aSceneName)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "src/dispmatrix.cpp"
-            timestampString = "557708116.726882"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "88"
-            endingLineNumber = "88"
-            landmarkName = "DispPanel::step()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
+            condition = "n&lt;0"
             continueAfterRunningActions = "No"
             filePath = "src/viewanimator.cpp"
-            timestampString = "557708116.727455"
+            timestampString = "557912469.626681"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "94"
-            endingLineNumber = "94"
-            landmarkName = "ViewAnimator::stepAnimation()"
+            startingLineNumber = "73"
+            endingLineNumber = "73"
+            landmarkName = "ViewAnimator::step(MLMicroSeconds aPriorityUntil)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "src/viewscroller.cpp"
+            timestampString = "558556900.025954"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "61"
+            endingLineNumber = "61"
+            landmarkName = "ViewScroller::step(MLMicroSeconds aPriorityUntil)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "src/viewstack.cpp"
+            timestampString = "557919343.421593"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "110"
+            endingLineNumber = "110"
+            landmarkName = "ViewStack::step(MLMicroSeconds aPriorityUntil)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
