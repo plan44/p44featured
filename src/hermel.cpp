@@ -28,7 +28,7 @@ HermelShoot::HermelShoot(AnalogIoPtr aPwmLeft, AnalogIoPtr aPwmRight) :
   pwmRight(aPwmRight)
 {
   // check for commandline-triggered standalone operation
-  if (CmdLineApp::sharedCmdLineApp()->getOption("hermelshoot")) {
+  if (CmdLineApp::sharedCmdLineApp()->getOption("hermel")) {
     setInitialized();
   }
 }
