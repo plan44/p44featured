@@ -55,6 +55,7 @@
 		EDA91F1A213DCAB000136117 /* imageview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED50D72D211F522B006D75A6 /* imageview.cpp */; };
 		EDAF7FEC2135348B007C3467 /* light.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDAF7FEA2135348B007C3467 /* light.cpp */; };
 		EDEEF1C52128377F0042FC98 /* macaddress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDEEF1C32128377F0042FC98 /* macaddress.cpp */; };
+		EDFA943121875344002469DD /* mixloop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDFA942F21875344002469DD /* mixloop.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -174,6 +175,8 @@
 		EDBB9DAB1F435BD600765F95 /* Makefile.am */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
 		EDEEF1C32128377F0042FC98 /* macaddress.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = macaddress.cpp; sourceTree = "<group>"; };
 		EDEEF1C42128377F0042FC98 /* macaddress.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = macaddress.hpp; sourceTree = "<group>"; };
+		EDFA942F21875344002469DD /* mixloop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = mixloop.cpp; sourceTree = "<group>"; };
+		EDFA943021875344002469DD /* mixloop.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = mixloop.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -241,6 +244,8 @@
 				ED7108EC210E106700A9B57C /* viewstack.hpp */,
 				ED50D72D211F522B006D75A6 /* imageview.cpp */,
 				ED50D72E211F522B006D75A6 /* imageview.hpp */,
+				EDFA942F21875344002469DD /* mixloop.cpp */,
+				EDFA943021875344002469DD /* mixloop.hpp */,
 				ED5D1F2421653572001F0332 /* hermel.cpp */,
 				ED5D1F2521653573001F0332 /* hermel.hpp */,
 				EDAF7FEA2135348B007C3467 /* light.cpp */,
@@ -431,6 +436,7 @@
 				ED5372D61DFC9FC60066FF5A /* sqlite3ppext.cpp in Sources */,
 				ED19DD1820F7C3B60012DE7E /* pwm.cpp in Sources */,
 				ED5372A61DFC2CBE0066FF5A /* jsonobject.cpp in Sources */,
+				EDFA943121875344002469DD /* mixloop.cpp in Sources */,
 				ED34E40821255A71006F286C /* dispmatrix.cpp in Sources */,
 				EDAF7FEC2135348B007C3467 /* light.cpp in Sources */,
 				ED7108F3210E106700A9B57C /* viewstack.cpp in Sources */,

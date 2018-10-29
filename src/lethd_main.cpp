@@ -30,6 +30,7 @@
 #include "light.hpp"
 #include "neuron.hpp"
 #include "hermel.hpp"
+#include "mixloop.hpp"
 #include "dispmatrix.hpp"
 
 
@@ -115,6 +116,7 @@ public:
       { 0  , "neuron",         true,  "mvgAvgCnt,threshold,nAxonLeds,nBodyLeds;start neuron" },
       { 0  , "light",          false, "start light" },
       { 0  , "hermel",         false, "start hermel" },
+      { 0  , "mixloop",        false, "start mixloop" },
       { 0  , "dispmatrix",     true,  "numcols;start display matrix" },
       { 0  , "jsonapiport",    true,  "port;server port number for JSON API (default=none)" },
       { 0  , "jsonapinonlocal",false, "allow JSON API from non-local clients" },
@@ -180,6 +182,11 @@ public:
       // - hermel
       lethdApi->addFeature(FeaturePtr(new HermelShoot(
         pwmLeft, pwmRight
+      )));
+      // - mixloop
+      lethdApi->addFeature(FeaturePtr(new MixLoop(
+        getOption("ledchain1","/dev/null"),
+        getOption("ledchain2","/dev/null")
       )));
       // - neuron
       lethdApi->addFeature(FeaturePtr(new Neuron(

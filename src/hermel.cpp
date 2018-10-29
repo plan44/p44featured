@@ -29,7 +29,7 @@ HermelShoot::HermelShoot(AnalogIoPtr aPwmLeft, AnalogIoPtr aPwmRight) :
 {
   // check for commandline-triggered standalone operation
   if (CmdLineApp::sharedCmdLineApp()->getOption("hermel")) {
-    setInitialized();
+    initOperation();
   }
 }
 

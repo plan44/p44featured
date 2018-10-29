@@ -139,6 +139,8 @@ lethd_SOURCES = \
   src/light.hpp \
   src/hermel.cpp \
   src/hermel.hpp \
+  src/mixloop.cpp \
+  src/mixloop.hpp \
   src/neuron.cpp \
   src/neuron.hpp \
   src/dispmatrix.cpp \
