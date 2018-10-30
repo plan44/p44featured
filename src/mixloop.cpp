@@ -26,9 +26,18 @@ MixLoop::MixLoop(const string aLedChain1Name, const string aLedChain2Name) :
   ledChain1Name(aLedChain1Name),
   ledChain2Name(aLedChain2Name),
   inherited("mixloop"),
-  accelThreshold(4),
-  accelDispScaling(0.1),
-  triggerOffset(5)
+  // params
+  accelThreshold(1),
+  accelChangeCutoff(0),
+  accelIntegrationGain(0.1),
+  integralFadeOffset(1.5),
+  integralFadeScaling(0.95),
+  maxIntegral(300),
+  numLeds(10),
+  integralDispOffset(0),
+  integralDispScaling(0.01),
+  // state
+  accelIntegral(0)
 {
   // check for commandline-triggered standalone operation
   if (CmdLineApp::sharedCmdLineApp()->getOption("mixloop")) {
@@ -59,14 +68,32 @@ ErrorPtr MixLoop::processRequest(ApiRequestPtr aRequest)
   }
   else {
     // decode properties
-    if (data->get("accelthreshold", o, true)) {
+    if (data->get("accelThreshold", o, true)) {
       accelThreshold = o->int32Value();
     }
-    if (data->get("acceldispscaling", o, true)) {
-      accelDispScaling = o->doubleValue();
+    if (data->get("accelChangeCutoff", o, true)) {
+      accelChangeCutoff = o->doubleValue();
     }
-    if (data->get("triggeroffset", o, true)) {
-      triggerOffset = o->doubleValue();
+    if (data->get("accelIntegrationGain", o, true)) {
+      accelIntegrationGain = o->doubleValue();
+    }
+    if (data->get("integralFadeOffset", o, true)) {
+      integralFadeOffset = o->doubleValue();
+    }
+    if (data->get("integralFadeScaling", o, true)) {
+      integralFadeScaling = o->doubleValue();
+    }
+    if (data->get("maxIntegral", o, true)) {
+      maxIntegral = o->doubleValue();
+    }
+    if (data->get("numLeds", o, true)) {
+      numLeds = o->int32Value();
+    }
+    if (data->get("integralDispOffset", o, true)) {
+      integralDispOffset = o->doubleValue();
+    }
+    if (data->get("integralDispScaling", o, true)) {
+      integralDispScaling = o->doubleValue();
     }
     return err ? err : Error::ok();
   }
@@ -77,7 +104,15 @@ JsonObjectPtr MixLoop::status()
 {
   JsonObjectPtr answer = inherited::status();
   if (answer->isType(json_type_object)) {
-    // TODO: add info here
+    answer->add("accelThreshold", JsonObject::newInt32(accelThreshold));
+    answer->add("accelChangeCutoff", JsonObject::newDouble(accelChangeCutoff));
+    answer->add("accelIntegrationGain", JsonObject::newDouble(accelIntegrationGain));
+    answer->add("integralFadeOffset", JsonObject::newDouble(integralFadeOffset));
+    answer->add("integralFadeScaling", JsonObject::newDouble(integralFadeScaling));
+    answer->add("maxIntegral", JsonObject::newDouble(maxIntegral));
+    answer->add("numLeds", JsonObject::newInt32(numLeds));
+    answer->add("integralDispOffset", JsonObject::newDouble(integralDispOffset));
+    answer->add("integralDispScaling", JsonObject::newDouble(integralDispScaling));
   }
   return answer;
 }
@@ -204,21 +239,31 @@ void MixLoop::accelMeasure()
     }
   }
   if (changed) {
-    LOG(LOG_INFO, "X = %5hd, Y = %5hd, Z = %5hd, changeAmount = %.0f", accel[0], accel[1], accel[2], changeamount);
-    // show LED bar
-    showAccel(changeamount);
+    LOG(LOG_INFO, "X = %5hd, Y = %5hd, Z = %5hd, raw changeAmount = %.0f", accel[0], accel[1], accel[2], changeamount);
   }
+  // process
+  changeamount -= accelChangeCutoff;
+  if (changeamount<0) changeamount = 0;
+  changeamount *= accelIntegrationGain;
+  // integrate
+  accelIntegral += changeamount - integralFadeOffset;
+  accelIntegral *= integralFadeScaling;
+  if (accelIntegral<0) accelIntegral = 0;
+  if (accelIntegral>maxIntegral) accelIntegral = maxIntegral;
+  if (accelIntegral>0) {
+    LOG(LOG_INFO, "     changeAmount = %.0f, integral = %.0f", changeamount, accelIntegral);
+  }
+  // show
+  showAccel(accelIntegral*integralDispScaling+integralDispOffset);
   // retrigger
   measureTicket.executeOnce(boost::bind(&MixLoop::accelMeasure, this), 33*MilliSecond);
 }
 
-static const int numLeds = 10;
 
-void MixLoop::showAccel(double aAmount)
+void MixLoop::showAccel(double aFraction)
 {
-  showTicket.cancel();
   if (ledChain1) {
-    int onLeds = (aAmount-triggerOffset)*accelDispScaling*numLeds;
+    int onLeds = aFraction*numLeds;
     LOG(LOG_DEBUG, "onLeds=%d", onLeds);
     for (int i=0; i<numLeds; i++) {
       if (i<onLeds) {
@@ -229,15 +274,5 @@ void MixLoop::showAccel(double aAmount)
       }
     }
     ledChain1->show();
-    showTicket.executeOnce(boost::bind(&MixLoop::resetLEDs, this), 100*MilliSecond);
   }
-}
-
-
-void MixLoop::resetLEDs()
-{
-  for (int i=0; i<numLeds; i++) {
-    ledChain1->setColor(i, 0, 0, 0);
-  }
-  ledChain1->show();
 }

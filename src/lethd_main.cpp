@@ -185,8 +185,8 @@ public:
       )));
       // - mixloop
       lethdApi->addFeature(FeaturePtr(new MixLoop(
-        getOption("ledchain1","/dev/null"),
-        getOption("ledchain2","/dev/null")
+        getOption("ledchain2","/dev/null"),
+        getOption("ledchain3","/dev/null")
       )));
       // - neuron
       lethdApi->addFeature(FeaturePtr(new Neuron(

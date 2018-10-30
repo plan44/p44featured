@@ -42,13 +42,21 @@ namespace p44 {
     MLTicket measureTicket;
     int16_t accel[3]; // X, Y, Z
     int16_t lastaccel[3]; // X, Y, Z
+    double accelIntegral;
+
 
     // parameters
-    int16_t accelThreshold;
-    double accelDispScaling;
-    double triggerOffset;
+    uint16_t accelThreshold; ///< X,Y,Z changes below this will be ignored
+    MLMicroSeconds interval; ///< sampling and integration interval
+    double accelChangeCutoff; ///< offset to subtract from acceleration change value (cutoff of small changes)
+    double accelIntegrationGain; ///< factor for integrating acceleration change values
+    double integralFadeOffset; ///< amount to subtract from integral per interval
+    double integralFadeScaling; ///< amount to multiply the integral per interval
+    double maxIntegral; ///< will not integrate above this
 
-    MLTicket showTicket;
+    uint16_t numLeds; ///< number of LEDs
+    double integralDispOffset; ///< offset for the integral for display
+    double integralDispScaling; ///< scaling of the integral for display
 
 
   public:
@@ -76,8 +84,7 @@ namespace p44 {
     void initOperation();
     void accelInit();
     void accelMeasure();
-    void showAccel(double aAmount);
-    void resetLEDs();
+    void showAccel(double aFraction);
 
   };
 
