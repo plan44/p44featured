@@ -27,17 +27,27 @@ MixLoop::MixLoop(const string aLedChain1Name, const string aLedChain2Name) :
   ledChain2Name(aLedChain2Name),
   inherited("mixloop"),
   // params
+  interval(33*MilliSecond),
   accelThreshold(1),
-  accelChangeCutoff(0),
-  accelIntegrationGain(0.1),
+  accelChangeCutoff(10),
+  accelMaxChange(50),
+  accelIntegrationGain(0.16),
   integralFadeOffset(1.5),
   integralFadeScaling(0.95),
   maxIntegral(300),
-  numLeds(10),
+  hitStartMinIntegral(15),
+  hitWindowStart(1.2*Second),
+  hitWindowDuration(2.5*Second),
+  hitMinAccelChange(300), ///< how much change in acceleration a hit needs to be
+  numLeds(52),
   integralDispOffset(0),
   integralDispScaling(0.01),
+  hitFlashTime(666*MilliSecond),
   // state
-  accelIntegral(0)
+  accelIntegral(0),
+  accelStart(Never),
+  hitDetectorActive(false),
+  hitShowing(false)
 {
   // check for commandline-triggered standalone operation
   if (CmdLineApp::sharedCmdLineApp()->getOption("mixloop")) {
@@ -61,18 +71,27 @@ ErrorPtr MixLoop::processRequest(ApiRequestPtr aRequest)
   JsonObjectPtr o = data->get("cmd");
   if (o) {
     string cmd = o->stringValue();
-//  if (cmd=="trigger") {
-//    return triggerEffect(aRequest);
-//  }
-    return inherited::processRequest(aRequest);
+    if (cmd=="hit") {
+      showHit();
+      return Error::ok();
+    }
+    else {
+      return inherited::processRequest(aRequest);
+    }
   }
   else {
     // decode properties
     if (data->get("accelThreshold", o, true)) {
       accelThreshold = o->int32Value();
     }
+    if (data->get("interval", o, true)) {
+      interval = o->doubleValue()*MilliSecond;
+    }
     if (data->get("accelChangeCutoff", o, true)) {
       accelChangeCutoff = o->doubleValue();
+    }
+    if (data->get("accelMaxChange", o, true)) {
+      accelMaxChange = o->doubleValue();
     }
     if (data->get("accelIntegrationGain", o, true)) {
       accelIntegrationGain = o->doubleValue();
@@ -86,6 +105,18 @@ ErrorPtr MixLoop::processRequest(ApiRequestPtr aRequest)
     if (data->get("maxIntegral", o, true)) {
       maxIntegral = o->doubleValue();
     }
+    if (data->get("hitStartMinIntegral", o, true)) {
+      hitStartMinIntegral = o->doubleValue();
+    }
+    if (data->get("hitWindowStart", o, true)) {
+      hitWindowStart = o->doubleValue()*MilliSecond;
+    }
+    if (data->get("hitWindowDuration", o, true)) {
+      hitWindowDuration = o->doubleValue()*MilliSecond;
+    }
+    if (data->get("hitMinAccelChange", o, true)) {
+      hitMinAccelChange = o->doubleValue();
+    }
     if (data->get("numLeds", o, true)) {
       numLeds = o->int32Value();
     }
@@ -94,6 +125,9 @@ ErrorPtr MixLoop::processRequest(ApiRequestPtr aRequest)
     }
     if (data->get("integralDispScaling", o, true)) {
       integralDispScaling = o->doubleValue();
+    }
+    if (data->get("hitFlashTime", o, true)) {
+      hitFlashTime = o->doubleValue()*MilliSecond;
     }
     return err ? err : Error::ok();
   }
@@ -105,14 +139,21 @@ JsonObjectPtr MixLoop::status()
   JsonObjectPtr answer = inherited::status();
   if (answer->isType(json_type_object)) {
     answer->add("accelThreshold", JsonObject::newInt32(accelThreshold));
+    answer->add("interval", JsonObject::newDouble((double)interval/MilliSecond));
     answer->add("accelChangeCutoff", JsonObject::newDouble(accelChangeCutoff));
+    answer->add("accelMaxChange", JsonObject::newDouble(accelMaxChange));
     answer->add("accelIntegrationGain", JsonObject::newDouble(accelIntegrationGain));
     answer->add("integralFadeOffset", JsonObject::newDouble(integralFadeOffset));
     answer->add("integralFadeScaling", JsonObject::newDouble(integralFadeScaling));
     answer->add("maxIntegral", JsonObject::newDouble(maxIntegral));
+    answer->add("hitStartMinIntegral", JsonObject::newDouble(hitStartMinIntegral));
+    answer->add("hitWindowStart", JsonObject::newDouble((double)hitWindowStart/MilliSecond));
+    answer->add("hitWindowDuration", JsonObject::newDouble((double)hitWindowDuration/MilliSecond));
+    answer->add("hitMinAccelChange", JsonObject::newDouble(hitMinAccelChange));
     answer->add("numLeds", JsonObject::newInt32(numLeds));
     answer->add("integralDispOffset", JsonObject::newDouble(integralDispOffset));
     answer->add("integralDispScaling", JsonObject::newDouble(integralDispScaling));
+    answer->add("hitFlashTime", JsonObject::newDouble((double)hitFlashTime/MilliSecond));
   }
   return answer;
 }
@@ -238,12 +279,34 @@ void MixLoop::accelMeasure()
       changed = true;
     }
   }
+  MLMicroSeconds now = MainLoop::now();
   if (changed) {
-    LOG(LOG_INFO, "X = %5hd, Y = %5hd, Z = %5hd, raw changeAmount = %.0f", accel[0], accel[1], accel[2], changeamount);
+    LOG(LOG_INFO, "[%06lldmS] X = %5hd, Y = %5hd, Z = %5hd, raw changeAmount = %.0f", (accelStart!=Never ? now-accelStart : 0)/MilliSecond, accel[0], accel[1], accel[2], changeamount);
   }
   // process
   changeamount -= accelChangeCutoff;
   if (changeamount<0) changeamount = 0;
+  // - hit detector
+  if (hitDetectorActive) {
+    if (now>accelStart+hitWindowStart) {
+      // after start window
+      if (now<accelStart+hitWindowStart+hitWindowDuration) {
+        // before end of window, look out for hit
+        if (changeamount>hitMinAccelChange) {
+          LOG(LOG_NOTICE, "HIT DETECTED with raw changeamount=%.0f, at %lldmS!", changeamount, (now-accelStart)/MilliSecond);
+          showHit();
+          hitDetectorActive = false;
+        }
+      }
+      else {
+        // after end of window
+        LOG(LOG_NOTICE, "Hit detector timed out");
+        hitDetectorActive = false;
+      }
+    }
+  }
+  // - other processing
+  if (changeamount>accelMaxChange) changeamount = accelMaxChange;
   changeamount *= accelIntegrationGain;
   // integrate
   accelIntegral += changeamount - integralFadeOffset;
@@ -253,26 +316,53 @@ void MixLoop::accelMeasure()
   if (accelIntegral>0) {
     LOG(LOG_INFO, "     changeAmount = %.0f, integral = %.0f", changeamount, accelIntegral);
   }
+  // possibly trigger hit detector
+  if (!hitDetectorActive) {
+    if (accelIntegral>=hitStartMinIntegral) {
+      accelStart = now;
+      hitDetectorActive = true;
+      LOG(LOG_NOTICE, "Hit detector activated with integral = %.0f", accelIntegral);
+    }
+  }
   // show
   showAccel(accelIntegral*integralDispScaling+integralDispOffset);
   // retrigger
-  measureTicket.executeOnce(boost::bind(&MixLoop::accelMeasure, this), 33*MilliSecond);
+  measureTicket.executeOnce(boost::bind(&MixLoop::accelMeasure, this), interval);
 }
 
 
 void MixLoop::showAccel(double aFraction)
 {
-  if (ledChain1) {
+  if (ledChain1 && !hitShowing) {
     int onLeds = aFraction*numLeds;
     LOG(LOG_DEBUG, "onLeds=%d", onLeds);
     for (int i=0; i<numLeds; i++) {
       if (i<onLeds) {
-        ledChain1->setColor(i, 255, 255-(255*i/numLeds), 0);
+        ledChain1->setColor(numLeds-1-i, 255, 255-(255*i/numLeds), 0);
       }
       else {
-        ledChain1->setColor(i, 0, 0, 0);
+        ledChain1->setColor(numLeds-1-i, 0, 0, 0);
       }
     }
     ledChain1->show();
   }
+}
+
+
+void MixLoop::showHit()
+{
+  hitShowing = true;
+  if (ledChain1) {
+    for (int i=0; i<numLeds; i++) {
+      ledChain1->setColor(i, 200, 200, 255);
+    }
+    ledChain1->show();
+  }
+  showTicket.executeOnce(boost::bind(&MixLoop::showHitEnd, this), hitFlashTime);
+}
+
+
+void MixLoop::showHitEnd()
+{
+  hitShowing = false;
 }

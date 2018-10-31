@@ -53,6 +53,27 @@ void LethdApiRequest::sendResponse(JsonObjectPtr aResponse, ErrorPtr aError)
 }
 
 
+// MARK: ===== InternalRequest
+
+InternalRequest::InternalRequest(JsonObjectPtr aRequest) :
+  inherited(aRequest)
+{
+  LOG(LOG_INFO,"Internal API request: %s", aRequest->c_strValue());
+}
+
+
+InternalRequest::~InternalRequest()
+{
+}
+
+
+void InternalRequest::sendResponse(JsonObjectPtr aResponse, ErrorPtr aError)
+{
+  LOG(LOG_INFO,"Internal API answer: %s", aResponse->c_strValue());
+}
+
+
+
 // MARK: ===== LethdApi
 
 
@@ -64,6 +85,24 @@ LethdApi::LethdApi()
 LethdApi::~LethdApi()
 {
 }
+
+
+void LethdApi::executeJson(JsonObjectPtr aJsonCmds)
+{
+  if (aJsonCmds->isType(json_type_array)) {
+    // array of commands
+    for (int i=0; i<aJsonCmds->arrayLength(); i++) {
+      ApiRequestPtr req = ApiRequestPtr(new InternalRequest(aJsonCmds->arrayGet(i)));
+      processRequest(req);
+    }
+  }
+  else {
+    // single command
+    ApiRequestPtr req = ApiRequestPtr(new InternalRequest(aJsonCmds));
+    processRequest(req);
+  }
+}
+
 
 
 void LethdApi::addFeature(FeaturePtr aFeature)

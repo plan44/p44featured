@@ -80,6 +80,24 @@ namespace p44 {
   };
 
 
+  class InternalRequest : public ApiRequest
+  {
+    typedef ApiRequest inherited;
+
+  public:
+
+    InternalRequest(JsonObjectPtr aRequest);
+    virtual ~InternalRequest();
+
+    /// send response
+    /// @param aResponse JSON response to send
+    /// @param aError error to report back
+    virtual void sendResponse(JsonObjectPtr aResponse, ErrorPtr aError) override;
+  };
+
+
+
+
 
   class LethdApi : public P44Obj
   {
@@ -107,6 +125,10 @@ namespace p44 {
     /// @note usually this is called internally, but method is exposed to allow injecting
     ///   api requests from other sources (such as Web API)
     void handleRequest(ApiRequestPtr aRequest);
+
+    /// execute JSON request(s) - can be called internally, no answer
+    /// @param aJsonCmds a single JSON command request or a array with multiple requests
+    void executeJson(JsonObjectPtr aJsonCmds);
 
     void start(const string aApiPort);
     void send(double aValue);

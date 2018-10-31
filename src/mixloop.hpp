@@ -43,20 +43,31 @@ namespace p44 {
     int16_t accel[3]; // X, Y, Z
     int16_t lastaccel[3]; // X, Y, Z
     double accelIntegral;
-
+    MLMicroSeconds accelStart;
+    bool hitDetectorActive;
+    bool hitShowing;
+    MLTicket showTicket;
 
     // parameters
+    // - measurement
     uint16_t accelThreshold; ///< X,Y,Z changes below this will be ignored
     MLMicroSeconds interval; ///< sampling and integration interval
-    double accelChangeCutoff; ///< offset to subtract from acceleration change value (cutoff of small changes)
+    double accelChangeCutoff; ///< offset to subtract from acceleration change value (lower end cutoff of small changes)
+    double accelMaxChange; ///< max acceleration change value (top cutoff of too intense vibrations)
     double accelIntegrationGain; ///< factor for integrating acceleration change values
     double integralFadeOffset; ///< amount to subtract from integral per interval
     double integralFadeScaling; ///< amount to multiply the integral per interval
     double maxIntegral; ///< will not integrate above this
-
+    // - hit detection: time window after seeing begin of acceleration, when a strong acceleration indicates a hit (ball trough funnel)
+    double hitStartMinIntegral; ///< how high the integral must be to start the hit detector
+    MLMicroSeconds hitWindowStart; ///< start of hit window (in time after seeing first acceleration)
+    MLMicroSeconds hitWindowDuration; ///< size of hit window (duration)
+    double hitMinAccelChange; ///< how much change in acceleration a hit needs to be
+    // - display
     uint16_t numLeds; ///< number of LEDs
-    double integralDispOffset; ///< offset for the integral for display
-    double integralDispScaling; ///< scaling of the integral for display
+    double integralDispOffset; ///< offset for the integral for display (after scaling)
+    double integralDispScaling; ///< scaling of the integral for display (for output scale 0..1 = none..all LEDs)
+    MLMicroSeconds hitFlashTime; ///< how long the hit flash lasts
 
 
   public:
@@ -85,6 +96,8 @@ namespace p44 {
     void accelInit();
     void accelMeasure();
     void showAccel(double aFraction);
+    void showHit();
+    void showHitEnd();
 
   };
 

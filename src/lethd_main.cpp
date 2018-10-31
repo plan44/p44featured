@@ -113,6 +113,7 @@ public:
       { 0  , "ledchain2",      true,  "devicepath;ledchain2 device to use" },
       { 0  , "ledchain3",      true,  "devicepath;ledchain3 device to use" },
       { 0  , "lethdapiport",   true,  "port;server port number for lETHd JSON API (default=none)" },
+      { 0  , "initjson",       true,  "jsonfile;run the command(s) from the specified JSON text file." },
       { 0  , "neuron",         true,  "mvgAvgCnt,threshold,nAxonLeds,nBodyLeds;start neuron" },
       { 0  , "light",          false, "start light" },
       { 0  , "hermel",         false, "start hermel" },
@@ -201,6 +202,14 @@ public:
         getOption("ledchain2","/dev/null"),
         getOption("ledchain3","/dev/null")
       )));
+      // run the initialisation command file
+      string initFile;
+      if (getStringOption("initjson", initFile)) {
+        JsonObjectPtr initCmds = JsonObject::objFromFile(Application::sharedApplication()->resourcePath(initFile).c_str());
+        if (initCmds) {
+          lethdApi->executeJson(initCmds);
+        }
+      }
       // start lethd API server for leths server
       string apiport;
       if (getStringOption("lethdapiport", apiport)) {
@@ -351,7 +360,9 @@ public:
     else if (aUri=="log") {
       if (aIsAction) {
         if (aData->get("level", o, true)) {
+          int oldLevel = LOGLEVEL;
           SETLOGLEVEL(o->int32Value());
+          LOG(LOGLEVEL, "\n==== changed log level from %d to %d ====\n", oldLevel, LOGLEVEL);
           aRequestDoneCB(JsonObjectPtr(), ErrorPtr());
           return true;
         }
