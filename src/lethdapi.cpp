@@ -77,6 +77,19 @@ void InternalRequest::sendResponse(JsonObjectPtr aResponse, ErrorPtr aError)
 // MARK: ===== LethdApi
 
 
+static LethdApiPtr lethdApi;
+
+
+LethdApiPtr LethdApi::sharedApi()
+{
+  if (!lethdApi) {
+    lethdApi = LethdApiPtr(new LethdApi);
+  }
+  return lethdApi;
+}
+
+
+
 LethdApi::LethdApi()
 {
 }
@@ -87,21 +100,84 @@ LethdApi::~LethdApi()
 }
 
 
-void LethdApi::executeJson(JsonObjectPtr aJsonCmds)
+ErrorPtr LethdApi::runJsonScript(const string aScriptPath, SimpleCB aFinishedCallback, ScriptContextPtr* aContextP)
 {
-  if (aJsonCmds->isType(json_type_array)) {
-    // array of commands
-    for (int i=0; i<aJsonCmds->arrayLength(); i++) {
-      ApiRequestPtr req = ApiRequestPtr(new InternalRequest(aJsonCmds->arrayGet(i)));
-      processRequest(req);
+  ErrorPtr err;
+  JsonObjectPtr script = JsonObject::objFromFile(Application::sharedApplication()->resourcePath(aScriptPath).c_str(), &err);
+  if (Error::isOK(err)) {
+    if (script) {
+      return lethdApi->executeJson(script, aFinishedCallback, aContextP);
     }
   }
-  else {
-    // single command
-    ApiRequestPtr req = ApiRequestPtr(new InternalRequest(aJsonCmds));
-    processRequest(req);
-  }
+  return err;
 }
+
+
+ErrorPtr LethdApi::executeJson(JsonObjectPtr aJsonCmds, SimpleCB aFinishedCallback, ScriptContextPtr* aContextP)
+{
+  JsonObjectPtr cmds;
+  if (!aJsonCmds->isType(json_type_array)) {
+    cmds = JsonObject::newArray();
+    cmds->arrayAppend(aJsonCmds);
+  }
+  else {
+    cmds = aJsonCmds;
+  }
+  ScriptContextPtr context;
+  if (aContextP && *aContextP) {
+    context = *aContextP;
+  }
+  else {
+    context = ScriptContextPtr(new ScriptContext);
+    if (aContextP) *aContextP = context;
+  }
+  context->kill();
+  executeNextCmd(cmds, 0, context, aFinishedCallback);
+  return ErrorPtr();
+}
+
+
+void LethdApi::executeNextCmd(JsonObjectPtr aCmds, int aIndex, ScriptContextPtr aContext, SimpleCB aFinishedCallback)
+{
+  if (!aCmds || aIndex>=aCmds->arrayLength()) {
+    // done
+    if (aFinishedCallback) aFinishedCallback();
+    return;
+  }
+  // run next command
+  MLMicroSeconds delay = 0;
+  JsonObjectPtr cmd = aCmds->arrayGet(aIndex);
+  // check for delay
+  JsonObjectPtr o = cmd->get("delayby");
+  if (o) {
+    delay = o->doubleValue()*MilliSecond;
+  }
+  // now execute
+  aContext->scriptTicket.executeOnce(boost::bind(&LethdApi::runCmd, this, aCmds, aIndex, aContext, aFinishedCallback), delay);
+}
+
+
+void LethdApi::runCmd(JsonObjectPtr aCmds, int aIndex, ScriptContextPtr aContext, SimpleCB aFinishedCallback)
+{
+  JsonObjectPtr cmd = aCmds->arrayGet(aIndex);
+  JsonObjectPtr o = cmd->get("callscript");
+  if (o) {
+    runJsonScript(o->stringValue(), boost::bind(&LethdApi::executeNextCmd, this, aCmds, aIndex+1, aContext, aFinishedCallback), &aContext);
+    return;
+  }
+  ApiRequestPtr req = ApiRequestPtr(new InternalRequest(cmd));
+  processRequest(req);
+  executeNextCmd(aCmds, aIndex+1, aContext, aFinishedCallback);
+}
+
+
+FeaturePtr LethdApi::getFeature(const string aFeatureName)
+{
+  FeatureMap::iterator pos = featureMap.find(aFeatureName);
+  if (pos==featureMap.end()) return FeaturePtr();
+  return pos->second;
+}
+
 
 
 
@@ -180,6 +256,13 @@ ErrorPtr LethdApi::processRequest(ApiRequestPtr aRequest)
       return LethdApiError::err("missing 'feature' or 'cmd' attribute");
     }
     string cmd = o->stringValue();
+    if (cmd=="nop") {
+      // no operation (e.g. script steps that only wait)
+      return Error::ok();
+    }
+    if (cmd=="call") {
+      return call(aRequest);
+    }
     if (cmd=="init") {
       return init(aRequest);
     }
@@ -201,6 +284,16 @@ ErrorPtr LethdApi::processRequest(ApiRequestPtr aRequest)
   }
 }
 
+
+ErrorPtr LethdApi::call(ApiRequestPtr aRequest)
+{
+  JsonObjectPtr reqData = aRequest->getRequest();
+  JsonObjectPtr o = reqData->get("script");
+  if (o) {
+    return runJsonScript(o->stringValue());
+  }
+  return LethdApiError::err("missing 'script' attribute");
+}
 
 
 ErrorPtr LethdApi::reset(ApiRequestPtr aRequest)

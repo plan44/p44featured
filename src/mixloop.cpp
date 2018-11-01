@@ -43,6 +43,7 @@ MixLoop::MixLoop(const string aLedChain1Name, const string aLedChain2Name) :
   integralDispOffset(0),
   integralDispScaling(0.01),
   hitFlashTime(666*MilliSecond),
+  hitDispTime(5*Second),
   // state
   accelIntegral(0),
   accelStart(Never),
@@ -129,6 +130,9 @@ ErrorPtr MixLoop::processRequest(ApiRequestPtr aRequest)
     if (data->get("hitFlashTime", o, true)) {
       hitFlashTime = o->doubleValue()*MilliSecond;
     }
+    if (data->get("hitDispTime", o, true)) {
+      hitDispTime = o->doubleValue()*MilliSecond;
+    }
     return err ? err : Error::ok();
   }
 }
@@ -154,24 +158,10 @@ JsonObjectPtr MixLoop::status()
     answer->add("integralDispOffset", JsonObject::newDouble(integralDispOffset));
     answer->add("integralDispScaling", JsonObject::newDouble(integralDispScaling));
     answer->add("hitFlashTime", JsonObject::newDouble((double)hitFlashTime/MilliSecond));
+    answer->add("hitDispTime", JsonObject::newDouble((double)hitDispTime/MilliSecond));
   }
   return answer;
 }
-
-
-//ErrorPtr MixLoop::triggerEffect(ApiRequestPtr aRequest)
-//{
-//  JsonObjectPtr data = aRequest->getRequest();
-//  JsonObjectPtr o;
-//  double angle = 0; // straight
-//  if (data->get("angle", o, true)) angle = o->doubleValue();
-//  double intensity = 1; // full power
-//  if (data->get("intensity", o, true)) intensity = o->doubleValue();
-//  MLMicroSeconds pulseLength = 500*MilliSecond;
-//  if (data->get("pulse", o, true)) pulseLength = o->int64Value() * MilliSecond;
-//  shoot(angle, intensity, pulseLength);
-//  return Error::ok();
-//}
 
 
 // MARK: ==== hermel operation
@@ -265,6 +255,7 @@ void MixLoop::accelInit()
 
 void MixLoop::accelMeasure()
 {
+  // measure
   bool changed = false;
   double changeamount = 0;
   for (int ai=0; ai<3; ai++) {
@@ -301,6 +292,7 @@ void MixLoop::accelMeasure()
       else {
         // after end of window
         LOG(LOG_NOTICE, "Hit detector timed out");
+        dispNormal();
         hitDetectorActive = false;
       }
     }
@@ -322,6 +314,7 @@ void MixLoop::accelMeasure()
       accelStart = now;
       hitDetectorActive = true;
       LOG(LOG_NOTICE, "Hit detector activated with integral = %.0f", accelIntegral);
+      LethdApi::sharedApi()->runJsonScript("scripts/game.json", NULL, &scriptContext);
     }
   }
   // show
@@ -359,10 +352,19 @@ void MixLoop::showHit()
     ledChain1->show();
   }
   showTicket.executeOnce(boost::bind(&MixLoop::showHitEnd, this), hitFlashTime);
+  // disp
+  LethdApi::sharedApi()->runJsonScript("scripts/hit.json", NULL, &scriptContext);
 }
 
 
 void MixLoop::showHitEnd()
 {
   hitShowing = false;
+}
+
+
+void MixLoop::dispNormal()
+{
+  dispTicket.cancel();
+  LethdApi::sharedApi()->runJsonScript("scripts/normal.json", NULL, &scriptContext);
 }

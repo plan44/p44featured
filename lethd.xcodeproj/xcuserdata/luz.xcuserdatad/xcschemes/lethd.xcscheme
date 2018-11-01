@@ -67,7 +67,7 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--resourcepath /Volumes/CaseSens/openwrt/feeds/plan44/leth-config/files/resources"
+            argument = "--resourcepath /Volumes/CaseSens/openwrt/feeds/plan44/hermel-config/files/resources"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
@@ -76,7 +76,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--lethdapiport 11200"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--ledchain1 /tmp/ledchainsim"
@@ -84,7 +84,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--sensor0 spi0.MCP3002@0.0"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--datapath /tmp/lethd"
@@ -96,6 +96,10 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--dispmatrix 74,7"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--initjson initcmds.json"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
@@ -116,11 +120,11 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-l 5"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-l 6"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-l 7"

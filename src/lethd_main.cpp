@@ -174,7 +174,7 @@ public:
       pwmRight = AnalogIoPtr(new AnalogIo(getOption("pwmright","missing"), true, 0)); // off to begin with
 
       // create API
-      lethdApi = LethdApiPtr(new LethdApi);
+      lethdApi = LethdApi::sharedApi();
       // add features
       // - light
       lethdApi->addFeature(FeaturePtr(new Light(
@@ -205,10 +205,7 @@ public:
       // run the initialisation command file
       string initFile;
       if (getStringOption("initjson", initFile)) {
-        JsonObjectPtr initCmds = JsonObject::objFromFile(Application::sharedApplication()->resourcePath(initFile).c_str());
-        if (initCmds) {
-          lethdApi->executeJson(initCmds);
-        }
+        lethdApi->runJsonScript(initFile);
       }
       // start lethd API server for leths server
       string apiport;
@@ -231,8 +228,6 @@ public:
   virtual void initialize()
   {
     LOG(LOG_NOTICE, "lethd initialize()");
-
-
   }
 
 

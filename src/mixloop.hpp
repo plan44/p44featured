@@ -47,6 +47,8 @@ namespace p44 {
     bool hitDetectorActive;
     bool hitShowing;
     MLTicket showTicket;
+    MLTicket dispTicket;
+    ScriptContextPtr scriptContext;
 
     // parameters
     // - measurement
@@ -68,7 +70,7 @@ namespace p44 {
     double integralDispOffset; ///< offset for the integral for display (after scaling)
     double integralDispScaling; ///< scaling of the integral for display (for output scale 0..1 = none..all LEDs)
     MLMicroSeconds hitFlashTime; ///< how long the hit flash lasts
-
+    MLMicroSeconds hitDispTime; ///< how long the hit display lasts
 
   public:
 
@@ -98,6 +100,7 @@ namespace p44 {
     void showAccel(double aFraction);
     void showHit();
     void showHitEnd();
+    void dispNormal();
 
   };
 

@@ -97,6 +97,18 @@ namespace p44 {
 
 
 
+  class ScriptContext : public P44Obj
+  {
+    friend class LethdApi;
+
+    MLTicket scriptTicket;
+
+  public:
+    void kill() { scriptTicket.cancel(); }
+
+  };
+  typedef boost::intrusive_ptr<ScriptContext> ScriptContextPtr;
+
 
 
   class LethdApi : public P44Obj
@@ -111,10 +123,15 @@ namespace p44 {
 
     string gridcoordinate;
 
+    MLTicket scriptTicket;
+
   public:
 
     LethdApi();
     virtual ~LethdApi();
+
+    /// singleton
+    static LethdApiPtr sharedApi();
 
     /// add a feature
     /// @param aFeature the to add
@@ -128,7 +145,19 @@ namespace p44 {
 
     /// execute JSON request(s) - can be called internally, no answer
     /// @param aJsonCmds a single JSON command request or a array with multiple requests
-    void executeJson(JsonObjectPtr aJsonCmds);
+    /// @param aFinishedCallback called when all commands are done
+    ErrorPtr executeJson(JsonObjectPtr aJsonCmds, SimpleCB aFinishedCallback = NULL, ScriptContextPtr* aContextP = NULL);
+
+    /// execute JSON request(s) from a file
+    /// @param aScriptPath resource dir relative (or absolute) path to script
+    /// @param aFinishedCallback called when all commands are done
+    ErrorPtr runJsonScript(const string aScriptPath, SimpleCB aFinishedCallback = NULL, ScriptContextPtr* aContextP = NULL);
+
+
+    /// get feature by name
+    /// @param aFeatureName name of the feature
+    /// @return feature or NULL if no such feature
+    FeaturePtr getFeature(const string aFeatureName);
 
     void start(const string aApiPort);
     void send(double aValue);
@@ -146,6 +175,7 @@ namespace p44 {
     ErrorPtr status(ApiRequestPtr aRequest);
     ErrorPtr ping(ApiRequestPtr aRequest);
     ErrorPtr features(ApiRequestPtr aRequest);
+    ErrorPtr call(ApiRequestPtr aRequest);
 
     ErrorPtr fire(ApiRequestPtr aRequest);
     ErrorPtr setText(ApiRequestPtr aRequest);
@@ -153,6 +183,9 @@ namespace p44 {
     /// send response via main API connection.
     /// @note: only for LethdApiRequest
     void sendResponse(JsonObjectPtr aResponse);
+
+    void executeNextCmd(JsonObjectPtr aCmds, int aIndex, ScriptContextPtr aContext, SimpleCB aFinishedCallback);
+    void runCmd(JsonObjectPtr aCmds, int aIndex, ScriptContextPtr aContext, SimpleCB aFinishedCallback);
 
   };
 

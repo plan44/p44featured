@@ -111,8 +111,10 @@ namespace p44 {
     void step(MLTimer &aTimer);
     void initOperation();
 
-
   };
+  typedef boost::intrusive_ptr<DispMatrix> DispMatrixPtr;
+
+
 
 } // namespace p44
 
