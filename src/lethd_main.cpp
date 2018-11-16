@@ -31,6 +31,7 @@
 #include "neuron.hpp"
 #include "hermel.hpp"
 #include "mixloop.hpp"
+#include "wifitrack.hpp"
 #include "dispmatrix.hpp"
 
 
@@ -112,12 +113,14 @@ public:
       { 0  , "ledchain1",      true,  "devicepath;ledchain1 device to use" },
       { 0  , "ledchain2",      true,  "devicepath;ledchain2 device to use" },
       { 0  , "ledchain3",      true,  "devicepath;ledchain3 device to use" },
+      { 0  , "wifimonif",      true,  "interface;wifi monitoring interface to use" },
       { 0  , "lethdapiport",   true,  "port;server port number for lETHd JSON API (default=none)" },
       { 0  , "initjson",       true,  "jsonfile;run the command(s) from the specified JSON text file." },
       { 0  , "neuron",         true,  "mvgAvgCnt,threshold,nAxonLeds,nBodyLeds;start neuron" },
       { 0  , "light",          false, "start light" },
       { 0  , "hermel",         false, "start hermel" },
       { 0  , "mixloop",        false, "start mixloop" },
+      { 0  , "wifitrack",      false, "start wifitrack" },
       { 0  , "dispmatrix",     true,  "numcols;start display matrix" },
       { 0  , "jsonapiport",    true,  "port;server port number for JSON API (default=none)" },
       { 0  , "jsonapinonlocal",false, "allow JSON API from non-local clients" },
@@ -188,6 +191,10 @@ public:
       lethdApi->addFeature(FeaturePtr(new MixLoop(
         getOption("ledchain2","/dev/null"),
         getOption("ledchain3","/dev/null")
+      )));
+      // - wifitrack
+      lethdApi->addFeature(FeaturePtr(new WifiTrack(
+        getOption("wifimonif","/dev/null")
       )));
       // - neuron
       lethdApi->addFeature(FeaturePtr(new Neuron(

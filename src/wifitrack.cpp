@@ -1,0 +1,150 @@
+//
+//  Copyright (c) 2018 plan44.ch / Lukas Zeller, Zurich, Switzerland
+//
+//  This file is part of lethd/hermeld
+//
+//  lethd/hermeld is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  lethd/hermeld is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with lethd/hermeld. If not, see <http://www.gnu.org/licenses/>.
+//
+
+#include "wifitrack.hpp"
+#include "application.hpp"
+
+using namespace p44;
+
+WifiTrack::WifiTrack(const string aMonitorIf) :
+  inherited("wifitrack"),
+  monitorIf(aMonitorIf),
+  dumpPid(-1)
+{
+  // check for commandline-triggered standalone operation
+  if (CmdLineApp::sharedCmdLineApp()->getOption("wifitrack")) {
+    initOperation();
+  }
+}
+
+
+WifiTrack::~WifiTrack()
+{
+}
+
+// MARK: ==== light API
+
+ErrorPtr WifiTrack::initialize(JsonObjectPtr aInitData)
+{
+  initOperation();
+  return Error::ok();
+}
+
+
+ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
+{
+  ErrorPtr err;
+  JsonObjectPtr data = aRequest->getRequest();
+  JsonObjectPtr o = data->get("cmd");
+  if (o) {
+    string cmd = o->stringValue();
+//    if (cmd=="hit") {
+//      showHit();
+//      return Error::ok();
+//    }
+//    else
+    {
+      return inherited::processRequest(aRequest);
+    }
+  }
+  else {
+    // decode properties
+//    if (data->get("accelThreshold", o, true)) {
+//      accelThreshold = o->int32Value();
+//    }
+//    if (data->get("interval", o, true)) {
+//      interval = o->doubleValue()*MilliSecond;
+//    }
+    return err ? err : Error::ok();
+  }
+}
+
+
+JsonObjectPtr WifiTrack::status()
+{
+  JsonObjectPtr answer = inherited::status();
+  if (answer->isType(json_type_object)) {
+//    answer->add("accelThreshold", JsonObject::newInt32(accelThreshold));
+//    answer->add("interval", JsonObject::newDouble((double)interval/MilliSecond));
+  }
+  return answer;
+}
+
+
+// MARK: ==== hermel operation
+
+
+void WifiTrack::initOperation()
+{
+  LOG(LOG_NOTICE, "initializing wifitrack");
+
+#ifdef __APPLE__
+  #warning "hardcoded access to mixloop hermel"
+//  string cmd = "ssh -p 22 root@hermel-40a36bc18907.local. \"tcpdump -e -i moni0 -s 2000 type mgt subtype probe-req\"";
+  string cmd = "ssh -p 22 root@1a8479bcaf76.cust.devices.plan44.ch \"tcpdump -e -i moni0 -s 2000 type mgt subtype probe-req\"";
+#else
+  string cmd = string_format("tcpdump -e -i %s -s 2000 type mgt subtype probe-req", monitorIf.c_str());
+#endif
+  int resultFd = -1;
+  dumpPid = MainLoop::currentMainLoop().fork_and_system(boost::bind(&WifiTrack::dumpEnded, this, _1), cmd.c_str(), true, &resultFd);
+  if (dumpPid>=0 && resultFd>=0) {
+    dumpStream = FdCommPtr(new FdComm(MainLoop::currentMainLoop()));
+    dumpStream->setFd(resultFd);
+    dumpStream->setReceiveHandler(boost::bind(&WifiTrack::gotDumpLine, this, _1), '\n');
+    // set up decoder
+    // 18:45:37.098313 1.0 Mb/s 2412 MHz 11b -86dBm signal -86dBm signal antenna 0 -107dBm signal antenna 1 BSSID:Broadcast DA:Broadcast SA:54:60:09:c3:ed:42 (oui Unknown) Probe Request (Atelier Teilraum) [1.0 2.0 5.5 6.0 9.0 11.0 12.0 18.0 Mbit]
+    ErrorPtr err = streamDecoder.compile(".* (-?\\d+)dBm signal antenna 0.*SA:([0123456789abcdef:]+).*Probe Request \\((.*)\\).*");
+    if (!Error::ok(err)) {
+      LOG(LOG_ERR, "Error in stream decoder Regexp: %s", err->description().c_str());
+    }
+
+  }
+  // ready
+  setInitialized();
+}
+
+
+void WifiTrack::dumpEnded(ErrorPtr aError)
+{
+  LOG(LOG_NOTICE, "tcpdump terminated with status: %s", Error::text(aError).c_str());
+  restartTicket.executeOnce(boost::bind(&WifiTrack::initOperation, this), 5*Second);
+}
+
+
+void WifiTrack::gotDumpLine(ErrorPtr aError)
+{
+  if (!Error::isOK(aError)) {
+    LOG(LOG_ERR, "error reading from tcp output stream: %s", Error::text(aError).c_str());
+    return;
+  }
+  string line;
+  if (dumpStream->receiveDelimitedString(line)) {
+    LOG(LOG_INFO, "TCPDUMP: %s", line.c_str());
+    if (streamDecoder.match(line, true)) {
+      int rssi = 0;
+      sscanf(streamDecoder.getCapture(1).c_str(), "%d", &rssi);
+      uint64_t mac = stringToMacAddress(streamDecoder.getCapture(2).c_str());
+      string ssid = streamDecoder.getCapture(3);
+      LOG(LOG_NOTICE, "RSSI=%d, MAC=%s, SSID='%s'", rssi, macAddressToString(mac,':').c_str(), ssid.c_str());
+    }
+  }
+}
+
+
+
