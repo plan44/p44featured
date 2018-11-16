@@ -67,6 +67,10 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "&quot;.* (-?\\d+)dBm signal antenna 0.*SA:([0123456789abcdef:]+).*Probe Request \\((.*)\\).*&quot;"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "--resourcepath /Volumes/CaseSens/openwrt/feeds/plan44/hermel-config/files/resources"
             isEnabled = "YES">
          </CommandLineArgument>
