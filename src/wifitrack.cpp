@@ -37,7 +37,12 @@ WTSSid::WTSSid() :
 
 WTMac::WTMac() :
   seenLast(Never),
-  seenCount(0)
+  seenFirst(Never),
+  seenCount(0),
+  lastRssi(-9999),
+  bestRssi(-9999),
+  worstRssi(9999),
+  shownLast(Never)
 {
 }
 
@@ -47,7 +52,9 @@ WTMac::WTMac() :
 WifiTrack::WifiTrack(const string aMonitorIf) :
   inherited("wifitrack"),
   monitorIf(aMonitorIf),
-  dumpPid(-1)
+  dumpPid(-1),
+  rememberwithoutssid(false),
+  minShowInterval(3*Minute)
 {
   // check for commandline-triggered standalone operation
   if (CmdLineApp::sharedCmdLineApp()->getOption("wifitrack")) {
@@ -76,12 +83,20 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
   JsonObjectPtr o = data->get("cmd");
   if (o) {
     string cmd = o->stringValue();
-//    if (cmd=="hit") {
-//      showHit();
-//      return Error::ok();
-//    }
-//    else
-    {
+    if (cmd=="dump") {
+      JsonObjectPtr ans = dataDump();
+      aRequest->sendResponse(ans, ErrorPtr());
+      return ErrorPtr();
+    }
+    else if (cmd=="save") {
+      err = save();
+      return err ? err : Error::ok();
+    }
+    else if (cmd=="load") {
+      err = load();
+      return err ? err : Error::ok();
+    }
+    else {
       return inherited::processRequest(aRequest);
     }
   }
@@ -109,13 +124,170 @@ JsonObjectPtr WifiTrack::status()
 }
 
 
-// MARK: ==== hermel operation
+#define WIFITRACK_STATE_FILE_NAME "wifitrack_state.json"
+
+ErrorPtr WifiTrack::load()
+{
+  JsonObjectPtr data = JsonObject::objFromFile(Application::sharedApplication()->dataPath(WIFITRACK_STATE_FILE_NAME).c_str());
+  return dataImport(data);
+}
+
+
+ErrorPtr WifiTrack::save()
+{
+  JsonObjectPtr data = dataDump();
+  return data->saveToFile(Application::sharedApplication()->dataPath(WIFITRACK_STATE_FILE_NAME).c_str());
+}
+
+
+JsonObjectPtr WifiTrack::dataDump()
+{
+  JsonObjectPtr ans = JsonObject::newObj();
+  // macs
+  JsonObjectPtr mans = JsonObject::newObj();
+  for (WTMacMap::iterator mpos = macs.begin(); mpos!=macs.end(); ++mpos) {
+    JsonObjectPtr m = JsonObject::newObj();
+    m->add("lastrssi", JsonObject::newInt32(mpos->second->lastRssi));
+    m->add("bestrssi", JsonObject::newInt32(mpos->second->bestRssi));
+    m->add("worstrssi", JsonObject::newInt32(mpos->second->worstRssi));
+    m->add("count", JsonObject::newInt64(mpos->second->seenCount));
+    m->add("last", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(mpos->second->seenLast)));
+    m->add("first", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(mpos->second->seenFirst)));
+    JsonObjectPtr sarr = JsonObject::newArray();
+    for (WTSSidMap::iterator spos = mpos->second->ssids.begin(); spos!=mpos->second->ssids.end(); ++spos) {
+      sarr->arrayAppend(JsonObject::newString(spos->second->ssid));
+    }
+    m->add("ssids", sarr);
+    mans->add(macAddressToString(mpos->first, ':').c_str(), m);
+  }
+  ans->add("macs", mans);
+  // ssid details
+  JsonObjectPtr sans = JsonObject::newObj();
+  for (WTSSidMap::iterator spos = ssids.begin(); spos!=ssids.end(); ++spos) {
+    JsonObjectPtr s = JsonObject::newObj();
+    s->add("count", JsonObject::newInt64(spos->second->seenCount));
+    s->add("last", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(spos->second->seenLast)));
+    s->add("maccount", JsonObject::newInt64(spos->second->macs.size()));
+    sans->add(spos->first.c_str(), s);
+  }
+  ans->add("ssids", sans);
+  return ans;
+}
+
+
+ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
+{
+  if (!aData || !aData->isType(json_type_object)) return TextError::err("invalid state data - must be JSON object");
+  // insert ssids
+  JsonObjectPtr sobjs = aData->get("ssids");
+  if (!sobjs) return TextError::err("missing 'ssids'");
+  sobjs->resetKeyIteration();
+  JsonObjectPtr sobj;
+  string ssidstr;
+  while (sobjs->nextKeyValue(ssidstr, sobj)) {
+    WTSSidPtr s;
+    WTSSidMap::iterator spos = ssids.find(ssidstr);
+    if (spos!=ssids.end()) {
+      s = spos->second;
+    }
+    else {
+      s = WTSSidPtr(new WTSSid);
+      s->ssid = ssidstr;
+      ssids[ssidstr] = s;
+    }
+    JsonObjectPtr o;
+    o = sobj->get("count");
+    if (o) s->seenCount += o->int64Value();
+    o = sobj->get("last");
+    MLMicroSeconds l = Never;
+    if (o) l = MainLoop::unixTimeToMainLoopTime(o->int64Value());
+    if (l>s->seenLast) s->seenLast = l;
+  }
+  // insert macs and links to ssids
+  JsonObjectPtr mobjs = aData->get("macs");
+  if (!mobjs) return TextError::err("missing 'macs'");
+  mobjs->resetKeyIteration();
+  JsonObjectPtr mobj;
+  string macstr;
+  while (mobjs->nextKeyValue(macstr, mobj)) {
+    bool insertMac = false;
+    uint64_t mac = stringToMacAddress(macstr.c_str());
+    WTMacPtr m;
+    WTMacMap::iterator mpos = macs.find(mac);
+    if (mpos!=macs.end()) {
+      m = mpos->second;
+    }
+    else {
+      m = WTMacPtr(new WTMac);
+      m->mac = mac;
+      insertMac = true;
+    }
+    // links
+    JsonObjectPtr sarr = mobj->get("ssids");
+    for (int i=0; i<sarr->arrayLength(); ++i) {
+      string ssidstr = sarr->arrayGet(i)->stringValue();
+      if (!rememberwithoutssid && ssidstr.empty() && sarr->arrayLength()==1) {
+        insertMac = false;
+      }
+      WTSSidPtr s;
+      WTSSidMap::iterator spos = ssids.find(ssidstr);
+      if (spos!=ssids.end()) {
+        s = spos->second;
+      }
+      else {
+        s = WTSSidPtr(new WTSSid);
+        s->ssid = ssidstr;
+        ssids[ssidstr] = s;
+      }
+      m->ssids[ssidstr] = s;
+      s->macs[mac] = m;
+    }
+    if (insertMac) {
+      macs[mac] = m;
+    }
+    // other props
+    JsonObjectPtr o;
+    o = mobj->get("count");
+    if (o) m->seenCount += o->int64Value();
+    o = mobj->get("bestrssi");
+    int r = -9999;
+    if (o) r = o->int32Value();
+    if (r>m->bestRssi) m->bestRssi = r;
+    o = mobj->get("worstrssi");
+    r = 9999;
+    if (o) r = o->int32Value();
+    if (r<m->worstRssi) m->worstRssi = r;
+    o = mobj->get("last");
+    MLMicroSeconds l = Never;
+    if (o) l = MainLoop::unixTimeToMainLoopTime(o->int64Value());
+    if (l>m->seenLast) {
+      m->seenLast = l;
+      o = mobj->get("lastrssi");
+      if (o) m->lastRssi = o->int32Value();
+    }
+    o = mobj->get("first");
+    l = Never;
+    if (o) l = MainLoop::unixTimeToMainLoopTime(o->int64Value());
+    if (l!=Never && m->seenFirst!=Never && l<m->seenFirst) m->seenFirst = l;
+  }
+  return ErrorPtr();
+}
+
+
+
+
+// MARK: ==== wifitrack operation
 
 
 void WifiTrack::initOperation()
 {
   LOG(LOG_NOTICE, "initializing wifitrack");
 
+  ErrorPtr err;
+  err = load();
+  if (!Error::isOK(err)) {
+    LOG(LOG_ERR, "could not load state: %s", Error::text(err).c_str());
+  }
 #ifdef __APPLE__
   #warning "hardcoded access to mixloop hermel"
 //  string cmd = "ssh -p 22 root@hermel-40a36bc18907.local. \"tcpdump -e -i moni0 -s 2000 type mgt subtype probe-req\"";
@@ -188,18 +360,25 @@ void WifiTrack::gotDumpLine(ErrorPtr aError)
       }
       else {
         // unknown, create
-        m = WTMacPtr(new WTMac);
-        m->mac = mac;
-        macs[mac] = m;
+        if (!s->ssid.empty() || rememberwithoutssid) {
+          m = WTMacPtr(new WTMac);
+          m->mac = mac;
+          macs[mac] = m;
+        }
       }
-      m->seenLast = now;
-      m->seenCount++;
-      m->rssi = rssi;
-      // - connection
-      m->ssids[ssid] = s;
-      s->macs[mac] = m;
-      // process sighting
-      processSighting(m, s);
+      if (m) {
+        m->seenCount++;
+        m->seenLast = now;
+        if (m->seenFirst==Never) m->seenFirst = now;
+        m->lastRssi = rssi;
+        if (rssi>m->bestRssi) m->bestRssi = rssi;
+        if (rssi<m->worstRssi) m->worstRssi = rssi;
+        // - connection
+        m->ssids[ssid] = s;
+        s->macs[mac] = m;
+        // process sighting
+        processSighting(m, s);
+      }
     }
   }
 }
@@ -215,10 +394,34 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid)
     string_format_append(s, "%s%s (%ld)", sep, sstr.c_str(), pos->second->seenCount);
     sep = ", ";
   }
-  LOG(LOG_NOTICE, "MAC=%s (%ld), RSSI=%d : %s", macAddressToString(aMac->mac,':').c_str(), aMac->seenCount, aMac->rssi, s.c_str());
+  LOG(LOG_NOTICE, "MAC=%s (%ld), RSSI=%d,%d,%d : %s", macAddressToString(aMac->mac,':').c_str(), aMac->seenCount, aMac->worstRssi, aMac->lastRssi, aMac->bestRssi, s.c_str());
+  if (aMac->seenLast>aMac->shownLast+minShowInterval) {
+    // pick SSID with the least mac links as most unique name
+    long minSightings = 999999999;
+    WTSSidPtr relevantSSid;
+    for (WTSSidMap::iterator pos = aMac->ssids.begin(); pos!=aMac->ssids.end(); ++pos) {
+      if (pos->second->seenCount<minSightings && !pos->first.empty()) {
+        minSightings = pos->second->seenCount;
+        relevantSSid = pos->second;
+      }
+    }
+    if (relevantSSid) {
+      // show it
+      aMac->shownLast = aMac->seenLast;
+      LOG(LOG_NOTICE, "*** Hello %s! ***", relevantSSid->ssid.c_str());
+      LethdApi::sharedApi()->runJsonScript("scripts/prepssid.json", boost::bind(&WifiTrack::ssidDispReady, this, relevantSSid->ssid), &scriptContext);
+    }
+  }
 }
 
 
-
+void WifiTrack::ssidDispReady(string aSSid)
+{
+  JsonObjectPtr cmd = JsonObject::newObj();
+  cmd->add("feature", JsonObject::newString("text"));
+  cmd->add("text", JsonObject::newString(aSSid));
+  LethdApi::sharedApi()->executeJson(cmd);
+  LethdApi::sharedApi()->runJsonScript("scripts/showssid.json", NULL, &scriptContext);
+}
 
 

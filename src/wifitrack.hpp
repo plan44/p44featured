@@ -43,12 +43,16 @@ namespace p44 {
     WTMac();
 
     MLMicroSeconds seenLast;
+    MLMicroSeconds seenFirst;
     long seenCount;
-    int rssi;
+    int lastRssi;
+    int bestRssi;
+    int worstRssi;
     uint64_t mac;
 
     WTSSidMap ssids;
 
+    MLMicroSeconds shownLast;
   };
 
 
@@ -79,9 +83,14 @@ namespace p44 {
     RegExp streamDecoder;
 
     MLTicket restartTicket;
+    ScriptContextPtr scriptContext;
 
     WTMacMap macs;
     WTSSidMap ssids;
+
+    // settings
+    bool rememberwithoutssid;
+    MLMicroSeconds minShowInterval;
 
   public:
 
@@ -106,11 +115,17 @@ namespace p44 {
 
     void initOperation();
 
+    ErrorPtr save();
+    ErrorPtr load();
+
+    JsonObjectPtr dataDump();
+    ErrorPtr dataImport(JsonObjectPtr aData);
+
     void dumpEnded(ErrorPtr aError);
     void gotDumpLine(ErrorPtr aError);
 
     void processSighting(WTMacPtr aMac, WTSSidPtr aSSid);
-
+    void ssidDispReady(string aSSid);
 
   };
 
