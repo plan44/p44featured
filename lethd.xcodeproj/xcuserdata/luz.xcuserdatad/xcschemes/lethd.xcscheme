@@ -103,8 +103,16 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--initjson initcmds.json"
+            argument = "--wifitrack"
             isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--wifimonif en0"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--initjson initcmds.json"
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--light"
@@ -112,7 +120,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--button sim.button --redled sim.redled --greenled sim.greenled"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--deltatstamps"
@@ -124,11 +132,11 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-l 5"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-l 6"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-l 7"

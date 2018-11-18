@@ -22,6 +22,28 @@
 
 using namespace p44;
 
+
+
+// MARK: ===== WTSSid
+
+WTSSid::WTSSid() :
+  seenLast(Never),
+  seenCount(0)
+{
+}
+
+
+// MARK: ===== WTMac
+
+WTMac::WTMac() :
+  seenLast(Never),
+  seenCount(0)
+{
+}
+
+
+// MARK: ===== WifiTrack
+
 WifiTrack::WifiTrack(const string aMonitorIf) :
   inherited("wifitrack"),
   monitorIf(aMonitorIf),
@@ -38,7 +60,7 @@ WifiTrack::~WifiTrack()
 {
 }
 
-// MARK: ==== light API
+// MARK: ==== API
 
 ErrorPtr WifiTrack::initialize(JsonObjectPtr aInitData)
 {
@@ -135,16 +157,68 @@ void WifiTrack::gotDumpLine(ErrorPtr aError)
   }
   string line;
   if (dumpStream->receiveDelimitedString(line)) {
-    LOG(LOG_INFO, "TCPDUMP: %s", line.c_str());
+    LOG(LOG_DEBUG, "TCPDUMP: %s", line.c_str());
     if (streamDecoder.match(line, true)) {
       int rssi = 0;
       sscanf(streamDecoder.getCapture(1).c_str(), "%d", &rssi);
       uint64_t mac = stringToMacAddress(streamDecoder.getCapture(2).c_str());
       string ssid = streamDecoder.getCapture(3);
-      LOG(LOG_NOTICE, "RSSI=%d, MAC=%s, SSID='%s'", rssi, macAddressToString(mac,':').c_str(), ssid.c_str());
+      LOG(LOG_INFO, "RSSI=%d, MAC=%s, SSID='%s'", rssi, macAddressToString(mac,':').c_str(), ssid.c_str());
+      // record
+      MLMicroSeconds now = MainLoop::now();
+      // - SSID
+      WTSSidPtr s;
+      WTSSidMap::iterator ssidPos = ssids.find(ssid);
+      if (ssidPos!=ssids.end()) {
+        s = ssidPos->second;
+      }
+      else {
+        // unknown, create
+        s = WTSSidPtr(new WTSSid);
+        s->ssid = ssid;
+        ssids[ssid] = s;
+      }
+      s->seenLast = now;
+      s->seenCount++;
+      // - MAC
+      WTMacPtr m;
+      WTMacMap::iterator macPos = macs.find(mac);
+      if (macPos!=macs.end()) {
+        m = macPos->second;
+      }
+      else {
+        // unknown, create
+        m = WTMacPtr(new WTMac);
+        m->mac = mac;
+        macs[mac] = m;
+      }
+      m->seenLast = now;
+      m->seenCount++;
+      m->rssi = rssi;
+      // - connection
+      m->ssids[ssid] = s;
+      s->macs[mac] = m;
+      // process sighting
+      processSighting(m, s);
     }
   }
 }
+
+
+void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid)
+{
+  string s;
+  const char* sep = "";
+  for (WTSSidMap::iterator pos = aMac->ssids.begin(); pos!=aMac->ssids.end(); ++pos) {
+    string sstr = pos->second->ssid;
+    if (sstr.empty()) sstr = "<undefined>";
+    string_format_append(s, "%s%s (%ld)", sep, sstr.c_str(), pos->second->seenCount);
+    sep = ", ";
+  }
+  LOG(LOG_NOTICE, "MAC=%s (%ld), RSSI=%d : %s", macAddressToString(aMac->mac,':').c_str(), aMac->seenCount, aMac->rssi, s.c_str());
+}
+
+
 
 
 

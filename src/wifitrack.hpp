@@ -27,6 +27,48 @@
 
 namespace p44 {
 
+  class WTMac;
+  typedef boost::intrusive_ptr<WTMac> WTMacPtr;
+  class WTSSid;
+  typedef boost::intrusive_ptr<WTSSid> WTSSidPtr;
+
+  typedef std::map<uint64_t, WTMacPtr> WTMacMap;
+  typedef std::map<string, WTSSidPtr> WTSSidMap;
+
+
+  class WTMac : public P44Obj
+  {
+  public:
+
+    WTMac();
+
+    MLMicroSeconds seenLast;
+    long seenCount;
+    int rssi;
+    uint64_t mac;
+
+    WTSSidMap ssids;
+
+  };
+
+
+  class WTSSid : public P44Obj
+  {
+  public:
+
+    WTSSid();
+
+    MLMicroSeconds seenLast;
+    long seenCount;
+    string ssid;
+
+    WTMacMap macs;
+
+  };
+
+
+
+
   class WifiTrack : public Feature
   {
     typedef Feature inherited;
@@ -37,6 +79,9 @@ namespace p44 {
     RegExp streamDecoder;
 
     MLTicket restartTicket;
+
+    WTMacMap macs;
+    WTSSidMap ssids;
 
   public:
 
@@ -63,6 +108,8 @@ namespace p44 {
 
     void dumpEnded(ErrorPtr aError);
     void gotDumpLine(ErrorPtr aError);
+
+    void processSighting(WTMacPtr aMac, WTSSidPtr aSSid);
 
 
   };
