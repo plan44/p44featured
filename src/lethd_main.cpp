@@ -140,30 +140,6 @@ public:
     setCommandDescriptors(usageText, options);
     parseCommandLine(argc, argv);
 
-    if (numArguments()==1) {
-      string expr = getArgument(0);
-      printf("Regexp: %s\n", expr.c_str());
-      RegExp regExp;
-      ErrorPtr err = regExp.compile(expr);
-      if (!Error::isOK(err)) {
-        terminateAppWith(err);
-      }
-      else {
-        string line = "21:19:00.784174 1.0 Mb/s 2412 MHz 11b -82dBm signal -82dBm signal antenna 0 -108dBm signal antenna 1 BSSID:Broadcast DA:Broadcast SA:90:06:28:36:39:59 (oui Unknown) Probe Request (Free_Swisscom_Auto_Login) [1.0 2.0 5.5 11.0 Mbit]";
-        if (!regExp.match(line, true)) {
-          terminateAppWith(TextError::err("No match"));
-        }
-        else {
-          printf("Match:\n");
-          for (int i=0; i<5; i++) {
-            printf("capture %d: %s\n", i, regExp.getCapture(i).c_str());
-          }
-          terminateApp(EXIT_SUCCESS);
-        }
-      }
-    }
-    else
-
     if ((numOptions()<1) || numArguments()>0) {
       // show usage
       showUsage();
