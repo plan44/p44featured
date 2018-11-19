@@ -330,11 +330,43 @@ void WifiTrack::gotDumpLine(ErrorPtr aError)
   string line;
   if (dumpStream->receiveDelimitedString(line)) {
     LOG(LOG_DEBUG, "TCPDUMP: %s", line.c_str());
+    // 17:40:22.356367 1.0 Mb/s 2412 MHz 11b -75dBm signal -75dBm signal antenna 0 -109dBm signal antenna 1 BSSID:5c:49:79:6d:28:1a (oui Unknown) DA:5c:49:79:6d:28:1a (oui Unknown) SA:c8:bc:c8:be:0d:0a (oui Unknown) Probe Request (iWay_Fiber_bu725) [1.0* 2.0* 5.5* 11.0* 6.0 9.0 12.0 18.0 Mbit]
+    bool decoded = false;
+    #ifndef USE_REGEXP
+    int rssi = 0;
+    uint64_t mac;
+    string ssid;
+    size_t s,e;
+    // - rssi (signal)
+    e = line.find(" signal ");
+    if (e!=string::npos) {
+      s = line.rfind(" ", e-1);
+      if (s!=string::npos) {
+        sscanf(line.c_str()+s+1, "%d", &rssi);
+      }
+      // - sender MAC (source address)
+      s = line.find("SA:");
+      if (s!=string::npos) {
+        mac = stringToMacAddress(line.c_str()+s+3);
+        // - SSID name
+        s = line.find("Probe Request (", s);
+        if (s!=string::npos) {
+          s += 15;
+          e = line.find(") ", s);
+          ssid = line.substr(s, e-s);
+          decoded = true;
+        }
+      }
+    }
+    #else
     if (streamDecoder.match(line, true)) {
-      int rssi = 0;
       sscanf(streamDecoder.getCapture(1).c_str(), "%d", &rssi);
-      uint64_t mac = stringToMacAddress(streamDecoder.getCapture(2).c_str());
-      string ssid = streamDecoder.getCapture(3);
+      mac = stringToMacAddress(streamDecoder.getCapture(2).c_str());
+      ssid = streamDecoder.getCapture(3);
+      decoded = true;
+    }
+    #endif
+    if (decoded) {
       LOG(LOG_INFO, "RSSI=%d, MAC=%s, SSID='%s'", rssi, macAddressToString(mac,':').c_str(), ssid.c_str());
       // record
       MLMicroSeconds now = MainLoop::now();
@@ -397,14 +429,15 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid)
   LOG(LOG_NOTICE, "MAC=%s (%ld), RSSI=%d,%d,%d : %s", macAddressToString(aMac->mac,':').c_str(), aMac->seenCount, aMac->worstRssi, aMac->lastRssi, aMac->bestRssi, s.c_str());
   if (aMac->seenLast>aMac->shownLast+minShowInterval) {
     // pick SSID with the least mac links as most unique name
-    long minSightings = 999999999;
+    long minMacs = 999999999;
     WTSSidPtr relevantSSid;
     for (WTSSidMap::iterator pos = aMac->ssids.begin(); pos!=aMac->ssids.end(); ++pos) {
-      if (pos->second->seenCount<minSightings && !pos->first.empty()) {
-        minSightings = pos->second->seenCount;
+      if (pos->second->macs.size()<minMacs && !pos->first.empty()) {
+        minMacs = pos->second->seenCount;
         relevantSSid = pos->second;
       }
     }
+    LOG(LOG_DEBUG, "minMacs = %d, relevantSSid='%s'", minMacs, relevantSSid ? relevantSSid->ssid.c_str() : "<none>");
     if (relevantSSid) {
       // show it
       aMac->shownLast = aMac->seenLast;
