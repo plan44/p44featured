@@ -91,6 +91,8 @@ lethd_SOURCES = \
   src/p44utils/p44obj.hpp \
   src/p44utils/persistentparams.cpp \
   src/p44utils/persistentparams.hpp \
+  src/p44utils/regexp.cpp \
+  src/p44utils/regexp.hpp \
   src/p44utils/serialcomm.cpp \
   src/p44utils/serialcomm.hpp \
   src/p44utils/serialqueue.cpp \
@@ -105,6 +107,8 @@ lethd_SOURCES = \
   src/p44utils/ssdpsearch.hpp \
   src/p44utils/utils.cpp \
   src/p44utils/utils.hpp \
+  src/p44utils/thirdparty/slre/slre.c \
+  src/p44utils/thirdparty/slre/slre.h \
   src/p44utils/thirdparty/sqlite3pp/sqlite3pp.cpp \
   src/p44utils/thirdparty/sqlite3pp/sqlite3pp.h \
   src/p44utils/thirdparty/sqlite3pp/sqlite3ppext.cpp \
@@ -141,6 +145,8 @@ lethd_SOURCES = \
   src/hermel.hpp \
   src/mixloop.cpp \
   src/mixloop.hpp \
+  src/wifitrack.cpp \
+  src/wifitrack.hpp \
   src/neuron.cpp \
   src/neuron.hpp \
   src/dispmatrix.cpp \
