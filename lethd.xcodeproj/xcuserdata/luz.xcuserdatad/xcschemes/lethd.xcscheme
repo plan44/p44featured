@@ -75,6 +75,14 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "--datapath /Users/luz/Documents/plan44/Projekte/wifitrack"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--datapath /tmp/lethd"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "--jsonapiipv6"
             isEnabled = "NO">
          </CommandLineArgument>
@@ -91,20 +99,16 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--datapath /tmp/lethd"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
             argument = "--neuron 20,250"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--dispmatrix 74,7"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--wifitrack"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--wifimonif en0"
@@ -112,7 +116,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--initjson initcmds.json"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--light"

@@ -89,7 +89,7 @@ namespace p44 {
     WTSSidMap ssids;
 
     // settings
-    bool rememberwithoutssid;
+    bool rememberWithoutSsid;
     MLMicroSeconds minShowInterval;
 
   public:

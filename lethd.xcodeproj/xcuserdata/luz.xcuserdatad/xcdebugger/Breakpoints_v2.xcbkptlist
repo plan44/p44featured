@@ -10,7 +10,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/view.cpp"
-            timestampString = "562795100.399539"
+            timestampString = "564083020.13911"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "346"
@@ -65,6 +65,22 @@
             startingLineNumber = "110"
             endingLineNumber = "110"
             landmarkName = "ViewStack::step(MLMicroSeconds aPriorityUntil)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "src/wifitrack.cpp"
+            timestampString = "564314515.509388"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "306"
+            endingLineNumber = "306"
+            landmarkName = "WifiTrack::initOperation()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

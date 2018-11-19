@@ -53,7 +53,7 @@ WifiTrack::WifiTrack(const string aMonitorIf) :
   inherited("wifitrack"),
   monitorIf(aMonitorIf),
   dumpPid(-1),
-  rememberwithoutssid(false),
+  rememberWithoutSsid(false),
   minShowInterval(3*Minute)
 {
   // check for commandline-triggered standalone operation
@@ -102,12 +102,12 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
   }
   else {
     // decode properties
-//    if (data->get("accelThreshold", o, true)) {
-//      accelThreshold = o->int32Value();
-//    }
-//    if (data->get("interval", o, true)) {
-//      interval = o->doubleValue()*MilliSecond;
-//    }
+    if (data->get("minShowInterval", o, true)) {
+      minShowInterval = o->doubleValue()*MilliSecond;
+    }
+    if (data->get("rememberWithoutSsid", o, true)) {
+      rememberWithoutSsid = o->boolValue();
+    }
     return err ? err : Error::ok();
   }
 }
@@ -117,8 +117,8 @@ JsonObjectPtr WifiTrack::status()
 {
   JsonObjectPtr answer = inherited::status();
   if (answer->isType(json_type_object)) {
-//    answer->add("accelThreshold", JsonObject::newInt32(accelThreshold));
-//    answer->add("interval", JsonObject::newDouble((double)interval/MilliSecond));
+    answer->add("minShowInterval", JsonObject::newDouble((double)minShowInterval/MilliSecond));
+    answer->add("rememberWithoutSsid", JsonObject::newBool(rememberWithoutSsid));
   }
   return answer;
 }
@@ -226,7 +226,7 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
     JsonObjectPtr sarr = mobj->get("ssids");
     for (int i=0; i<sarr->arrayLength(); ++i) {
       string ssidstr = sarr->arrayGet(i)->stringValue();
-      if (!rememberwithoutssid && ssidstr.empty() && sarr->arrayLength()==1) {
+      if (!rememberWithoutSsid && ssidstr.empty() && sarr->arrayLength()==1) {
         insertMac = false;
       }
       WTSSidPtr s;
@@ -360,7 +360,7 @@ void WifiTrack::gotDumpLine(ErrorPtr aError)
       }
       else {
         // unknown, create
-        if (!s->ssid.empty() || rememberwithoutssid) {
+        if (!s->ssid.empty() || rememberWithoutSsid) {
           m = WTMacPtr(new WTMac);
           m->mac = mac;
           macs[mac] = m;
