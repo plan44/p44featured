@@ -28,7 +28,8 @@ using namespace p44;
 
 WTSSid::WTSSid() :
   seenLast(Never),
-  seenCount(0)
+  seenCount(0),
+  hidden(false)
 {
 }
 
@@ -42,7 +43,8 @@ WTMac::WTMac() :
   lastRssi(-9999),
   bestRssi(-9999),
   worstRssi(9999),
-  shownLast(Never)
+  shownLast(Never),
+  hidden(false)
 {
 }
 
@@ -97,32 +99,22 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
       err = load();
       return err ? err : Error::ok();
     }
-    else if (cmd=="blacklist") {
+    else if (cmd=="hide") {
       if (data->get("ssid", o)) {
-        string b = o->stringValue();
-        if (!b.empty()) {
-          if (b[0]=='!') {
-            // remove from blacklist
-            for (WTSSidBlackList::iterator pos = ssidblacklist.begin(); pos!=ssidblacklist.end(); ++pos) {
-              if (b.substr(1)==*pos) {
-                ssidblacklist.erase(pos);
-                break;
-              }
-            }
-          }
-          else {
-            // add to blacklist
-            ssidblacklist.push_back(b);
-          }
+        string s = o->stringValue();
+        WTSSidMap::iterator pos = ssids.find(s);
+        if (pos!=ssids.end()) {
+          pos->second->hidden = true;
         }
-        return Error::ok();
       }
-      else {
-        // query
-        JsonObjectPtr ans = ssidBlacklistJSON();
-        aRequest->sendResponse(ans, ErrorPtr());
-        return NULL;
+      else if (data->get("mac", o)) {
+        uint64_t mac = stringToMacAddress(o->stringValue().c_str());
+        WTMacMap::iterator pos = macs.find(mac);
+        if (pos!=macs.end()) {
+          pos->second->hidden = true;
+        }
       }
+      return Error::ok();
     }
     else {
       return inherited::processRequest(aRequest);
@@ -160,7 +152,7 @@ JsonObjectPtr WifiTrack::status()
 
 ErrorPtr WifiTrack::load()
 {
-  JsonObjectPtr data = JsonObject::objFromFile(Application::sharedApplication()->dataPath(WIFITRACK_STATE_FILE_NAME).c_str());
+  JsonObjectPtr data = JsonObject::objFromFile(Application::sharedApplication()->dataPath(WIFITRACK_STATE_FILE_NAME).c_str(), NULL, 2048*1024);
   return dataImport(data);
 }
 
@@ -182,6 +174,7 @@ JsonObjectPtr WifiTrack::dataDump()
     m->add("lastrssi", JsonObject::newInt32(mpos->second->lastRssi));
     m->add("bestrssi", JsonObject::newInt32(mpos->second->bestRssi));
     m->add("worstrssi", JsonObject::newInt32(mpos->second->worstRssi));
+    if (mpos->second->hidden) m->add("hidden", JsonObject::newBool(true));
     m->add("count", JsonObject::newInt64(mpos->second->seenCount));
     m->add("last", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(mpos->second->seenLast)));
     m->add("first", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(mpos->second->seenFirst)));
@@ -200,38 +193,17 @@ JsonObjectPtr WifiTrack::dataDump()
     s->add("count", JsonObject::newInt64(spos->second->seenCount));
     s->add("last", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(spos->second->seenLast)));
     s->add("maccount", JsonObject::newInt64(spos->second->macs.size()));
+    if (spos->second->hidden) s->add("hidden", JsonObject::newBool(true));
     sans->add(spos->first.c_str(), s);
   }
   ans->add("ssids", sans);
-  // ssid blacklist
-  ans->add("ssidblacklist", ssidBlacklistJSON());
   return ans;
-}
-
-
-JsonObjectPtr WifiTrack::ssidBlacklistJSON()
-{
-  JsonObjectPtr sbl = JsonObject::newArray();
-  for (WTSSidBlackList::iterator pos = ssidblacklist.begin(); pos!=ssidblacklist.end(); ++pos) {
-    sbl->arrayAppend(JsonObject::newString(*pos));
-  }
-  return sbl;
 }
 
 
 ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
 {
   if (!aData || !aData->isType(json_type_object)) return TextError::err("invalid state data - must be JSON object");
-  // load blacklist
-  JsonObjectPtr sbl = aData->get("ssidblacklist");
-  if (sbl) {
-    for (int i=0; i<sbl->arrayLength(); i++) {
-      JsonObjectPtr o = sbl->arrayGet(i);
-      if (o) {
-        ssidblacklist.push_back(o->stringValue());
-      }
-    }
-  }
   // insert ssids
   JsonObjectPtr sobjs = aData->get("ssids");
   if (!sobjs) return TextError::err("missing 'ssids'");
@@ -250,6 +222,8 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
       ssids[ssidstr] = s;
     }
     JsonObjectPtr o;
+    o = sobj->get("hidden");
+    if (o) s->hidden = o->boolValue();
     o = sobj->get("count");
     if (o) s->seenCount += o->int64Value();
     o = sobj->get("last");
@@ -301,6 +275,8 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
     }
     // other props
     JsonObjectPtr o;
+    o = mobj->get("hidden");
+    if (o) m->hidden = o->boolValue();
     o = mobj->get("count");
     if (o) m->seenCount += o->int64Value();
     o = mobj->get("bestrssi");
@@ -380,7 +356,7 @@ void WifiTrack::gotDumpLine(ErrorPtr aError)
     // 17:40:22.356367 1.0 Mb/s 2412 MHz 11b -75dBm signal -75dBm signal antenna 0 -109dBm signal antenna 1 BSSID:5c:49:79:6d:28:1a (oui Unknown) DA:5c:49:79:6d:28:1a (oui Unknown) SA:c8:bc:c8:be:0d:0a (oui Unknown) Probe Request (iWay_Fiber_bu725) [1.0* 2.0* 5.5* 11.0* 6.0 9.0 12.0 18.0 Mbit]
     bool decoded = false;
     int rssi = 0;
-    uint64_t mac;
+    uint64_t mac = 0;
     string ssid;
     size_t s,e;
     // - rssi (signal)
@@ -465,30 +441,17 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid)
     sep = ", ";
   }
   LOG(LOG_NOTICE, "MAC=%s (%ld), RSSI=%d,%d,%d : %s", macAddressToString(aMac->mac,':').c_str(), aMac->seenCount, aMac->worstRssi, aMac->lastRssi, aMac->bestRssi, s.c_str());
-  if (aMac->seenLast>aMac->shownLast+minShowInterval) {
+  if (!aMac->hidden && aMac->seenLast>aMac->shownLast+minShowInterval) {
     // pick SSID with the least mac links as most unique name
     long minMacs = 999999999;
     WTSSidPtr relevantSSid;
     for (WTSSidMap::iterator pos = aMac->ssids.begin(); pos!=aMac->ssids.end(); ++pos) {
-      if (pos->second->macs.size()<minMacs && !pos->first.empty()) {
-        // check for blacklist
-        string sstr = pos->second->ssid;
-        bool useit = true;
-        for (WTSSidBlackList::iterator bpos = ssidblacklist.begin(); bpos!=ssidblacklist.end(); ++bpos) {
-          string bstr = *bpos;
-          if ((bstr[0]!='*' && bstr==sstr) || sstr.find(bstr.substr(1))!=string::npos) {
-            // is blacklisted
-            useit = false;
-            break;
-          }
-        }
-        if (useit) {
-          minMacs = pos->second->seenCount;
-          relevantSSid = pos->second;
-        }
+      if (!pos->second->hidden && pos->second->macs.size()<minMacs && !pos->first.empty()) {
+        minMacs = pos->second->seenCount;
+        relevantSSid = pos->second;
       }
     }
-    LOG(LOG_DEBUG, "minMacs = %d, relevantSSid='%s'", minMacs, relevantSSid ? relevantSSid->ssid.c_str() : "<none>");
+    LOG(LOG_DEBUG, "minMacs = %ld, relevantSSid='%s'", minMacs, relevantSSid ? relevantSSid->ssid.c_str() : "<none>");
     if (relevantSSid) {
       // show it
       aMac->shownLast = aMac->seenLast;

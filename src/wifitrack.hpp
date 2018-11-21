@@ -49,6 +49,7 @@ namespace p44 {
     int bestRssi;
     int worstRssi;
     uint64_t mac;
+    bool hidden;
 
     WTSSidMap ssids;
 
@@ -65,6 +66,7 @@ namespace p44 {
     MLMicroSeconds seenLast;
     long seenCount;
     string ssid;
+    bool hidden;
 
     WTMacMap macs;
 
@@ -86,8 +88,6 @@ namespace p44 {
 
     WTMacMap macs;
     WTSSidMap ssids;
-    WTSSidBlackList ssidblacklist;
-
 
     // settings
     bool rememberWithoutSsid;
@@ -122,8 +122,6 @@ namespace p44 {
 
     JsonObjectPtr dataDump();
     ErrorPtr dataImport(JsonObjectPtr aData);
-
-    JsonObjectPtr ssidBlacklistJSON();
 
     void dumpEnded(ErrorPtr aError);
     void gotDumpLine(ErrorPtr aError);
