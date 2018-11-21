@@ -46,7 +46,10 @@ namespace p44 {
     /// @param aPositioning where to append the view relative to the previous view on the stack. Using wrapMode constants,
     ///   wrapXmax means appending in positive X direction, wrapXmin means in negative X direction, etc.
     /// @param aSpacing extra pixels between appended views
-    void pushView(ViewPtr aView, WrapMode aPositioning = noWrap, int aSpacing = 0);
+    /// @param aNeededDx if not 0, and aPositioning specifies appending, views falling out of the specified size
+    ///   on the opposide of the appended view will be removed from the stack
+    /// @param aNeededDy same as aNeededDx for Y direction
+    void pushView(ViewPtr aView, WrapMode aPositioning = noWrap, int aSpacing = 0, int aNeededDx = 0, int aNeededDy = 0);
 
     /// remove topmost view
     void popView();

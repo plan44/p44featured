@@ -54,7 +54,8 @@ WifiTrack::WifiTrack(const string aMonitorIf) :
   monitorIf(aMonitorIf),
   dumpPid(-1),
   rememberWithoutSsid(false),
-  minShowInterval(3*Minute)
+  minShowInterval(3*Minute),
+  minRssi(-70)
 {
   // check for commandline-triggered standalone operation
   if (CmdLineApp::sharedCmdLineApp()->getOption("wifitrack")) {
@@ -96,6 +97,33 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
       err = load();
       return err ? err : Error::ok();
     }
+    else if (cmd=="blacklist") {
+      if (data->get("ssid", o)) {
+        string b = o->stringValue();
+        if (!b.empty()) {
+          if (b[0]=='!') {
+            // remove from blacklist
+            for (WTSSidBlackList::iterator pos = ssidblacklist.begin(); pos!=ssidblacklist.end(); ++pos) {
+              if (b.substr(1)==*pos) {
+                ssidblacklist.erase(pos);
+                break;
+              }
+            }
+          }
+          else {
+            // add to blacklist
+            ssidblacklist.push_back(b);
+          }
+        }
+        return Error::ok();
+      }
+      else {
+        // query
+        JsonObjectPtr ans = ssidBlacklistJSON();
+        aRequest->sendResponse(ans, ErrorPtr());
+        return NULL;
+      }
+    }
     else {
       return inherited::processRequest(aRequest);
     }
@@ -108,6 +136,9 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
     if (data->get("rememberWithoutSsid", o, true)) {
       rememberWithoutSsid = o->boolValue();
     }
+    if (data->get("minRssi", o, true)) {
+      minRssi = o->int32Value();
+    }
     return err ? err : Error::ok();
   }
 }
@@ -119,6 +150,7 @@ JsonObjectPtr WifiTrack::status()
   if (answer->isType(json_type_object)) {
     answer->add("minShowInterval", JsonObject::newDouble((double)minShowInterval/MilliSecond));
     answer->add("rememberWithoutSsid", JsonObject::newBool(rememberWithoutSsid));
+    answer->add("minRssi", JsonObject::newInt32(minRssi));
   }
   return answer;
 }
@@ -171,13 +203,35 @@ JsonObjectPtr WifiTrack::dataDump()
     sans->add(spos->first.c_str(), s);
   }
   ans->add("ssids", sans);
+  // ssid blacklist
+  ans->add("ssidblacklist", ssidBlacklistJSON());
   return ans;
+}
+
+
+JsonObjectPtr WifiTrack::ssidBlacklistJSON()
+{
+  JsonObjectPtr sbl = JsonObject::newArray();
+  for (WTSSidBlackList::iterator pos = ssidblacklist.begin(); pos!=ssidblacklist.end(); ++pos) {
+    sbl->arrayAppend(JsonObject::newString(*pos));
+  }
+  return sbl;
 }
 
 
 ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
 {
   if (!aData || !aData->isType(json_type_object)) return TextError::err("invalid state data - must be JSON object");
+  // load blacklist
+  JsonObjectPtr sbl = aData->get("ssidblacklist");
+  if (sbl) {
+    for (int i=0; i<sbl->arrayLength(); i++) {
+      JsonObjectPtr o = sbl->arrayGet(i);
+      if (o) {
+        ssidblacklist.push_back(o->stringValue());
+      }
+    }
+  }
   // insert ssids
   JsonObjectPtr sobjs = aData->get("ssids");
   if (!sobjs) return TextError::err("missing 'ssids'");
@@ -301,13 +355,6 @@ void WifiTrack::initOperation()
     dumpStream = FdCommPtr(new FdComm(MainLoop::currentMainLoop()));
     dumpStream->setFd(resultFd);
     dumpStream->setReceiveHandler(boost::bind(&WifiTrack::gotDumpLine, this, _1), '\n');
-    // set up decoder
-    // 18:45:37.098313 1.0 Mb/s 2412 MHz 11b -86dBm signal -86dBm signal antenna 0 -107dBm signal antenna 1 BSSID:Broadcast DA:Broadcast SA:54:60:09:c3:ed:42 (oui Unknown) Probe Request (Atelier Teilraum) [1.0 2.0 5.5 6.0 9.0 11.0 12.0 18.0 Mbit]
-    ErrorPtr err = streamDecoder.compile(".* (-?\\d+)dBm signal antenna 0.*SA:([0123456789abcdef:]+).*Probe Request \\((.*)\\).*");
-    if (!Error::ok(err)) {
-      LOG(LOG_ERR, "Error in stream decoder Regexp: %s", err->description().c_str());
-    }
-
   }
   // ready
   setInitialized();
@@ -332,7 +379,6 @@ void WifiTrack::gotDumpLine(ErrorPtr aError)
     LOG(LOG_DEBUG, "TCPDUMP: %s", line.c_str());
     // 17:40:22.356367 1.0 Mb/s 2412 MHz 11b -75dBm signal -75dBm signal antenna 0 -109dBm signal antenna 1 BSSID:5c:49:79:6d:28:1a (oui Unknown) DA:5c:49:79:6d:28:1a (oui Unknown) SA:c8:bc:c8:be:0d:0a (oui Unknown) Probe Request (iWay_Fiber_bu725) [1.0* 2.0* 5.5* 11.0* 6.0 9.0 12.0 18.0 Mbit]
     bool decoded = false;
-    #ifndef USE_REGEXP
     int rssi = 0;
     uint64_t mac;
     string ssid;
@@ -358,14 +404,6 @@ void WifiTrack::gotDumpLine(ErrorPtr aError)
         }
       }
     }
-    #else
-    if (streamDecoder.match(line, true)) {
-      sscanf(streamDecoder.getCapture(1).c_str(), "%d", &rssi);
-      mac = stringToMacAddress(streamDecoder.getCapture(2).c_str());
-      ssid = streamDecoder.getCapture(3);
-      decoded = true;
-    }
-    #endif
     if (decoded) {
       LOG(LOG_INFO, "RSSI=%d, MAC=%s, SSID='%s'", rssi, macAddressToString(mac,':').c_str(), ssid.c_str());
       // record
@@ -433,8 +471,21 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid)
     WTSSidPtr relevantSSid;
     for (WTSSidMap::iterator pos = aMac->ssids.begin(); pos!=aMac->ssids.end(); ++pos) {
       if (pos->second->macs.size()<minMacs && !pos->first.empty()) {
-        minMacs = pos->second->seenCount;
-        relevantSSid = pos->second;
+        // check for blacklist
+        string sstr = pos->second->ssid;
+        bool useit = true;
+        for (WTSSidBlackList::iterator bpos = ssidblacklist.begin(); bpos!=ssidblacklist.end(); ++bpos) {
+          string bstr = *bpos;
+          if ((bstr[0]!='*' && bstr==sstr) || sstr.find(bstr.substr(1))!=string::npos) {
+            // is blacklisted
+            useit = false;
+            break;
+          }
+        }
+        if (useit) {
+          minMacs = pos->second->seenCount;
+          relevantSSid = pos->second;
+        }
       }
     }
     LOG(LOG_DEBUG, "minMacs = %d, relevantSSid='%s'", minMacs, relevantSSid ? relevantSSid->ssid.c_str() : "<none>");

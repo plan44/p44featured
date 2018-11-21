@@ -21,7 +21,6 @@
 #define __lethd_wifitrack_hpp__
 
 #include "feature.hpp"
-#include "regexp.hpp"
 
 #include <math.h>
 
@@ -34,6 +33,7 @@ namespace p44 {
 
   typedef std::map<uint64_t, WTMacPtr> WTMacMap;
   typedef std::map<string, WTSSidPtr> WTSSidMap;
+  typedef std::list<string> WTSSidBlackList;
 
 
   class WTMac : public P44Obj
@@ -80,17 +80,19 @@ namespace p44 {
     string monitorIf;
     int dumpPid;
     FdCommPtr dumpStream;
-    RegExp streamDecoder;
 
     MLTicket restartTicket;
     ScriptContextPtr scriptContext;
 
     WTMacMap macs;
     WTSSidMap ssids;
+    WTSSidBlackList ssidblacklist;
+
 
     // settings
     bool rememberWithoutSsid;
     MLMicroSeconds minShowInterval;
+    int minRssi;
 
   public:
 
@@ -120,6 +122,8 @@ namespace p44 {
 
     JsonObjectPtr dataDump();
     ErrorPtr dataImport(JsonObjectPtr aData);
+
+    JsonObjectPtr ssidBlacklistJSON();
 
     void dumpEnded(ErrorPtr aError);
     void gotDumpLine(ErrorPtr aError);

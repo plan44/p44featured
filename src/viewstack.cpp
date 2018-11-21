@@ -41,7 +41,7 @@ ViewStack::~ViewStack()
 }
 
 
-void ViewStack::pushView(ViewPtr aView, WrapMode aPositioning, int aSpacing)
+void ViewStack::pushView(ViewPtr aView, WrapMode aPositioning, int aSpacing, int aNeededDx, int aNeededDy)
 {
   // auto-positioning?
   if (aPositioning && !viewStack.empty()) {
