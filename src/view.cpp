@@ -34,10 +34,10 @@ View::View()
   // default to no content wrap
   contentWrapMode = noWrap;
   // default content size is same as view's
-  offsetX = 0;
-  offsetY = 0;
-  contentSizeX = 0;
-  contentSizeY = 0;
+  content.x = 0;
+  content.y = 0;
+  content.dx = 0;
+  content.dy = 0;
   backgroundColor = { .r=0, .g=0, .b=0, .a=0 }; // transparent background,
   foregroundColor = { .r=255, .g=255, .b=255, .a=255 }; // fully white foreground...
   alpha = 255; // but content pixels passed trough 1:1
@@ -56,16 +56,16 @@ View::~View()
 
 bool View::isInContentSize(int aX, int aY)
 {
-  return aX>=0 && aY>=0 && aX<contentSizeX && aY<contentSizeY;
+  return aX>=0 && aY>=0 && aX<content.dx && aY<content.dy;
 }
 
 
 void View::setFrame(int aOriginX, int aOriginY, int aSizeX, int aSizeY)
 {
-  originX = aOriginX;
-  originY = aOriginY;
-  dX = aSizeX,
-  dY = aSizeY;
+  frame.x = aOriginX;
+  frame.y = aOriginY;
+  frame.dx = aSizeX,
+  frame.dy = aSizeY;
   makeDirty();
 }
 
@@ -168,7 +168,7 @@ void View::fadeTo(int aAlpha, MLMicroSeconds aWithIn, SimpleCB aCompletedCB)
 
 void View::setFullFrameContent()
 {
-  setContentSize(dX, dY);
+  setContentSize(frame.dx, frame.dy);
   setContentOffset(0, 0);
   setOrientation(View::right);
 }
@@ -176,13 +176,13 @@ void View::setFullFrameContent()
 
 void View::sizeFrameToContent()
 {
-  int csx = contentSizeX;
-  int csy = contentSizeY;
+  int csx = content.dx;
+  int csy = content.dy;
   if (contentOrientation & xy_swap) {
     swap(csx, csy);
   }
-  dX = offsetX+csx;
-  dY = offsetY+csy;
+  frame.dx = content.x+csx;
+  frame.dy = content.y+csy;
   makeDirty();
 }
 
@@ -200,24 +200,24 @@ PixelColor View::colorAt(int aX, int aY)
   }
   else {
     // calculate coordinate relative to the content's origin
-    int x = aX-originX-offsetX;
-    int y = aY-originY-offsetY;
+    int x = aX-frame.x-content.x;
+    int y = aY-frame.y-content.y;
     // translate into content coordinates
     if (contentOrientation & xy_swap) {
       swap(x, y);
     }
     if (contentOrientation & x_flip) {
-      x = contentSizeX-x-1;
+      x = content.dx-x-1;
     }
     if (contentOrientation & y_flip) {
-      y = contentSizeY-y-1;
+      y = content.dy-y-1;
     }
     // optionally clip content
     if (contentWrapMode&clipXY && (
       ((contentWrapMode&clipXmin) && x<0) ||
-      ((contentWrapMode&clipXmax) && x>=contentSizeX) ||
+      ((contentWrapMode&clipXmax) && x>=content.dx) ||
       ((contentWrapMode&clipYmin) && y<0) ||
-      ((contentWrapMode&clipYmax) && y>=contentSizeY)
+      ((contentWrapMode&clipYmax) && y>=content.dy)
     )) {
       // clip
       pc.a = 0; // invisible
@@ -225,13 +225,13 @@ PixelColor View::colorAt(int aX, int aY)
     else {
       // not clipped
       // optionally wrap content
-      if (contentSizeX>0) {
-        while ((contentWrapMode&wrapXmin) && x<0) x+=contentSizeX;
-        while ((contentWrapMode&wrapXmax) && x>=contentSizeX) x-=contentSizeX;
+      if (content.dx>0) {
+        while ((contentWrapMode&wrapXmin) && x<0) x+=content.dx;
+        while ((contentWrapMode&wrapXmax) && x>=content.dx) x-=content.dx;
       }
-      if (contentSizeY>0) {
-        while ((contentWrapMode&wrapYmin) && y<0) y+=contentSizeY;
-        while ((contentWrapMode&wrapYmax) && y>=contentSizeY) y-=contentSizeY;
+      if (content.dy>0) {
+        while ((contentWrapMode&wrapYmin) && y<0) y+=content.dy;
+        while ((contentWrapMode&wrapYmax) && y>=content.dy) y-=content.dy;
       }
       // now get content pixel
       pc = contentColorAt(x, y);
@@ -461,16 +461,16 @@ ErrorPtr View::configureView(JsonObjectPtr aViewConfig)
     if(o->boolValue()) clear();
   }
   if (aViewConfig->get("x", o)) {
-    originX = o->int32Value(); makeDirty();
+    frame.x = o->int32Value(); makeDirty();
   }
   if (aViewConfig->get("y", o)) {
-    originY = o->int32Value(); makeDirty();
+    frame.y = o->int32Value(); makeDirty();
   }
   if (aViewConfig->get("dx", o)) {
-    dX = o->int32Value(); makeDirty();
+    frame.dx = o->int32Value(); makeDirty();
   }
   if (aViewConfig->get("dy", o)) {
-    dY = o->int32Value(); makeDirty();
+    frame.dy = o->int32Value(); makeDirty();
   }
   if (aViewConfig->get("bgcolor", o)) {
     backgroundColor = webColorToPixel(o->stringValue()); makeDirty();
@@ -488,16 +488,16 @@ ErrorPtr View::configureView(JsonObjectPtr aViewConfig)
     contentIsMask = o->boolValue();
   }
   if (aViewConfig->get("content_x", o)) {
-    offsetX = o->int32Value(); makeDirty();
+    content.x = o->int32Value(); makeDirty();
   }
   if (aViewConfig->get("content_y", o)) {
-    offsetY = o->int32Value(); makeDirty();
+    content.y = o->int32Value(); makeDirty();
   }
   if (aViewConfig->get("content_dx", o)) {
-    contentSizeX = o->int32Value(); makeDirty();
+    content.dx = o->int32Value(); makeDirty();
   }
   if (aViewConfig->get("content_dy", o)) {
-    contentSizeY = o->int32Value(); makeDirty();
+    content.dy = o->int32Value(); makeDirty();
   }
   if (aViewConfig->get("orientation", o)) {
     setOrientation(o->int32Value());

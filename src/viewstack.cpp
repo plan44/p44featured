@@ -48,17 +48,17 @@ void ViewStack::pushView(ViewPtr aView, WrapMode aPositioning, int aSpacing, int
     ViewPtr refView = viewStack.back();
     // X auto positioning
     if (aPositioning&wrapXmax) {
-      aView->originX = refView->originX+refView->dX+aSpacing;
+      aView->frame.x = refView->frame.x+refView->frame.dx+aSpacing;
     }
     else if (aPositioning&wrapXmin) {
-      aView->originX = refView->originX-aView->dX-aSpacing;
+      aView->frame.x = refView->frame.x-aView->frame.dx-aSpacing;
     }
     // Y auto positioning
     if (aPositioning&wrapYmax) {
-      aView->originY = refView->originY+refView->dY+aSpacing;
+      aView->frame.y = refView->frame.y+refView->frame.dy+aSpacing;
     }
     else if (aPositioning&wrapYmin) {
-      aView->originY = refView->originY-aView->dY-aSpacing;
+      aView->frame.y = refView->frame.y-aView->frame.dy-aSpacing;
     }
   }
   viewStack.push_back(aView);
@@ -69,13 +69,13 @@ void ViewStack::pushView(ViewPtr aView, WrapMode aPositioning, int aSpacing, int
   int maxY = INT_MIN;
   for (ViewsList::iterator pos = viewStack.begin(); pos!=viewStack.end(); ++pos) {
     ViewPtr v = *pos;
-    if (v->originX<minX) minX = v->originX;
-    if (v->originY<minY) minY = v->originY;
-    if (v->originX+v->dX>maxX) maxX = v->originX+v->dX;
-    if (v->originY+v->dY>maxY) maxY = v->originY+v->dY;
+    if (v->frame.x<minX) minX = v->frame.x;
+    if (v->frame.y<minY) minY = v->frame.y;
+    if (v->frame.x+v->frame.dx>maxX) maxX = v->frame.x+v->frame.dx;
+    if (v->frame.y+v->frame.dy>maxY) maxY = v->frame.y+v->frame.dy;
   }
-  contentSizeX = maxX-minX+aSpacing; if (contentSizeX<0) contentSizeX = 0;
-  contentSizeY = maxY-minY+aSpacing; if (contentSizeY<0) contentSizeY = 0;
+  content.dx = maxX-minX+aSpacing; if (content.dx<0) content.dx = 0;
+  content.dy = maxY-minY+aSpacing; if (content.dy<0) content.dy = 0;
   makeDirty();
 }
 

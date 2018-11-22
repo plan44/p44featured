@@ -124,21 +124,21 @@ int LifeView::cellindex(int aX, int aY, bool aWrap)
 {
   if (aX<0) {
     if (!aWrap) return (int)cells.size(); // out of range
-    aX += contentSizeX;
+    aX += content.dx;
   }
-  else if (aX>=contentSizeX) {
+  else if (aX>=content.dx) {
     if (!aWrap) return (int)cells.size(); // out of range
-    aX -= contentSizeX;
+    aX -= content.dx;
   }
   if (aY<0) {
     if (!aWrap) return (int)cells.size(); // out of range
-    aY += contentSizeY;
+    aY += content.dy;
   }
-  else if (aY>=contentSizeX) {
+  else if (aY>=content.dx) {
     if (!aWrap) return (int)cells.size(); // out of range
-    aY -= contentSizeY;
+    aY -= content.dy;
   }
-  return aY*contentSizeX+aX;
+  return aY*content.dx+aX;
 }
 
 
@@ -167,8 +167,8 @@ void LifeView::calculateGeneration()
     }
   }
   // apply rules
-  for (int x=0; x<contentSizeX; ++x) {
-    for (int y=0; y<contentSizeY; y++) {
+  for (int x=0; x<content.dx; ++x) {
+    for (int y=0; y<content.dy; y++) {
       int ci = cellindex(x, y, false);
       // calculate number of neighbours
       int nn = 0;
@@ -275,8 +275,8 @@ void LifeView::placePattern(uint16_t aPatternNo, bool aWrap, int aCenterX, int a
 {
   if (!prepareCells()) return;
   if (aPatternNo>=NUMPATTERNS) return;
-  if (aCenterX<0) aCenterX = rand() % contentSizeX;
-  if (aCenterY<0) aCenterY = rand() % contentSizeY;
+  if (aCenterX<0) aCenterX = rand() % content.dx;
+  if (aCenterY<0) aCenterY = rand() % content.dy;
   if (aOrientation<0) aOrientation = rand() % 4;
   for (int i=0; i<patterns[aPatternNo].numpix; i++) {
     int x,y;

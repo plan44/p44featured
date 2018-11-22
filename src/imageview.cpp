@@ -77,8 +77,8 @@ ErrorPtr ImageView::loadPNG(const string aPNGFileName)
     LOG(LOG_INFO, "Image width = %d", pngImage.width);
     LOG(LOG_INFO, "Image height = %d", pngImage.height);
     LOG(LOG_INFO, "Image width*height = %d", pngImage.height*pngImage.width);
-    contentSizeX = pngImage.width;
-    contentSizeY = pngImage.height;
+    content.dx = pngImage.width;
+    content.dy = pngImage.height;
     if (pngBuffer==NULL) {
       return TextError::err("Could not allocate buffer for reading PNG file %s", aPNGFileName.c_str());
     }
@@ -104,7 +104,7 @@ ErrorPtr ImageView::loadPNG(const string aPNGFileName)
 
 PixelColor ImageView::contentColorAt(int aX, int aY)
 {
-  if (aX<0 || aX>=contentSizeX || aY<0 || aY>=contentSizeY) {
+  if (aX<0 || aX>=content.dx || aY<0 || aY>=content.dy) {
     return inherited::contentColorAt(aX, aY);
   }
   else {

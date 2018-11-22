@@ -45,6 +45,12 @@ namespace p44 {
   const PixelColor transparent = { .r=0, .g=0, .b=0, .a=0 };
   const PixelColor black = { .r=0, .g=0, .b=0, .a=255 };
 
+
+  typedef struct {
+    int x,y,dx,dy;
+  } PixelRect;
+
+
   /// Utilities
   /// @{
 
@@ -166,10 +172,7 @@ namespace p44 {
   protected:
 
     // outer frame
-    int originX;
-    int originY;
-    int dX;
-    int dY;
+    PixelRect frame;
 
     // alpha (opacity)
     uint8_t alpha;
@@ -178,14 +181,11 @@ namespace p44 {
     PixelColor foregroundColor; ///< foreground color
 
     // content
-    int offsetX; ///< content X offset (in view coordinates)
-    int offsetY; ///< content Y offset (in view coordinates)
+    PixelRect content; ///< content position and size relative to frame
     Orientation contentOrientation; ///< orientation of content in view (defines content->view coordinate transformation)
-    int contentSizeX; ///< X size of content (in content coordinates)
-    int contentSizeY; ///< Y size of content (in content coordinates)
     WrapMode contentWrapMode; ///< content wrap mode
     bool contentIsMask; ///< if set, only alpha of content is used on foreground color
-    bool localTimingPriority; ///< if set, this view's timing requirements should be treaded with priority over child view's
+    bool localTimingPriority; ///< if set, this view's timing requirements should be treated with priority over child view's
     MLMicroSeconds maskChildDirtyUntil; ///< if>0, child's dirty must not be reported until this time is reached
 
     #if ENABLE_VIEWCONFIG
@@ -285,16 +285,16 @@ namespace p44 {
     void setOrientation(Orientation aOrientation) { contentOrientation = aOrientation; makeDirty(); }
 
     /// set content offset
-    void setContentOffset(int aOffsetX, int aOffsetY) { offsetX = aOffsetX; offsetY = aOffsetY; makeDirty(); };
+    void setContentOffset(int aOffsetX, int aOffsetY) { content.x = aOffsetX; content.y = aOffsetY; makeDirty(); };
 
     /// set content size
-    void setContentSize(int aSizeX, int aSizeY) { contentSizeX = aSizeX; contentSizeY = aSizeY; makeDirty(); };
+    void setContentSize(int aSizeX, int aSizeY) { content.dx = aSizeX; content.dy = aSizeY; makeDirty(); };
 
     /// @return content size X
-    int getContentSizeX() const { return contentSizeX; }
+    int getContentSizeX() const { return content.dx; }
 
     /// @return content size Y
-    int getContentSizeY() const { return contentSizeY; }
+    int getContentSizeY() const { return content.dy; }
 
 
     /// set content size to full frame content with same origin and orientation
