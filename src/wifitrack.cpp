@@ -456,7 +456,8 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid)
       // show it
       aMac->shownLast = aMac->seenLast;
       LOG(LOG_NOTICE, "*** Hello %s! ***", relevantSSid->ssid.c_str());
-      LethdApi::sharedApi()->runJsonScript("scripts/prepssid.json", boost::bind(&WifiTrack::ssidDispReady, this, relevantSSid->ssid), &scriptContext);
+//      LethdApi::sharedApi()->runJsonScript("scripts/prepssid.json", boost::bind(&WifiTrack::ssidDispReady, this, relevantSSid->ssid), &scriptContext);
+      ssidDispReady(relevantSSid->ssid);
     }
   }
 }
@@ -466,7 +467,7 @@ void WifiTrack::ssidDispReady(string aSSid)
 {
   JsonObjectPtr cmd = JsonObject::newObj();
   cmd->add("feature", JsonObject::newString("text"));
-  cmd->add("text", JsonObject::newString(aSSid));
+  cmd->add("text", JsonObject::newString(" "+aSSid));
   LethdApi::sharedApi()->executeJson(cmd);
   LethdApi::sharedApi()->runJsonScript("scripts/showssid.json", NULL, &scriptContext);
 }
