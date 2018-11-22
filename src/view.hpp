@@ -47,14 +47,27 @@ namespace p44 {
 
 
   typedef struct {
-    int x,y,dx,dy;
+    int x,y; ///< origin, can be positive or negative
+    int dx,dy; ///< size, must always be positive (assumption in all code handling rects)
   } PixelRect;
+
+  typedef struct {
+    int x,y;
+  } PixelCoord;
+
+
 
   const PixelRect zeroRect = { .x=0, .y=0, .dx=0, .dy=0 };
 
 
   /// Utilities
   /// @{
+
+  /// @return true if child rect is completely contained in parent rect
+  bool rectContainsRect(const PixelRect &aParentRect, const PixelRect &aChildRect);
+
+  /// @return true if rectangles intersect
+  bool rectIntersectsRect(const PixelRect &aRect1, const PixelRect &aRect2);
 
   /// dim down (or light up) value
   /// @param aVal 0..255 value to dim up or down
@@ -140,6 +153,9 @@ namespace p44 {
     PixelRect previousFrame;
     PixelRect previousContent;
 
+    bool sizeToContent; ///< if set, frame is automatically resized with content
+
+
     void geometryChange(bool aStart);
 
   public:
@@ -193,8 +209,8 @@ namespace p44 {
     PixelColor foregroundColor; ///< foreground color
 
     // content
-    PixelRect content; ///< content position and size relative to frame
-    Orientation contentOrientation; ///< orientation of content in view (defines content->view coordinate transformation)
+    PixelRect content; ///< content offset and size relative to frame (but in content coordinates, i.e. possibly orientation translated!)
+    Orientation contentOrientation; ///< orientation of content in frame
     WrapMode contentWrapMode; ///< content wrap mode
     bool contentIsMask; ///< if set, only alpha of content is used on foreground color
     bool localTimingPriority; ///< if set, this view's timing requirements should be treated with priority over child view's
@@ -205,15 +221,18 @@ namespace p44 {
     #endif
 
 
-    /// get content pixel color
-    /// @param aX content X coordinate
-    /// @param aY content Y coordinate
-    /// @note aX and aY are NOT guaranteed to be within actual content as defined by contentSizeX/Y
-    ///   implementation must check this!
-    virtual PixelColor contentColorAt(int aX, int aY) { return backgroundColor; }
+    /// re-orient point according to contentOrientation
+    /// @note works in both directions
+    void orientPoint(PixelCoord &aCoord);
 
-    /// helper for implementations: check if aX/aY within set content size
-    bool isInContentSize(int aX, int aY);
+    /// get content pixel color
+    /// @param aPt content coordinate
+    /// @note aPt is NOT guaranteed to be within actual content as defined by contentSize
+    ///   implementation must check this!
+    virtual PixelColor contentColorAt(PixelCoord aPt) { return backgroundColor; }
+
+    /// helper for implementations: check if aPt within set content size
+    bool isInContentSize(PixelCoord aPt);
 
     /// set dirty - to be called by step() implementation when the view needs to be redisplayed
     void makeDirty() { dirty = true; };
@@ -296,14 +315,14 @@ namespace p44 {
     /// @param aOrientation the orientation of the content
     void setOrientation(Orientation aOrientation) { contentOrientation = aOrientation; makeDirty(); }
 
-    /// set content rectangle
+    /// set content size and offset (relative to frame origin, but in content coordinates, i.e. possibly orientation translated!)
     void setContent(PixelRect aContent);
 
     /// set content size (without changing offset)
-    void setContentSize(int aSizeX, int aSizeY);
+    void setContentSize(PixelCoord aSize);
 
     /// @return content size X
-    int getContentSizeX() const { return content.dx; }
+    PixelCoord getContentSize() const { return { content.dx, content.dy }; }
 
     /// @return content size Y
     int getContentSizeY() const { return content.dy; }
@@ -319,9 +338,8 @@ namespace p44 {
     virtual void childGeometryChanged(ViewPtr aChildView, PixelRect aOldFrame, PixelRect aOldContent) {};
 
     /// get color at X,Y
-    /// @param aX PlayField X coordinate
-    /// @param aY PlayField Y coordinate
-    PixelColor colorAt(int aX, int aY);
+    /// @param aPt point to get in frame coordinates
+    PixelColor colorAt(PixelCoord aPt);
 
     /// clear contents of this view
     /// @note base class just resets content size to zero, subclasses might NOT want to do that

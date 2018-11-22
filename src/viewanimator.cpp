@@ -178,15 +178,15 @@ void ViewAnimator::updated()
 }
 
 
-PixelColor ViewAnimator::contentColorAt(int aX, int aY)
+PixelColor ViewAnimator::contentColorAt(PixelCoord aPt)
 {
-  // default is the viewstack's background color
+  // default is the animator's background color
   if (alpha==0 || !currentView) {
     return transparent; // entire viewstack is invisible
   }
   else {
     // consult current step's view
-    return currentView->colorAt(aX, aY);
+    return currentView->colorAt(aPt);
   }
 }
 

@@ -110,11 +110,10 @@ namespace p44 {
   protected:
 
     /// get content pixel color
-    /// @param aX content X coordinate
-    /// @param aY content Y coordinate
-    /// @note aX and aY are NOT guaranteed to be within actual content as defined by contentSizeX/Y
+    /// @param aPt content coordinate
+    /// @note aPt is NOT guaranteed to be within actual content as defined by contentSize
     ///   implementation must check this!
-    virtual PixelColor contentColorAt(int aX, int aY) P44_OVERRIDE;
+    virtual PixelColor contentColorAt(PixelCoord aPt) P44_OVERRIDE;
 
   private:
 

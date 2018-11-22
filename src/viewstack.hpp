@@ -33,6 +33,7 @@ namespace p44 {
     typedef std::list<ViewPtr> ViewsList;
 
     ViewsList viewStack;
+    WrapMode positioningMode; ///< mode for positioning views with pushView, purging with purgeView, and autoresizing on child changes
 
   public :
 
@@ -41,15 +42,27 @@ namespace p44 {
 
     virtual ~ViewStack();
 
+    /// set the positioning, purging and autosizing mode
+    /// @param aPositioningMode where to append or purge views. Using wrapMode constants as follows:
+    /// - for pushView: wrapXmax means appending in positive X direction, wrapXmin means in negative X direction, etc.
+    /// - for pushView, purgeView and change of child view sizes: any clip bits set means *NO* automatic change of content bounds
+    /// - for purgeViews: wrapXmax means measuring new size from max X coordinate in negative X direction,
+    ///   wrapXmin means from min X coordinate in positive X direction, etc.
+    void setPositioningMode(WrapMode aPositioningMode) { positioningMode = aPositioningMode; }
+
+    /// get the current positioning mode as set by setPositioningMode()
+    WrapMode getPositioningMode() { return positioningMode; }
+
     /// push view onto top of stack
     /// @param aView the view to push in front of all other views
-    /// @param aPositioning where to append the view relative to the previous view on the stack. Using wrapMode constants,
-    ///   wrapXmax means appending in positive X direction, wrapXmin means in negative X direction, etc.
     /// @param aSpacing extra pixels between appended views
-    /// @param aNeededDx if not 0, and aPositioning specifies appending, views falling out of the specified size
-    ///   on the opposide of the appended view will be removed from the stack
-    /// @param aNeededDy same as aNeededDx for Y direction
-    void pushView(ViewPtr aView, WrapMode aPositioning = noWrap, int aSpacing = 0, int aNeededDx = 0, int aNeededDy = 0);
+    void pushView(ViewPtr aView, int aSpacing = 0);
+
+    /// purge views that are outside the specified content size in the specified direction
+    /// @param aKeepDx keep views with frame completely or partially within this new size (measured according to positioning mode)
+    /// @param aKeepDy keep views with frame completely or partially within this new size (measured according to positioning mode)
+    /// @param aCompletely if set, keep only views which are completely within the new size
+    void purgeViews(int aKeepDx, int aKeepDy, bool aCompletely);
 
     /// remove topmost view
     void popView();
@@ -97,15 +110,15 @@ namespace p44 {
   protected:
 
     /// get content pixel color
-    /// @param aX content X coordinate
-    /// @param aY content Y coordinate
-    /// @note aX and aY are NOT guaranteed to be within actual content as defined by contentSizeX/Y
+    /// @param aPt content coordinate
+    /// @note aPt is NOT guaranteed to be within actual content as defined by contentSize
     ///   implementation must check this!
-    virtual PixelColor contentColorAt(int aX, int aY) P44_OVERRIDE;
+    virtual PixelColor contentColorAt(PixelCoord aPt) P44_OVERRIDE;
 
   private:
 
-    void recalculateContent();
+    void getEnclosingContentRect(PixelRect &aBounds);
+    void recalculateContentSize();
 
   };
   typedef boost::intrusive_ptr<ViewStack> ViewStackPtr;

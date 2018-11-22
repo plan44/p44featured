@@ -26,7 +26,10 @@ using namespace p44;
 
 // MARK: ===== View
 
-View::View()
+View::View() :
+  geometryChanging(0),
+  changedGeometry(false),
+  sizeToContent(false)
 {
   setFrame(zeroRect);
   // default to normal orientation
@@ -34,10 +37,7 @@ View::View()
   // default to no content wrap
   contentWrapMode = noWrap;
   // default content size is same as view's
-  content.x = 0;
-  content.y = 0;
-  content.dx = 0;
-  content.dy = 0;
+  setContent(zeroRect);
   backgroundColor = { .r=0, .g=0, .b=0, .a=0 }; // transparent background,
   foregroundColor = { .r=255, .g=255, .b=255, .a=255 }; // fully white foreground...
   alpha = 255; // but content pixels passed trough 1:1
@@ -45,8 +45,6 @@ View::View()
   targetAlpha = -1; // not fading
   localTimingPriority = true;
   maskChildDirtyUntil = Never;
-  geometryChanging = 0;
-  changedGeometry = false;
 }
 
 
@@ -56,9 +54,9 @@ View::~View()
 }
 
 
-bool View::isInContentSize(int aX, int aY)
+bool View::isInContentSize(PixelCoord aPt)
 {
-  return aX>=0 && aY>=0 && aX<content.dx && aY<content.dy;
+  return aPt.x>=0 && aPt.y>=0 && aPt.x<content.dx && aPt.y<content.dy;
 }
 
 
@@ -79,7 +77,9 @@ void View::geometryChange(bool aStart)
       if (geometryChanging==0) {
         if (changedGeometry) {
           makeDirty();
-          if (parentView) parentView->childGeometryChanged(this, previousFrame, previousContent);
+          if (parentView) {
+            parentView->childGeometryChanged(this, previousFrame, previousContent);
+          }
         }
       }
     }
@@ -92,6 +92,7 @@ void View::setFrame(PixelRect aFrame)
 {
   geometryChange(true);
   changedGeometry = true;
+  frame = aFrame;
   makeDirty();
   geometryChange(false);
 }
@@ -108,17 +109,19 @@ void View::setContent(PixelRect aContent)
   geometryChange(true);
   changedGeometry = true;
   content = aContent;
+  if (sizeToContent) sizeFrameToContent();
   makeDirty();
   geometryChange(false);
 };
 
 
-void View::setContentSize(int aSizeX, int aSizeY)
+void View::setContentSize(PixelCoord aSize)
 {
   geometryChange(true);
   changedGeometry = true;
-  content.dx = aSizeX;
-  content.dy = aSizeY;
+  content.dx = aSize.x;
+  content.dy = aSize.y;
+  if (sizeToContent) sizeFrameToContent();
   makeDirty();
   geometryChange(false);
 };
@@ -126,7 +129,9 @@ void View::setContentSize(int aSizeX, int aSizeY)
 
 void View::setFullFrameContent()
 {
+  PixelCoord sz = getContentSize();
   setOrientation(View::right);
+  orientPoint(sz);
   setContent({ 0, 0, frame.dx, frame.dy });
 }
 
@@ -135,13 +140,10 @@ void View::sizeFrameToContent()
 {
   geometryChange(true);
   changedGeometry = true;
-  int csx = content.dx;
-  int csy = content.dy;
-  if (contentOrientation & xy_swap) {
-    swap(csx, csy);
-  }
-  frame.dx = content.x+csx;
-  frame.dy = content.y+csy;
+  PixelCoord sz = getContentSize();
+  orientPoint(sz);
+  frame.dx = sz.x;
+  frame.dy = sz.y;
   makeDirty();
   geometryChange(false);
 }
@@ -149,7 +151,7 @@ void View::sizeFrameToContent()
 
 void View::clear()
 {
-  setContentSize(0, 0);
+  setContentSize({0, 0});
 }
 
 
@@ -245,7 +247,24 @@ void View::fadeTo(int aAlpha, MLMicroSeconds aWithIn, SimpleCB aCompletedCB)
 
 #define SHOW_ORIGIN 0
 
-PixelColor View::colorAt(int aX, int aY)
+
+void View::orientPoint(PixelCoord &aCoord)
+{
+  // translate between content and frame coordinates
+  if (contentOrientation & xy_swap) {
+    swap(aCoord.x, aCoord.y);
+  }
+  if (contentOrientation & x_flip) {
+    aCoord.x = content.dx-aCoord.x-1;
+  }
+  if (contentOrientation & y_flip) {
+    aCoord.y = content.dy-aCoord.y-1;
+  }
+}
+
+
+
+PixelColor View::colorAt(PixelCoord aPt)
 {
   // default is background color
   PixelColor pc = backgroundColor;
@@ -253,25 +272,17 @@ PixelColor View::colorAt(int aX, int aY)
     pc.a = 0; // entire view is invisible
   }
   else {
-    // calculate coordinate relative to the content's origin
-    int x = aX-frame.x-content.x;
-    int y = aY-frame.y-content.y;
+    // calculate coordinate relative to the frame's origin
+    aPt.x -= frame.x;
+    aPt.y -= frame.y;
     // translate into content coordinates
-    if (contentOrientation & xy_swap) {
-      swap(x, y);
-    }
-    if (contentOrientation & x_flip) {
-      x = content.dx-x-1;
-    }
-    if (contentOrientation & y_flip) {
-      y = content.dy-y-1;
-    }
+    orientPoint(aPt);
     // optionally clip content
     if (contentWrapMode&clipXY && (
-      ((contentWrapMode&clipXmin) && x<0) ||
-      ((contentWrapMode&clipXmax) && x>=content.dx) ||
-      ((contentWrapMode&clipYmin) && y<0) ||
-      ((contentWrapMode&clipYmax) && y>=content.dy)
+      ((contentWrapMode&clipXmin) && aPt.x<0) ||
+      ((contentWrapMode&clipXmax) && aPt.x>=content.dx) ||
+      ((contentWrapMode&clipYmin) && aPt.y<0) ||
+      ((contentWrapMode&clipYmax) && aPt.y>=content.dy)
     )) {
       // clip
       pc.a = 0; // invisible
@@ -280,15 +291,15 @@ PixelColor View::colorAt(int aX, int aY)
       // not clipped
       // optionally wrap content
       if (content.dx>0) {
-        while ((contentWrapMode&wrapXmin) && x<0) x+=content.dx;
-        while ((contentWrapMode&wrapXmax) && x>=content.dx) x-=content.dx;
+        while ((contentWrapMode&wrapXmin) && aPt.x<0) aPt.x+=content.dx;
+        while ((contentWrapMode&wrapXmax) && aPt.x>=content.dx) aPt.x-=content.dx;
       }
       if (content.dy>0) {
-        while ((contentWrapMode&wrapYmin) && y<0) y+=content.dy;
-        while ((contentWrapMode&wrapYmax) && y>=content.dy) y-=content.dy;
+        while ((contentWrapMode&wrapYmin) && aPt.y<0) aPt.y+=content.dy;
+        while ((contentWrapMode&wrapYmax) && aPt.y>=content.dy) aPt.y-=content.dy;
       }
-      // now get content pixel
-      pc = contentColorAt(x, y);
+      // now get content pixel (possibly shifted by content origin)
+      pc = contentColorAt({aPt.x+content.x, aPt.y+content.y});
       if (contentIsMask) {
         // use only alpha of content, color comes from foregroundColor
         pc.r = foregroundColor.r;
@@ -296,13 +307,13 @@ PixelColor View::colorAt(int aX, int aY)
         pc.b = foregroundColor.b;
       }
       #if SHOW_ORIGIN
-      if (x==0 && y==0) {
+      if (aPt.x==0 && aPt.y==0) {
         return { .r=255, .g=0, .b=0, .a=255 };
       }
-      else if (x==1 && y==0) {
+      else if (aPt.x==1 && aPt.y==0) {
         return { .r=0, .g=255, .b=0, .a=255 };
       }
-      else if (x==0 && y==1) {
+      else if (aPt.x==0 && aPt.y==1) {
         return { .r=0, .g=0, .b=255, .a=255 };
       }
       #endif
@@ -323,6 +334,26 @@ PixelColor View::colorAt(int aX, int aY)
 
 
 // MARK: ===== Utilities
+
+bool p44::rectContainsRect(const PixelRect &aParentRect, const PixelRect &aChildRect)
+{
+  return
+    aChildRect.x>=aParentRect.x &&
+    aChildRect.x+aChildRect.dx<=aParentRect.x+aParentRect.dx &&
+    aChildRect.y>=aParentRect.y &&
+    aChildRect.y+aChildRect.dy<=aParentRect.y+aParentRect.dy;
+}
+
+bool p44::rectIntersectsRect(const PixelRect &aRect1, const PixelRect &aRect2)
+{
+  return
+    aRect1.x+aRect1.dx>aRect2.x &&
+    aRect1.x<aRect2.x+aRect2.dx &&
+    aRect1.y+aRect1.dy>aRect2.y &&
+    aRect1.y<aRect2.y+aRect2.dy;
+}
+
+
 
 uint8_t p44::dimVal(uint8_t aVal, uint16_t aDim)
 {
@@ -569,10 +600,13 @@ ErrorPtr View::configureView(JsonObjectPtr aViewConfig)
     if(o->boolValue()) setFullFrameContent();
   }
   if (aViewConfig->get("sizetocontent", o)) {
-    if(o->boolValue()) sizeFrameToContent();
+    sizeToContent = o->boolValue();
   }
   if (aViewConfig->get("timingpriority", o)) {
     localTimingPriority = o->boolValue();
+  }
+  if (changedGeometry && sizeToContent) {
+    sizeFrameToContent();
   }
   geometryChange(false);
   return ErrorPtr();

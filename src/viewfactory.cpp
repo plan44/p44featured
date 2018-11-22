@@ -57,6 +57,9 @@ ErrorPtr p44::createViewFromConfig(JsonObjectPtr aViewConfig, ViewPtr &aNewView,
     else if (vt=="life") {
       aNewView = ViewPtr(new LifeView);
     }
+    else if (vt=="plain") {
+      aNewView = ViewPtr(new View);
+    }
     else {
       return TextError::err("unknown view type '%s'", vt.c_str());
     }

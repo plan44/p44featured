@@ -118,7 +118,7 @@ MLMicroSeconds DispPanel::updateDisplay()
           // update LED chain content buffer
           for (int x=borderRight; x<cols-borderLeft; x++) {
             for (int y=0; y<rows; y++) {
-              PixelColor p = dispView->colorAt(x-borderRight, y);
+              PixelColor p = dispView->colorAt({ x-borderRight, y });
               PixelColor dp = dimmedPixel(p, p.a);
               chain->setColorXY(x, y, dp.r, dp.g, dp.b);
             }
@@ -174,7 +174,7 @@ void DispPanel::setText(const string aText)
       // current offset might be smaller than panel's offsetX right now. This must be
       // adjusted BEFORE content size changes
       double ox = dispView->getOffsetX();
-      double cx = contents->getContentSizeX();
+      double cx = contents->getContentSize().x;
       while (cx>0 && ox<offsetX) ox += cx;
       dispView->setOffsetX(ox);
     }
@@ -194,7 +194,7 @@ ErrorPtr DispPanel::installScene(JsonObjectPtr aSceneConfig)
       // current offset might be smaller than panel's offsetX right now. This must be
       // adjusted BEFORE content size changes
       double ox = dispView->getOffsetX();
-      double cx = contents->getContentSizeX();
+      double cx = contents->getContentSize().x;
       while (cx>0 && ox<offsetX) ox += cx;
       dispView->setOffsetX(ox);
       contents.reset();

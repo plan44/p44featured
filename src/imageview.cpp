@@ -102,15 +102,15 @@ ErrorPtr ImageView::loadPNG(const string aPNGFileName)
 }
 
 
-PixelColor ImageView::contentColorAt(int aX, int aY)
+PixelColor ImageView::contentColorAt(PixelCoord aPt)
 {
-  if (aX<0 || aX>=content.dx || aY<0 || aY>=content.dy) {
-    return inherited::contentColorAt(aX, aY);
+  if (aPt.x<0 || aPt.x>=content.dx || aPt.y<0 || aPt.y>=content.dy) {
+    return inherited::contentColorAt(aPt);
   }
   else {
     PixelColor pc;
     // get pixel infomration from image buffer
-    uint8_t *pix = pngBuffer+((pngImage.height-1-aY)*pngImage.width+aX)*4;
+    uint8_t *pix = pngBuffer+((pngImage.height-1-aPt.y)*pngImage.width+aPt.x)*4;
     pc.r = *pix++;
     pc.g = *pix++;
     pc.b = *pix++;

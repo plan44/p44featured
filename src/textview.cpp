@@ -848,24 +848,24 @@ void TextView::renderText()
     }
   }
   // set content size
-  setContentSize((int)textPixelCols.size(), rowsPerGlyph);
+  setContentSize({(int)textPixelCols.size(), rowsPerGlyph});
   makeDirty();
 }
 
 
-PixelColor TextView::contentColorAt(int aX, int aY)
+PixelColor TextView::contentColorAt(PixelCoord aPt)
 {
-  if (isInContentSize(aX, aY)) {
-    uint8_t col = textPixelCols[aX];
-    if (col & (1<<(rowsPerGlyph-1-aY))) {
+  if (isInContentSize(aPt)) {
+    uint8_t col = textPixelCols[aPt.x];
+    if (col & (1<<(rowsPerGlyph-1-aPt.y))) {
       return foregroundColor;
     }
     else {
-      return inherited::contentColorAt(aX, aY);;
+      return inherited::contentColorAt(aPt);;
     }
   }
   else {
-    return inherited::contentColorAt(aX, aY);
+    return inherited::contentColorAt(aPt);
   }
 }
 
@@ -876,16 +876,17 @@ PixelColor TextView::contentColorAt(int aX, int aY)
 
 ErrorPtr TextView::configureView(JsonObjectPtr aViewConfig)
 {
-  // text properties (size...) must be known before configuring base view
-  JsonObjectPtr o;
-  if (aViewConfig->get("text", o)) {
-    setText(o->stringValue());
+  ErrorPtr err = inherited::configureView(aViewConfig);
+  if (Error::isOK(err)) {
+    JsonObjectPtr o;
+    if (aViewConfig->get("text", o)) {
+      setText(o->stringValue());
+    }
+    if (aViewConfig->get("spacing", o)) {
+      setTextSpacing(o->int32Value());
+    }
   }
-  if (aViewConfig->get("spacing", o)) {
-    setTextSpacing(o->int32Value());
-  }
-  // now let base view configure itself
-  return inherited::configureView(aViewConfig);
+  return err;
 }
 
 #endif // ENABLE_VIEWCONFIG

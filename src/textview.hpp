@@ -66,8 +66,8 @@ namespace p44 {
 
   protected:
 
-    /// get content color at X,Y
-    virtual PixelColor contentColorAt(int aX, int aY) P44_OVERRIDE;
+    /// get content color at aPt
+    virtual PixelColor contentColorAt(PixelCoord aPt) P44_OVERRIDE;
 
   private:
 

@@ -85,15 +85,16 @@ MLMicroSeconds ViewScroller::step(MLMicroSeconds aPriorityUntil)
         // Note: might need multiple rounds after scrolled view's content size has changed to get back in range
         if (scrolledView) {
           WrapMode wm = scrolledView->getWrapMode();
+          PixelCoord svcsz = scrolledView->getContentSize();
           if (wm&wrapX) {
-            long csx_milli = scrolledView->getContentSizeX()*1000;
+            long csx_milli = svcsz.x*1000;
             while ((wm&wrapXmax) && scrollOffsetX_milli>=csx_milli && csx_milli>0)
               scrollOffsetX_milli-=csx_milli;
             while ((wm&wrapXmin) && scrollOffsetX_milli<0 && csx_milli>0)
               scrollOffsetX_milli+=csx_milli;
           }
           if (wm&wrapY) {
-            long csy_milli = scrolledView->getContentSizeY()*1000;
+            long csy_milli = svcsz.y*1000;
             while ((wm&wrapYmax) && scrollOffsetY_milli>=csy_milli && csy_milli>0)
               scrollOffsetY_milli-=csy_milli;
             while ((wm&wrapYmin) && scrollOffsetY_milli<0 && csy_milli>0)
@@ -142,7 +143,7 @@ void ViewScroller::updated()
 }
 
 
-PixelColor ViewScroller::contentColorAt(int aX, int aY)
+PixelColor ViewScroller::contentColorAt(PixelCoord aPt)
 {
   if (!scrolledView) return transparent;
   // Note: implementation aims to be efficient at integer scroll offsets in either or both directions
@@ -154,24 +155,24 @@ PixelColor ViewScroller::contentColorAt(int aX, int aY)
   if (outsideWeightX<0) { outsideWeightX *= -1; subSampleOffsetX = -1; }
   int outsideWeightY = (int)((scrollOffsetY_milli-(long)sampleOffsetY*1000)*255/1000);
   if (outsideWeightY<0) { outsideWeightY *= -1; subSampleOffsetY = -1; }
-  sampleOffsetX += aX;
-  sampleOffsetY += aY;
-  PixelColor samp = scrolledView->colorAt(sampleOffsetX, sampleOffsetY);
+  sampleOffsetX += aPt.x;
+  sampleOffsetY += aPt.y;
+  PixelColor samp = scrolledView->colorAt({sampleOffsetX, sampleOffsetY});
   if (outsideWeightX!=0) {
     // X Subsampling (and possibly also Y, checked below)
-    mixinPixel(samp, scrolledView->colorAt(sampleOffsetX+subSampleOffsetX, sampleOffsetY), outsideWeightX);
+    mixinPixel(samp, scrolledView->colorAt({sampleOffsetX+subSampleOffsetX, sampleOffsetY}), outsideWeightX);
     // check if ALSO parts from other pixels in Y direction needed
     if (outsideWeightY!=0) {
       // subsample the Y side neigbours
-      PixelColor neighbourY = scrolledView->colorAt(sampleOffsetX, sampleOffsetY+subSampleOffsetY);
-      mixinPixel(neighbourY, scrolledView->colorAt(sampleOffsetX+subSampleOffsetX, sampleOffsetY+subSampleOffsetY), outsideWeightX);
+      PixelColor neighbourY = scrolledView->colorAt({sampleOffsetX, sampleOffsetY+subSampleOffsetY});
+      mixinPixel(neighbourY, scrolledView->colorAt({sampleOffsetX+subSampleOffsetX, sampleOffsetY+subSampleOffsetY}), outsideWeightX);
       // combine with Y main
       mixinPixel(samp, neighbourY, outsideWeightY);
     }
   }
   else if (outsideWeightY!=0) {
     // only Y subsampling
-    mixinPixel(samp, scrolledView->colorAt(sampleOffsetX, sampleOffsetY+subSampleOffsetY), outsideWeightY);
+    mixinPixel(samp, scrolledView->colorAt({sampleOffsetX, sampleOffsetY+subSampleOffsetY}), outsideWeightY);
   }
   return samp;
 }

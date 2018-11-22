@@ -33,6 +33,7 @@ using namespace p44;
 
 ViewStack::ViewStack()
 {
+  positioningMode = noWrap;
 }
 
 
@@ -41,46 +42,103 @@ ViewStack::~ViewStack()
 }
 
 
-void ViewStack::pushView(ViewPtr aView, WrapMode aPositioning, int aSpacing, int aNeededDx, int aNeededDy)
+void ViewStack::pushView(ViewPtr aView, int aSpacing)
 {
+  geometryChange(true);
+  // clip bits set means we don't want the content rect to get recalculated
+  bool adjust = (positioningMode&clipXY)==0;
   // auto-positioning?
-  int gutterX = 0;
-  int gutterY = 0;
-  if (aPositioning && !viewStack.empty()) {
-    ViewPtr refView = viewStack.back();
+  if (positioningMode & wrapXY) {
+    // wrap bits determine in which direction to position the view relative to those already present
+    // - wrapXmin = to the left, wrapXmax = to the right etc.
+    PixelRect r;
+    getEnclosingContentRect(r);
     // X auto positioning
-    if (aPositioning&wrapXmax) {
-      aView->frame.x = refView->frame.x+refView->frame.dx+aSpacing;
-      gutterX = aSpacing;
+    if (positioningMode&wrapXmax) {
+      aView->frame.x = r.x+r.dx+aSpacing;
     }
-    else if (aPositioning&wrapXmin) {
-      aView->frame.x = refView->frame.x-aView->frame.dx-aSpacing;
-      gutterX = aSpacing;
+    else if (positioningMode&wrapXmin) {
+      aView->frame.x = r.x-aView->frame.dx-aSpacing;
     }
     // Y auto positioning
-    if (aPositioning&wrapYmax) {
-      aView->frame.y = refView->frame.y+refView->frame.dy+aSpacing;
-      gutterY = aSpacing;
+    if (positioningMode&wrapYmax) {
+      aView->frame.y = r.y+r.dy+aSpacing;
     }
-    else if (aPositioning&wrapYmin) {
-      aView->frame.y = refView->frame.y-aView->frame.dy-aSpacing;
-      gutterY = aSpacing;
+    else if (positioningMode&wrapYmin) {
+      aView->frame.y = r.y-aView->frame.dy-aSpacing;
     }
   }
   viewStack.push_back(aView);
+  if (adjust) {
+    recalculateContentSize();
+  }
   aView->setParent(this);
-  geometryChange(true);
-  recalculateContent();
-  content.dx += gutterX;
-  content.dy += gutterY;
   makeDirty();
   geometryChange(false);
 }
 
 
-void ViewStack::recalculateContent()
+void ViewStack::purgeViews(int aKeepDx, int aKeepDy, bool aCompletely)
 {
-  // recalculate my own content size
+  if ((positioningMode&wrapXY)==0) return; // NOP
+  // calculate content bounds where to keep views
+  PixelRect r;
+  getEnclosingContentRect(r);
+  if (positioningMode&wrapXmax) {
+    r.x = r.x+r.dx-aKeepDx;
+    r.dx = aKeepDx;
+  }
+  else if (positioningMode&wrapXmin) {
+    r.dx = aKeepDx;
+  }
+  if (positioningMode&wrapYmax) {
+    r.y = r.y+r.dy-aKeepDy;
+    r.dy = aKeepDy;
+  }
+  else if (positioningMode&wrapYmin) {
+    r.dy = aKeepDy;
+  }
+  // now purge views
+  ViewsList::iterator pos = viewStack.begin();
+  while (pos!=viewStack.end()) {
+    ViewPtr v = *pos;
+    if (
+      !rectIntersectsRect(r, v->frame) ||
+      (aCompletely && !rectContainsRect(r, v->frame))
+    ) {
+      // remove this view
+      pos = viewStack.erase(pos);
+    }
+    else {
+      // test next
+      ++pos;
+    }
+  }
+  if ((positioningMode&clipXY)==0) {
+    recalculateContentSize();
+  }
+}
+
+
+void ViewStack::recalculateContentSize()
+{
+  geometryChange(true);
+  PixelRect r;
+  getEnclosingContentRect(r);
+  setContentSize({r.dx, r.dy});
+  geometryChange(false);
+}
+
+
+
+void ViewStack::getEnclosingContentRect(PixelRect &aBounds)
+{
+  // get enclosing rect of all layers
+  if (viewStack.empty()) {
+    // no content, just a point at the origin
+    aBounds = zeroRect;
+    return;
+  }
   int minX = INT_MAX;
   int maxX = INT_MIN;
   int minY = INT_MAX;
@@ -92,17 +150,16 @@ void ViewStack::recalculateContent()
     if (v->frame.x+v->frame.dx>maxX) maxX = v->frame.x+v->frame.dx;
     if (v->frame.y+v->frame.dy>maxY) maxY = v->frame.y+v->frame.dy;
   }
-  geometryChange(true);
-  content.dx = maxX-minX; if (content.dx<0) content.dx = 0;
-  content.dy = maxY-minY; if (content.dy<0) content.dy = 0;
-  geometryChange(false);
+  aBounds.x = minX;
+  aBounds.y = minY;
+  aBounds.dx = maxX-minX; if (aBounds.dx<0) aBounds.dx = 0;
+  aBounds.dy = maxY-minY; if (aBounds.dy<0) aBounds.dy = 0;
 }
 
 
 void ViewStack::popView()
 {
   viewStack.pop_back();
-  recalculateContent();
   makeDirty();
 }
 
@@ -113,7 +170,6 @@ void ViewStack::removeView(ViewPtr aView)
     if ((*pos)==aView) {
       viewStack.erase(pos);
       makeDirty();
-      recalculateContent();
       break;
     }
   }
@@ -159,7 +215,19 @@ void ViewStack::updated()
 }
 
 
-PixelColor ViewStack::contentColorAt(int aX, int aY)
+
+void ViewStack::childGeometryChanged(ViewPtr aChildView, PixelRect aOldFrame, PixelRect aOldContent)
+{
+  if ((positioningMode&clipXY)==0) {
+    // current content bounds should not clip -> auto-adjust
+    recalculateContentSize();
+    sizeFrameToContent();
+  }
+}
+
+
+
+PixelColor ViewStack::contentColorAt(PixelCoord aPt)
 {
   // default is the viewstack's background color
   if (alpha==0) {
@@ -173,7 +241,7 @@ PixelColor ViewStack::contentColorAt(int aX, int aY)
     for (ViewsList::reverse_iterator pos = viewStack.rbegin(); pos!=viewStack.rend(); ++pos) {
       ViewPtr layer = *pos;
       if (layer->alpha==0) continue; // shortcut: skip fully transparent layers
-      lc = layer->colorAt(aX, aY);
+      lc = layer->colorAt(aPt);
       if (lc.a==0) continue; // skip layer with fully transparent pixel
       // not-fully-transparent pixel
       // - scale down to current budget left
@@ -207,6 +275,9 @@ ErrorPtr ViewStack::configureView(JsonObjectPtr aViewConfig)
   ErrorPtr err = inherited::configureView(aViewConfig);
   if (Error::isOK(err)) {
     JsonObjectPtr o;
+    if (aViewConfig->get("positioningmode", o)) {
+      setPositioningMode((WrapMode)o->int32Value());
+    }
     if (aViewConfig->get("layers", o)) {
       for (int i=0; i<o->arrayLength(); ++i) {
         JsonObjectPtr l = o->arrayGet(i);
@@ -215,15 +286,15 @@ ErrorPtr ViewStack::configureView(JsonObjectPtr aViewConfig)
         if (l->get("view", o2)) {
           err = p44::createViewFromConfig(o2, layerView, this);
           if (Error::isOK(err)) {
-            WrapMode pos = noWrap;
             int spacing = 0;
             if (l->get("positioning", o2)) {
-              pos = (WrapMode)o2->int32Value();
-              if (l->get("spacing", o2)) {
-                spacing = o2->int32Value();
-              }
+              LOG(LOG_WARNING, "Warning: legacy 'positioning' in stack subview -> use stack-global 'positioningmode' instead");
+              setPositioningMode((WrapMode)o2->int32Value());
             }
-            pushView(layerView, pos, spacing);
+            if (l->get("spacing", o2)) {
+              spacing = o2->int32Value();
+            }
+            pushView(layerView, spacing);
           }
         }
       }

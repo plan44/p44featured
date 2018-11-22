@@ -51,7 +51,8 @@ void LifeView::clear()
 
 bool LifeView::prepareCells()
 {
-  int numCells = getContentSizeX()*getContentSizeY();
+  PixelCoord csz = getContentSize();
+  int numCells = csz.x*csz.y;
   if (numCells<=0) return false;
   if (numCells!=cells.size()) {
     cells.clear();
@@ -294,11 +295,11 @@ void LifeView::placePattern(uint16_t aPatternNo, bool aWrap, int aCenterX, int a
 
 
 
-PixelColor LifeView::contentColorAt(int aX, int aY)
+PixelColor LifeView::contentColorAt(PixelCoord aPt)
 {
   PixelColor pix = transparent;
   // simplest colorisation: from yellow (young) to red
-  int ci = cellindex(aX, aY, false);
+  int ci = cellindex(aPt.x, aPt.y, false);
   if (ci>=cells.size()) return pix; // out of range
   pix = backgroundColor;
   int age = cells[ci];
