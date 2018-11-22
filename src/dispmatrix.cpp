@@ -49,7 +49,7 @@ DispPanel::DispPanel(const string aChainName, int aOffsetX, int aRows, int aCols
   chain->begin();
   // the scroller
   dispView = ViewScrollerPtr(new ViewScroller);
-  dispView->setFrame(0, 0, cols-borderLeft-borderRight, rows);
+  dispView->setFrame({ 0, 0, cols-borderLeft-borderRight, rows });
   dispView->setFullFrameContent();
   dispView->setOrientation(orientation);
   dispView->setBackgroundColor(black); // not transparent!
@@ -166,7 +166,7 @@ void DispPanel::setText(const string aText)
   if (dispView) {
     if (!contents) {
       // no content yet, create text as default
-      p44::createViewFromConfig(JsonObject::objFromText(DEFAULT_CONTENTS_CFG), contents);
+      p44::createViewFromConfig(JsonObject::objFromText(DEFAULT_CONTENTS_CFG), contents, dispView);
       dispView->setScrolledView(contents);
     }
     if (contents) {
@@ -201,7 +201,7 @@ ErrorPtr DispPanel::installScene(JsonObjectPtr aSceneConfig)
       dispView->setScrolledView(contents);
     }
     // get new contents view hierarchy
-    err = p44::createViewFromConfig(aSceneConfig, contents);
+    err = p44::createViewFromConfig(aSceneConfig, contents, dispView);
     if (!Error::isOK(err))
       return err;
     dispView->setScrolledView(contents);

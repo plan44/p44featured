@@ -212,7 +212,7 @@ ErrorPtr ViewScroller::configureView(JsonObjectPtr aViewConfig)
     JsonObjectPtr o;
     // view
     if (aViewConfig->get("scrolledview", o)) {
-      err = p44::createViewFromConfig(o, scrolledView);
+      err = p44::createViewFromConfig(o, scrolledView, this);
       makeDirty();
     }
     // offsets

@@ -74,6 +74,10 @@ namespace p44 {
     /// call when display is updated
     virtual void updated() P44_OVERRIDE;
 
+    /// child view has changed geometry (frame, content rect)
+    virtual void childGeometryChanged(ViewPtr aChildView, PixelRect aOldFrame, PixelRect aOldContent) P44_OVERRIDE;
+
+
     #if ENABLE_VIEWCONFIG
 
     /// configure view from JSON
@@ -98,6 +102,10 @@ namespace p44 {
     /// @note aX and aY are NOT guaranteed to be within actual content as defined by contentSizeX/Y
     ///   implementation must check this!
     virtual PixelColor contentColorAt(int aX, int aY) P44_OVERRIDE;
+
+  private:
+
+    void recalculateContent();
 
   };
   typedef boost::intrusive_ptr<ViewStack> ViewStackPtr;

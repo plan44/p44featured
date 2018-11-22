@@ -50,6 +50,8 @@ namespace p44 {
     int x,y,dx,dy;
   } PixelRect;
 
+  const PixelRect zeroRect = { .x=0, .y=0, .dx=0, .dy=0 };
+
 
   /// Utilities
   /// @{
@@ -133,6 +135,13 @@ namespace p44 {
     MLMicroSeconds fadeTime; ///< how long fading takes
     SimpleCB fadeCompleteCB; ///< fade complete
 
+    int geometryChanging;
+    bool changedGeometry;
+    PixelRect previousFrame;
+    PixelRect previousContent;
+
+    void geometryChange(bool aStart);
+
   public:
 
     // Orientation
@@ -170,6 +179,9 @@ namespace p44 {
 
 
   protected:
+
+    // parent view
+    ViewPtr parentView;
 
     // outer frame
     PixelRect frame;
@@ -226,11 +238,11 @@ namespace p44 {
     virtual ~View();
 
     /// set the frame within the parent coordinate system
-    /// @param aOriginX origin X on pixelboard
-    /// @param aOriginY origin Y on pixelboard
-    /// @param aSizeX the X width of the view
-    /// @param aSizeY the Y width of the view
-    virtual void setFrame(int aOriginX, int aOriginY, int aSizeX, int aSizeY);
+    /// @param aFrame the new frame for the view
+    virtual void setFrame(PixelRect aFrame);
+
+    /// @param aParentView parent view or NULL if none
+    void setParent(ViewPtr aParentView);
 
     /// set the view's background color
     /// @param aBackgroundColor color of pixels not covered by content
@@ -284,11 +296,11 @@ namespace p44 {
     /// @param aOrientation the orientation of the content
     void setOrientation(Orientation aOrientation) { contentOrientation = aOrientation; makeDirty(); }
 
-    /// set content offset
-    void setContentOffset(int aOffsetX, int aOffsetY) { content.x = aOffsetX; content.y = aOffsetY; makeDirty(); };
+    /// set content rectangle
+    void setContent(PixelRect aContent);
 
-    /// set content size
-    void setContentSize(int aSizeX, int aSizeY) { content.dx = aSizeX; content.dy = aSizeY; makeDirty(); };
+    /// set content size (without changing offset)
+    void setContentSize(int aSizeX, int aSizeY);
 
     /// @return content size X
     int getContentSizeX() const { return content.dx; }
@@ -302,6 +314,9 @@ namespace p44 {
 
     /// set frame size to contain all content
     void sizeFrameToContent();
+
+    /// child view has changed geometry (frame, content rect)
+    virtual void childGeometryChanged(ViewPtr aChildView, PixelRect aOldFrame, PixelRect aOldContent) {};
 
     /// get color at X,Y
     /// @param aX PlayField X coordinate

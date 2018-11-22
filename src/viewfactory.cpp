@@ -34,7 +34,7 @@ using namespace p44;
 
 // MARK: ===== View factory function
 
-ErrorPtr p44::createViewFromConfig(JsonObjectPtr aViewConfig, ViewPtr &aNewView)
+ErrorPtr p44::createViewFromConfig(JsonObjectPtr aViewConfig, ViewPtr &aNewView, ViewPtr aParentView)
 {
   JsonObjectPtr o;
   if (aViewConfig->get("type", o)) {
@@ -64,6 +64,7 @@ ErrorPtr p44::createViewFromConfig(JsonObjectPtr aViewConfig, ViewPtr &aNewView)
   else {
     return TextError::err("missing 'type'");
   }
+  aNewView->setParent(aParentView);
   // now let view configure itself
   return aNewView->configureView(aViewConfig);
 }

@@ -44,24 +44,42 @@ ViewStack::~ViewStack()
 void ViewStack::pushView(ViewPtr aView, WrapMode aPositioning, int aSpacing, int aNeededDx, int aNeededDy)
 {
   // auto-positioning?
+  int gutterX = 0;
+  int gutterY = 0;
   if (aPositioning && !viewStack.empty()) {
     ViewPtr refView = viewStack.back();
     // X auto positioning
     if (aPositioning&wrapXmax) {
       aView->frame.x = refView->frame.x+refView->frame.dx+aSpacing;
+      gutterX = aSpacing;
     }
     else if (aPositioning&wrapXmin) {
       aView->frame.x = refView->frame.x-aView->frame.dx-aSpacing;
+      gutterX = aSpacing;
     }
     // Y auto positioning
     if (aPositioning&wrapYmax) {
       aView->frame.y = refView->frame.y+refView->frame.dy+aSpacing;
+      gutterY = aSpacing;
     }
     else if (aPositioning&wrapYmin) {
       aView->frame.y = refView->frame.y-aView->frame.dy-aSpacing;
+      gutterY = aSpacing;
     }
   }
   viewStack.push_back(aView);
+  aView->setParent(this);
+  geometryChange(true);
+  recalculateContent();
+  content.dx += gutterX;
+  content.dy += gutterY;
+  makeDirty();
+  geometryChange(false);
+}
+
+
+void ViewStack::recalculateContent()
+{
   // recalculate my own content size
   int minX = INT_MAX;
   int maxX = INT_MIN;
@@ -74,15 +92,17 @@ void ViewStack::pushView(ViewPtr aView, WrapMode aPositioning, int aSpacing, int
     if (v->frame.x+v->frame.dx>maxX) maxX = v->frame.x+v->frame.dx;
     if (v->frame.y+v->frame.dy>maxY) maxY = v->frame.y+v->frame.dy;
   }
-  content.dx = maxX-minX+aSpacing; if (content.dx<0) content.dx = 0;
-  content.dy = maxY-minY+aSpacing; if (content.dy<0) content.dy = 0;
-  makeDirty();
+  geometryChange(true);
+  content.dx = maxX-minX; if (content.dx<0) content.dx = 0;
+  content.dy = maxY-minY; if (content.dy<0) content.dy = 0;
+  geometryChange(false);
 }
 
 
 void ViewStack::popView()
 {
   viewStack.pop_back();
+  recalculateContent();
   makeDirty();
 }
 
@@ -92,6 +112,8 @@ void ViewStack::removeView(ViewPtr aView)
   for (ViewsList::iterator pos = viewStack.begin(); pos!=viewStack.end(); ++pos) {
     if ((*pos)==aView) {
       viewStack.erase(pos);
+      makeDirty();
+      recalculateContent();
       break;
     }
   }
@@ -100,8 +122,10 @@ void ViewStack::removeView(ViewPtr aView)
 
 void ViewStack::clear()
 {
+  geometryChange(true);
   viewStack.clear();
   inherited::clear();
+  geometryChange(false);
 }
 
 
@@ -189,7 +213,7 @@ ErrorPtr ViewStack::configureView(JsonObjectPtr aViewConfig)
         JsonObjectPtr o2;
         ViewPtr layerView;
         if (l->get("view", o2)) {
-          err = p44::createViewFromConfig(o2, layerView);
+          err = p44::createViewFromConfig(o2, layerView, this);
           if (Error::isOK(err)) {
             WrapMode pos = noWrap;
             int spacing = 0;

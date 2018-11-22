@@ -30,7 +30,7 @@
 
 namespace p44 {
 
-  ErrorPtr createViewFromConfig(JsonObjectPtr aViewConfig, ViewPtr &aNewView);
+  ErrorPtr createViewFromConfig(JsonObjectPtr aViewConfig, ViewPtr &aNewView, ViewPtr aParentView);
 
 } // namespace p44
 

@@ -209,7 +209,7 @@ ErrorPtr ViewAnimator::configureView(JsonObjectPtr aViewConfig)
         MLMicroSeconds fadeInTime = 0;
         MLMicroSeconds fadeOutTime = 0;
         if (s->get("view", o2)) {
-          err = p44::createViewFromConfig(o2, stepView);
+          err = p44::createViewFromConfig(o2, stepView, this);
           if (Error::isOK(err)) {
             if (s->get("showtime", o2)) {
               showTime = o2->int32Value()*MilliSecond;

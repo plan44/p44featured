@@ -28,7 +28,7 @@ using namespace p44;
 
 View::View()
 {
-  setFrame(0, 0, 0, 0);
+  setFrame(zeroRect);
   // default to normal orientation
   contentOrientation = right;
   // default to no content wrap
@@ -45,6 +45,8 @@ View::View()
   targetAlpha = -1; // not fading
   localTimingPriority = true;
   maskChildDirtyUntil = Never;
+  geometryChanging = 0;
+  changedGeometry = false;
 }
 
 
@@ -60,13 +62,88 @@ bool View::isInContentSize(int aX, int aY)
 }
 
 
-void View::setFrame(int aOriginX, int aOriginY, int aSizeX, int aSizeY)
+void View::geometryChange(bool aStart)
 {
-  frame.x = aOriginX;
-  frame.y = aOriginY;
-  frame.dx = aSizeX,
-  frame.dy = aSizeY;
+  if (aStart){
+    if (geometryChanging<=0) {
+      // start tracking changes
+      changedGeometry = false;
+      previousFrame = frame;
+      previousContent = content;
+    }
+    geometryChanging++;
+  }
+  else {
+    if (geometryChanging>0) {
+      geometryChanging--;
+      if (geometryChanging==0) {
+        if (changedGeometry) {
+          makeDirty();
+          if (parentView) parentView->childGeometryChanged(this, previousFrame, previousContent);
+        }
+      }
+    }
+  }
+}
+
+
+
+void View::setFrame(PixelRect aFrame)
+{
+  geometryChange(true);
+  changedGeometry = true;
   makeDirty();
+  geometryChange(false);
+}
+
+
+void View::setParent(ViewPtr aParentView)
+{
+  parentView = aParentView;
+}
+
+
+void View::setContent(PixelRect aContent)
+{
+  geometryChange(true);
+  changedGeometry = true;
+  content = aContent;
+  makeDirty();
+  geometryChange(false);
+};
+
+
+void View::setContentSize(int aSizeX, int aSizeY)
+{
+  geometryChange(true);
+  changedGeometry = true;
+  content.dx = aSizeX;
+  content.dy = aSizeY;
+  makeDirty();
+  geometryChange(false);
+};
+
+
+void View::setFullFrameContent()
+{
+  setOrientation(View::right);
+  setContent({ 0, 0, frame.dx, frame.dy });
+}
+
+
+void View::sizeFrameToContent()
+{
+  geometryChange(true);
+  changedGeometry = true;
+  int csx = content.dx;
+  int csy = content.dy;
+  if (contentOrientation & xy_swap) {
+    swap(csx, csy);
+  }
+  frame.dx = content.x+csx;
+  frame.dy = content.y+csy;
+  makeDirty();
+  geometryChange(false);
 }
 
 
@@ -164,29 +241,6 @@ void View::fadeTo(int aAlpha, MLMicroSeconds aWithIn, SimpleCB aCompletedCB)
     fadeCompleteCB = aCompletedCB;
   }
 }
-
-
-void View::setFullFrameContent()
-{
-  setContentSize(frame.dx, frame.dy);
-  setContentOffset(0, 0);
-  setOrientation(View::right);
-}
-
-
-void View::sizeFrameToContent()
-{
-  int csx = content.dx;
-  int csy = content.dy;
-  if (contentOrientation & xy_swap) {
-    swap(csx, csy);
-  }
-  frame.dx = content.x+csx;
-  frame.dy = content.y+csy;
-  makeDirty();
-}
-
-
 
 
 #define SHOW_ORIGIN 0
@@ -454,6 +508,7 @@ string p44::pixelToWebColor(const PixelColor aPixelColor)
 ErrorPtr View::configureView(JsonObjectPtr aViewConfig)
 {
   JsonObjectPtr o;
+  geometryChange(true);
   if (aViewConfig->get("label", o)) {
     label = o->stringValue();
   }
@@ -462,15 +517,19 @@ ErrorPtr View::configureView(JsonObjectPtr aViewConfig)
   }
   if (aViewConfig->get("x", o)) {
     frame.x = o->int32Value(); makeDirty();
+    changedGeometry = true;
   }
   if (aViewConfig->get("y", o)) {
     frame.y = o->int32Value(); makeDirty();
+    changedGeometry = true;
   }
   if (aViewConfig->get("dx", o)) {
     frame.dx = o->int32Value(); makeDirty();
+    changedGeometry = true;
   }
   if (aViewConfig->get("dy", o)) {
     frame.dy = o->int32Value(); makeDirty();
+    changedGeometry = true;
   }
   if (aViewConfig->get("bgcolor", o)) {
     backgroundColor = webColorToPixel(o->stringValue()); makeDirty();
@@ -489,15 +548,19 @@ ErrorPtr View::configureView(JsonObjectPtr aViewConfig)
   }
   if (aViewConfig->get("content_x", o)) {
     content.x = o->int32Value(); makeDirty();
+    changedGeometry = true;
   }
   if (aViewConfig->get("content_y", o)) {
     content.y = o->int32Value(); makeDirty();
+    changedGeometry = true;
   }
   if (aViewConfig->get("content_dx", o)) {
     content.dx = o->int32Value(); makeDirty();
+    changedGeometry = true;
   }
   if (aViewConfig->get("content_dy", o)) {
     content.dy = o->int32Value(); makeDirty();
+    changedGeometry = true;
   }
   if (aViewConfig->get("orientation", o)) {
     setOrientation(o->int32Value());
@@ -511,6 +574,7 @@ ErrorPtr View::configureView(JsonObjectPtr aViewConfig)
   if (aViewConfig->get("timingpriority", o)) {
     localTimingPriority = o->boolValue();
   }
+  geometryChange(false);
   return ErrorPtr();
 }
 
