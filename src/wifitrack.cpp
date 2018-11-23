@@ -142,6 +142,9 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
         uint64_t mac = stringToMacAddress(o->stringValue().c_str());
         WTMacMap::iterator pos = macs.find(mac);
         if (pos!=macs.end()) {
+          if (data->get("withperson", o)) {
+            if (pos->second->person && o->boolValue()) pos->second->person->hidden = true; // hide associated person
+          }
           pos->second->hidden = true;
         }
       }
@@ -387,6 +390,7 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
         WTMacMap::iterator mpos = macs.find(mac);
         if (mpos!=macs.end()) {
           p->macs.insert(mpos->second);
+          mpos->second->person = p;
         }
       }
       // other props
@@ -633,6 +637,11 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
           }
         }
         if (commonSsids<minCommonSsidCount) continue; // not a candidate
+        LOG(LOG_INFO, "- This MAC %s has %d SSIDs in common with %s -> link to same person",
+          macAddressToString(aMac->mac,':').c_str(),
+          commonSsids,
+          macAddressToString((*mpos)->mac,':').c_str()
+        );
         relatedMacs.insert(*mpos); // is a candidate
         if (commonSsids>maxCommonSsids) {
           mostCommonMac = *mpos; // this is the mac with most common ssids
@@ -672,9 +681,18 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
     if (person->bestRssi<person->lastRssi) person->bestRssi = person->lastRssi;
     if (person->worstRssi>person->lastRssi) person->worstRssi = person->lastRssi;
     if (person->seenFirst==Never) person->seenFirst = person->seenLast;
-    LOG(LOG_INFO, "*** Recognized person: '%s', color=%s, imageindex=%d", person->name.c_str(), pixelToWebColor(person->color).c_str(), person->imageIndex);
+    LOG(LOG_INFO, "*** Recognized person%s, name='%s', color=%s, imgidx=%d, linked macs=%lu, via ssid='%s', mac=%s%s",
+      person->hidden ? " (hidden)" : "",
+      person->name.c_str(),
+      pixelToWebColor(person->color).c_str(),
+      person->imageIndex,
+      person->macs.size(),
+      aSSid->ssid.c_str(),
+      macAddressToString(aMac->mac,':').c_str(),
+      aMac->hidden ? " (hidden)" : ""
+    );
     // show person?
-    if (!person->hidden && person->seenLast>person->shownLast+minShowInterval) {
+    if (!aMac->hidden && !person->hidden && person->seenLast>person->shownLast+minShowInterval) {
       // determine name
       string nameToShow = person->name;
       if (nameToShow.empty()) {
