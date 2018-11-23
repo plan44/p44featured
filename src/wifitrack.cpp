@@ -17,6 +17,14 @@
 //  along with lethd/hermeld. If not, see <http://www.gnu.org/licenses/>.
 //
 
+// File scope debugging options
+// - Set ALWAYS_DEBUG to 1 to enable DBGLOG output even in non-DEBUG builds of this file
+#define ALWAYS_DEBUG 0
+// - set FOCUSLOGLEVEL to non-zero log level (usually, 5,6, or 7==LOG_DEBUG) to get focus (extensive logging) for this file
+//   Note: must be before including "logger.hpp" (or anything that includes "logger.hpp")
+#define FOCUSLOGLEVEL 6
+
+
 #include "wifitrack.hpp"
 #include "application.hpp"
 
@@ -513,7 +521,7 @@ void WifiTrack::gotDumpLine(ErrorPtr aError)
             ssid = line.substr(s, e-s);
             // - check min rssi
             if (rssi<minRssi) {
-              LOG(LOG_INFO, "Too weak: RSSI=%d<%d, MAC=%s, SSID='%s'", rssi, minRssi, macAddressToString(mac,':').c_str(), ssid.c_str());
+              FOCUSLOG("Too weak: RSSI=%d<%d, MAC=%s, SSID='%s'", rssi, minRssi, macAddressToString(mac,':').c_str(), ssid.c_str());
             }
             else {
               decoded = true;
@@ -548,7 +556,7 @@ void WifiTrack::gotDumpLine(ErrorPtr aError)
       }
       else {
         // process probe request
-        LOG(LOG_INFO, "RSSI=%d, MAC=%s, SSID='%s'", rssi, macAddressToString(mac,':').c_str(), ssid.c_str());
+        FOCUSLOG("RSSI=%d, MAC=%s, SSID='%s'", rssi, macAddressToString(mac,':').c_str(), ssid.c_str());
         s->seenLast = now;
         s->seenCount++;
         // - MAC
@@ -589,8 +597,9 @@ void WifiTrack::gotDumpLine(ErrorPtr aError)
 
 void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidForMac)
 {
+  WTPersonPtr person = aMac->person; // default to already existing, if any
   // log
-  if (LOGENABLED(LOG_INFO)) {
+  if (FOCUSLOGENABLED) {
     string s;
     const char* sep = "";
     for (WTSSidSet::iterator pos = aMac->ssids.begin(); pos!=aMac->ssids.end(); ++pos) {
@@ -599,13 +608,12 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
       string_format_append(s, "%s%s (%ld)", sep, sstr.c_str(), (*pos)->seenCount);
       sep = ", ";
     }
-    LOG(LOG_NOTICE, "Sigthed: MAC=%s (%ld), RSSI=%d,%d,%d : %s", macAddressToString(aMac->mac,':').c_str(), aMac->seenCount, aMac->worstRssi, aMac->lastRssi, aMac->bestRssi, s.c_str());
+    FOCUSLOG("Sighted%s: MAC=%s (%ld), RSSI=%d,%d,%d : %s", person ? " and already has person" : "", macAddressToString(aMac->mac,':').c_str(), aMac->seenCount, aMac->worstRssi, aMac->lastRssi, aMac->bestRssi, s.c_str());
   }
   // process
-  WTPersonPtr person = aMac->person; // default to already existing, if any
   if (aNewSSidForMac && aSSid->macs.size()<tooCommonMacCount) {
     // a new SSID for this Mac, not too commonly used
-    LOG(LOG_NOTICE, "- not too common (only %lu macs)", aSSid->macs.size());
+    FOCUSLOG("- not too common (only %lu macs)", aSSid->macs.size());
     WTMacSet relatedMacs;
     WTMacPtr mostCommonMac;
     WTPersonPtr mostProbablePerson;
@@ -664,6 +672,7 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
     if (person->bestRssi<person->lastRssi) person->bestRssi = person->lastRssi;
     if (person->worstRssi>person->lastRssi) person->worstRssi = person->lastRssi;
     if (person->seenFirst==Never) person->seenFirst = person->seenLast;
+    LOG(LOG_INFO, "*** Recognized person: '%s', color=%s, imageindex=%d", person->name.c_str(), pixelToWebColor(person->color).c_str(), person->imageIndex);
     // show person?
     if (!person->hidden && person->seenLast>person->shownLast+minShowInterval) {
       // determine name
@@ -687,7 +696,7 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
       string msg = string_format("P%d_%s - %s", person->imageIndex, pixelToWebColor(person->color).c_str(), nameToShow.c_str());
       // show message
       person->shownLast = person->seenLast;
-      LOG(LOG_NOTICE, "*** Hello %s! ***", msg.c_str());
+      LOG(LOG_NOTICE, "*** Display person: %s", msg.c_str());
       JsonObjectPtr cmd = JsonObject::newObj();
       cmd->add("feature", JsonObject::newString("text"));
       cmd->add("text", JsonObject::newString(" "+msg));

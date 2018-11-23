@@ -17,6 +17,13 @@
 //  along with lethd/hermeld. If not, see <http://www.gnu.org/licenses/>.
 //
 
+// File scope debugging options
+// - Set ALWAYS_DEBUG to 1 to enable DBGLOG output even in non-DEBUG builds of this file
+#define ALWAYS_DEBUG 0
+// - set FOCUSLOGLEVEL to non-zero log level (usually, 5,6, or 7==LOG_DEBUG) to get focus (extensive logging) for this file
+//   Note: must be before including "logger.hpp" (or anything that includes "logger.hpp")
+#define FOCUSLOGLEVEL 7
+
 #include "mixloop.hpp"
 #include "application.hpp"
 
@@ -247,7 +254,7 @@ void MixLoop::accelInit()
     }
   }
   // retry later again
-  LOG(LOG_INFO, "waiting for accelerometer to get ready, reg 0x2D=0x%02x", b);
+  FOCUSLOG("waiting for accelerometer to get ready, reg 0x2D=0x%02x", b);
   measureTicket.executeOnce(boost::bind(&MixLoop::accelInit, this), 1*Second);
 }
 
@@ -272,7 +279,7 @@ void MixLoop::accelMeasure()
   }
   MLMicroSeconds now = MainLoop::now();
   if (changed) {
-    LOG(LOG_INFO, "[%06lldmS] X = %5hd, Y = %5hd, Z = %5hd, raw changeAmount = %.0f", (accelStart!=Never ? now-accelStart : 0)/MilliSecond, accel[0], accel[1], accel[2], changeamount);
+    FOCUSLOG("[%06lldmS] X = %5hd, Y = %5hd, Z = %5hd, raw changeAmount = %.0f", (accelStart!=Never ? now-accelStart : 0)/MilliSecond, accel[0], accel[1], accel[2], changeamount);
   }
   // process
   changeamount -= accelChangeCutoff;
@@ -306,7 +313,7 @@ void MixLoop::accelMeasure()
   if (accelIntegral<0) accelIntegral = 0;
   if (accelIntegral>maxIntegral) accelIntegral = maxIntegral;
   if (accelIntegral>0) {
-    LOG(LOG_INFO, "     changeAmount = %.0f, integral = %.0f", changeamount, accelIntegral);
+    FOCUSLOG("     changeAmount = %.0f, integral = %.0f", changeamount, accelIntegral);
   }
   // possibly trigger hit detector
   if (!hitDetectorActive) {
