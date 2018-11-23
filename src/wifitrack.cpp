@@ -79,7 +79,7 @@ WifiTrack::WifiTrack(const string aMonitorIf) :
   minRssi(-70),
   tooCommonMacCount(20),
   minCommonSsidCount(3),
-  numPersonImages(4),
+  numPersonImages(24),
   personImagePrefix("pers_")
 {
   // check for commandline-triggered standalone operation
@@ -160,6 +160,12 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
     if (data->get("minCommonSsidCount", o, true)) {
       minCommonSsidCount = o->int32Value();
     }
+    if (data->get("numPersonImages", o, true)) {
+      numPersonImages = o->int32Value();
+    }
+    if (data->get("personImagePrefix", o, true)) {
+      personImagePrefix = o->stringValue();
+    }
     return err ? err : Error::ok();
   }
 }
@@ -174,6 +180,8 @@ JsonObjectPtr WifiTrack::status()
     answer->add("minRssi", JsonObject::newInt32(minRssi));
     answer->add("tooCommonMacCount", JsonObject::newInt32(tooCommonMacCount));
     answer->add("minCommonSsidCount", JsonObject::newInt32(minCommonSsidCount));
+    answer->add("numPersonImages", JsonObject::newInt32(numPersonImages));
+    answer->add("personImagePrefix", JsonObject::newString(personImagePrefix));
   }
   return answer;
 }
