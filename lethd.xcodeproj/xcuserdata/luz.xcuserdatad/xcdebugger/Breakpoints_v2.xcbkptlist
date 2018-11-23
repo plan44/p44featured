@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/view.cpp"
-            timestampString = "564083020.13911"
+            timestampString = "564690297.606967"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "346"
-            endingLineNumber = "346"
+            startingLineNumber = "431"
+            endingLineNumber = "431"
             landmarkName = "p44::mixinPixel(PixelColor &amp;aMainPixel, PixelColor aOutsidePixel, uint8_t aAmountOutside)"
             landmarkType = "7">
          </BreakpointContent>
@@ -27,7 +27,7 @@
             condition = "n&lt;0"
             continueAfterRunningActions = "No"
             filePath = "src/viewanimator.cpp"
-            timestampString = "557912469.626681"
+            timestampString = "564690297.607393"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "73"
@@ -43,44 +43,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/viewscroller.cpp"
-            timestampString = "558556900.025954"
+            timestampString = "564690297.607438"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "61"
             endingLineNumber = "61"
             landmarkName = "ViewScroller::step(MLMicroSeconds aPriorityUntil)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "src/viewstack.cpp"
-            timestampString = "557919343.421593"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "110"
-            endingLineNumber = "110"
-            landmarkName = "ViewStack::step(MLMicroSeconds aPriorityUntil)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "src/wifitrack.cpp"
-            timestampString = "564314515.509388"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "306"
-            endingLineNumber = "306"
-            landmarkName = "WifiTrack::initOperation()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

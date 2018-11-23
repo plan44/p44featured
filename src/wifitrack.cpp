@@ -24,16 +24,6 @@ using namespace p44;
 
 
 
-// MARK: ===== WTSSid
-
-WTSSid::WTSSid() :
-  seenLast(Never),
-  seenCount(0),
-  hidden(false)
-{
-}
-
-
 // MARK: ===== WTMac
 
 WTMac::WTMac() :
@@ -43,10 +33,39 @@ WTMac::WTMac() :
   lastRssi(-9999),
   bestRssi(-9999),
   worstRssi(9999),
-  shownLast(Never),
   hidden(false)
 {
 }
+
+
+// MARK: ===== WTSSid
+
+WTSSid::WTSSid() :
+  seenLast(Never),
+  seenCount(0),
+  hidden(false),
+  beaconSeenLast(Never),
+  beaconRssi(-9999)
+{
+}
+
+
+// MARK: ===== WTPerson
+
+WTPerson::WTPerson() :
+  seenLast(Never),
+  seenFirst(Never),
+  seenCount(0),
+  lastRssi(-9999),
+  bestRssi(-9999),
+  worstRssi(9999),
+  shownLast(Never),
+  color(white),
+  imageIndex(0),
+  hidden(false)
+{
+}
+
 
 
 // MARK: ===== WifiTrack
@@ -57,7 +76,11 @@ WifiTrack::WifiTrack(const string aMonitorIf) :
   dumpPid(-1),
   rememberWithoutSsid(false),
   minShowInterval(3*Minute),
-  minRssi(-70)
+  minRssi(-70),
+  tooCommonMacCount(20),
+  minCommonSsidCount(3),
+  numPersonImages(4),
+  personImagePrefix("pers_")
 {
   // check for commandline-triggered standalone operation
   if (CmdLineApp::sharedCmdLineApp()->getOption("wifitrack")) {
@@ -131,6 +154,12 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
     if (data->get("minRssi", o, true)) {
       minRssi = o->int32Value();
     }
+    if (data->get("tooCommonMacCount", o, true)) {
+      tooCommonMacCount = o->int32Value();
+    }
+    if (data->get("minCommonSsidCount", o, true)) {
+      minCommonSsidCount = o->int32Value();
+    }
     return err ? err : Error::ok();
   }
 }
@@ -143,6 +172,8 @@ JsonObjectPtr WifiTrack::status()
     answer->add("minShowInterval", JsonObject::newDouble((double)minShowInterval/MilliSecond));
     answer->add("rememberWithoutSsid", JsonObject::newBool(rememberWithoutSsid));
     answer->add("minRssi", JsonObject::newInt32(minRssi));
+    answer->add("tooCommonMacCount", JsonObject::newInt32(tooCommonMacCount));
+    answer->add("minCommonSsidCount", JsonObject::newInt32(minCommonSsidCount));
   }
   return answer;
 }
@@ -167,6 +198,28 @@ ErrorPtr WifiTrack::save()
 JsonObjectPtr WifiTrack::dataDump()
 {
   JsonObjectPtr ans = JsonObject::newObj();
+  // persons
+  JsonObjectPtr pans = JsonObject::newArray();
+  for (WTPersonSet::iterator ppos = persons.begin(); ppos!=persons.end(); ++ppos) {
+    JsonObjectPtr p = JsonObject::newObj();
+    p->add("lastrssi", JsonObject::newInt32((*ppos)->lastRssi));
+    p->add("bestrssi", JsonObject::newInt32((*ppos)->bestRssi));
+    p->add("worstrssi", JsonObject::newInt32((*ppos)->worstRssi));
+    if ((*ppos)->hidden) p->add("hidden", JsonObject::newBool(true));
+    p->add("count", JsonObject::newInt64((*ppos)->seenCount));
+    p->add("last", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime((*ppos)->seenLast)));
+    p->add("first", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime((*ppos)->seenFirst)));
+    p->add("color", JsonObject::newString(pixelToWebColor((*ppos)->color)));
+    p->add("imgidx", JsonObject::newInt64((*ppos)->imageIndex));
+    p->add("name", JsonObject::newString((*ppos)->name));
+    JsonObjectPtr marr = JsonObject::newArray();
+    for (WTMacSet::iterator mpos = (*ppos)->macs.begin(); mpos!=(*ppos)->macs.end(); ++mpos) {
+      marr->arrayAppend(JsonObject::newString(macAddressToString((*mpos)->mac, ':').c_str()));
+    }
+    p->add("macs", marr);
+    pans->arrayAppend(p);
+  }
+  ans->add("persons", pans);
   // macs
   JsonObjectPtr mans = JsonObject::newObj();
   for (WTMacMap::iterator mpos = macs.begin(); mpos!=macs.end(); ++mpos) {
@@ -179,8 +232,8 @@ JsonObjectPtr WifiTrack::dataDump()
     m->add("last", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(mpos->second->seenLast)));
     m->add("first", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(mpos->second->seenFirst)));
     JsonObjectPtr sarr = JsonObject::newArray();
-    for (WTSSidMap::iterator spos = mpos->second->ssids.begin(); spos!=mpos->second->ssids.end(); ++spos) {
-      sarr->arrayAppend(JsonObject::newString(spos->second->ssid));
+    for (WTSSidSet::iterator spos = mpos->second->ssids.begin(); spos!=mpos->second->ssids.end(); ++spos) {
+      sarr->arrayAppend(JsonObject::newString((*spos)->ssid));
     }
     m->add("ssids", sarr);
     mans->add(macAddressToString(mpos->first, ':').c_str(), m);
@@ -194,6 +247,10 @@ JsonObjectPtr WifiTrack::dataDump()
     s->add("last", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(spos->second->seenLast)));
     s->add("maccount", JsonObject::newInt64(spos->second->macs.size()));
     if (spos->second->hidden) s->add("hidden", JsonObject::newBool(true));
+    if (spos->second->beaconSeenLast!=Never) {
+      s->add("lastbeacon", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(spos->second->beaconSeenLast)));
+      s->add("beaconrssi", JsonObject::newInt32(spos->second->beaconRssi));
+    }
     sans->add(spos->first.c_str(), s);
   }
   ans->add("ssids", sans);
@@ -267,8 +324,8 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
         s->ssid = ssidstr;
         ssids[ssidstr] = s;
       }
-      m->ssids[ssidstr] = s;
-      s->macs[mac] = m;
+      m->ssids.insert(s);
+      s->macs.insert(m);
     }
     if (insertMac) {
       macs[mac] = m;
@@ -300,6 +357,57 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
     if (o) l = MainLoop::unixTimeToMainLoopTime(o->int64Value());
     if (l!=Never && m->seenFirst!=Never && l<m->seenFirst) m->seenFirst = l;
   }
+  JsonObjectPtr pobjs = aData->get("persons");
+  if (pobjs) {
+    for (int pidx=0; pidx<pobjs->arrayLength(); pidx++) {
+      JsonObjectPtr pobj = pobjs->arrayGet(pidx);
+      WTPersonPtr p = WTPersonPtr(new WTPerson);
+      persons.insert(p);
+      // links to macs
+      JsonObjectPtr marr = pobj->get("macs");
+      for (int i=0; i<marr->arrayLength(); ++i) {
+        string macstr = marr->arrayGet(i)->stringValue();
+        uint64_t mac = stringToMacAddress(macstr.c_str());
+        WTMacMap::iterator mpos = macs.find(mac);
+        if (mpos!=macs.end()) {
+          p->macs.insert(mpos->second);
+        }
+      }
+      // other props
+      JsonObjectPtr o;
+      o = pobj->get("name");
+      if (o) p->name = o->stringValue();
+      o = pobj->get("color");
+      if (o) p->color = webColorToPixel(o->stringValue());
+      o = pobj->get("imgidx");
+      if (o) p->imageIndex = o->int32Value();
+      o = pobj->get("hidden");
+      if (o) p->hidden = o->boolValue();
+      o = pobj->get("count");
+      if (o) p->seenCount += o->int64Value();
+      o = pobj->get("bestrssi");
+      int r = -9999;
+      if (o) r = o->int32Value();
+      if (r>p->bestRssi) p->bestRssi = r;
+      o = pobj->get("worstrssi");
+      r = 9999;
+      if (o) r = o->int32Value();
+      if (r<p->worstRssi) p->worstRssi = r;
+      o = pobj->get("last");
+      MLMicroSeconds l = Never;
+      if (o) l = MainLoop::unixTimeToMainLoopTime(o->int64Value());
+      if (l>p->seenLast) {
+        p->seenLast = l;
+        o = pobj->get("lastrssi");
+        if (o) p->lastRssi = o->int32Value();
+      }
+      o = pobj->get("first");
+      l = Never;
+      if (o) l = MainLoop::unixTimeToMainLoopTime(o->int64Value());
+      if (l!=Never && p->seenFirst!=Never && l<p->seenFirst) p->seenFirst = l;
+
+    }
+  }
   return ErrorPtr();
 }
 
@@ -308,6 +416,7 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
 
 // MARK: ==== wifitrack operation
 
+#define SCAN_APS 1
 
 void WifiTrack::initOperation()
 {
@@ -318,12 +427,15 @@ void WifiTrack::initOperation()
   if (!Error::isOK(err)) {
     LOG(LOG_ERR, "could not load state: %s", Error::text(err).c_str());
   }
-#ifdef __APPLE__
-  #warning "hardcoded access to mixloop hermel"
-//  string cmd = "ssh -p 22 root@hermel-40a36bc18907.local. \"tcpdump -e -i moni0 -s 2000 type mgt subtype probe-req\"";
-  string cmd = "ssh -p 22 root@1a8479bcaf76.cust.devices.plan44.ch \"tcpdump -e -i moni0 -s 2000 type mgt subtype probe-req\"";
-#else
+  #if SCAN_APS
+  string cmd = string_format("tcpdump -e -i %s -s 2000 type mgt subtype probe-req or subtype beacon", monitorIf.c_str());
+  #else
   string cmd = string_format("tcpdump -e -i %s -s 2000 type mgt subtype probe-req", monitorIf.c_str());
+  #endif
+#ifdef __APPLE__
+#warning "hardcoded access to mixloop hermel"
+  //cmd = "ssh -p 22 root@hermel-40a36bc18907.local. \"tcpdump -e -i moni0 -s 2000 type mgt subtype probe-req\"";
+  cmd = "ssh -p 22 root@1a8479bcaf76.cust.devices.plan44.ch \"" + cmd + "\"";
 #endif
   int resultFd = -1;
   dumpPid = MainLoop::currentMainLoop().fork_and_system(boost::bind(&WifiTrack::dumpEnded, this, _1), cmd.c_str(), true, &resultFd);
@@ -355,6 +467,7 @@ void WifiTrack::gotDumpLine(ErrorPtr aError)
     LOG(LOG_DEBUG, "TCPDUMP: %s", line.c_str());
     // 17:40:22.356367 1.0 Mb/s 2412 MHz 11b -75dBm signal -75dBm signal antenna 0 -109dBm signal antenna 1 BSSID:5c:49:79:6d:28:1a (oui Unknown) DA:5c:49:79:6d:28:1a (oui Unknown) SA:c8:bc:c8:be:0d:0a (oui Unknown) Probe Request (iWay_Fiber_bu725) [1.0* 2.0* 5.5* 11.0* 6.0 9.0 12.0 18.0 Mbit]
     bool decoded = false;
+    bool beacon = false;
     int rssi = 0;
     uint64_t mac = 0;
     string ssid;
@@ -366,25 +479,46 @@ void WifiTrack::gotDumpLine(ErrorPtr aError)
       if (s!=string::npos) {
         sscanf(line.c_str()+s+1, "%d", &rssi);
       }
-      // - sender MAC (source address)
-      s = line.find("SA:");
+      #if SCAN_APS
+      s = line.find("Beacon (", s);
       if (s!=string::npos) {
-        mac = stringToMacAddress(line.c_str()+s+3);
-        // - SSID name
-        s = line.find("Probe Request (", s);
+        // Is a beacon, get SSID
+        s += 8;
+        e = line.find(") ", s);
+        ssid = line.substr(s, e-s);
+        decoded = true;
+        beacon = true;
+      }
+      else
+      #endif
+      {
+        // must be Probe Request
+        // - sender MAC (source address)
+        s = line.find("SA:");
         if (s!=string::npos) {
-          s += 15;
-          e = line.find(") ", s);
-          ssid = line.substr(s, e-s);
-          decoded = true;
+          mac = stringToMacAddress(line.c_str()+s+3);
+          // - name of SSID probed
+          s = line.find("Probe Request (", s);
+          if (s!=string::npos) {
+            s += 15;
+            e = line.find(") ", s);
+            ssid = line.substr(s, e-s);
+            // - check min rssi
+            if (rssi<minRssi) {
+              LOG(LOG_INFO, "Too weak: RSSI=%d<%d, MAC=%s, SSID='%s'", rssi, minRssi, macAddressToString(mac,':').c_str(), ssid.c_str());
+            }
+            else {
+              decoded = true;
+            }
+          }
         }
       }
     }
     if (decoded) {
-      LOG(LOG_INFO, "RSSI=%d, MAC=%s, SSID='%s'", rssi, macAddressToString(mac,':').c_str(), ssid.c_str());
       // record
       MLMicroSeconds now = MainLoop::now();
       // - SSID
+      bool newSSidForMac = false;
       WTSSidPtr s;
       WTSSidMap::iterator ssidPos = ssids.find(ssid);
       if (ssidPos!=ssids.end()) {
@@ -396,80 +530,161 @@ void WifiTrack::gotDumpLine(ErrorPtr aError)
         s->ssid = ssid;
         ssids[ssid] = s;
       }
-      s->seenLast = now;
-      s->seenCount++;
-      // - MAC
-      WTMacPtr m;
-      WTMacMap::iterator macPos = macs.find(mac);
-      if (macPos!=macs.end()) {
-        m = macPos->second;
+      if (beacon) {
+        // just record beacon sighting
+        if (s->beaconSeenLast==Never) {
+          LOG(LOG_INFO, "New Beacon found: RSSI=%d, SSID='%s'", rssi, ssid.c_str());
+        }
+        s->beaconSeenLast = now;
+        s->beaconRssi = rssi;
       }
       else {
-        // unknown, create
-        if (!s->ssid.empty() || rememberWithoutSsid) {
-          m = WTMacPtr(new WTMac);
-          m->mac = mac;
-          macs[mac] = m;
+        // process probe request
+        LOG(LOG_INFO, "RSSI=%d, MAC=%s, SSID='%s'", rssi, macAddressToString(mac,':').c_str(), ssid.c_str());
+        s->seenLast = now;
+        s->seenCount++;
+        // - MAC
+        WTMacPtr m;
+        WTMacMap::iterator macPos = macs.find(mac);
+        if (macPos!=macs.end()) {
+          m = macPos->second;
+        }
+        else {
+          // unknown, create
+          if (!s->ssid.empty() || rememberWithoutSsid) {
+            m = WTMacPtr(new WTMac);
+            m->mac = mac;
+            macs[mac] = m;
+          }
+        }
+        if (m) {
+          m->seenCount++;
+          m->seenLast = now;
+          if (m->seenFirst==Never) m->seenFirst = now;
+          m->lastRssi = rssi;
+          if (rssi>m->bestRssi) m->bestRssi = rssi;
+          if (rssi<m->worstRssi) m->worstRssi = rssi;
+          // - connection
+          if (m->ssids.find(s)==m->ssids.end()) {
+            newSSidForMac = true;
+            m->ssids.insert(s);
+          }
+          s->macs.insert(m);
+          // process sighting
+          processSighting(m, s, newSSidForMac);
         }
       }
-      if (m) {
-        m->seenCount++;
-        m->seenLast = now;
-        if (m->seenFirst==Never) m->seenFirst = now;
-        m->lastRssi = rssi;
-        if (rssi>m->bestRssi) m->bestRssi = rssi;
-        if (rssi<m->worstRssi) m->worstRssi = rssi;
-        // - connection
-        m->ssids[ssid] = s;
-        s->macs[mac] = m;
-        // process sighting
-        processSighting(m, s);
+    }
+  }
+}
+
+
+void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidForMac)
+{
+  // log
+  if (LOGENABLED(LOG_INFO)) {
+    string s;
+    const char* sep = "";
+    for (WTSSidSet::iterator pos = aMac->ssids.begin(); pos!=aMac->ssids.end(); ++pos) {
+      string sstr = (*pos)->ssid;
+      if (sstr.empty()) sstr = "<undefined>";
+      string_format_append(s, "%s%s (%ld)", sep, sstr.c_str(), (*pos)->seenCount);
+      sep = ", ";
+    }
+    LOG(LOG_NOTICE, "Sigthed: MAC=%s (%ld), RSSI=%d,%d,%d : %s", macAddressToString(aMac->mac,':').c_str(), aMac->seenCount, aMac->worstRssi, aMac->lastRssi, aMac->bestRssi, s.c_str());
+  }
+  // process
+  WTPersonPtr person = aMac->person; // default to already existing, if any
+  if (aNewSSidForMac && aSSid->macs.size()<tooCommonMacCount) {
+    // a new SSID for this Mac, not too commonly used
+    LOG(LOG_NOTICE, "- not too common (only %lu macs)", aSSid->macs.size());
+    WTMacSet relatedMacs;
+    WTMacPtr mostCommonMac;
+    WTPersonPtr mostProbablePerson;
+    if (aMac->ssids.size()>=minCommonSsidCount) {
+      // has enough ssids overall -> try to find related MACs
+      // - search all macs that know the new ssid
+      int maxCommonSsids = 0;
+      for (WTMacSet::iterator mpos = aSSid->macs.begin(); mpos!=aSSid->macs.end(); ++mpos) {
+        // - see how many other ssids this mac shares with the other one
+        if ((*mpos)->ssids.size()<minCommonSsidCount) continue; // shortcut, candidate does not have enough ssids to possibly match at all -> next
+        int commonSsids = 1; // we have at least aSSid in common by definition when we get here!
+        for (WTSSidSet::iterator spos = (*mpos)->ssids.begin(); spos!=(*mpos)->ssids.end(); ++spos) {
+          if (*spos==aSSid) continue; // shortcut, we know that we have aSSid in common
+  //        if ((*spos)->macs.size()>=tooCommonMacCount) continue; // this is a too common ssid, don't count (maybe we still should %%%)
+          if (aMac->ssids.find(*spos)!=aMac->ssids.end()) {
+            commonSsids++;
+          }
+        }
+        if (commonSsids<minCommonSsidCount) continue; // not a candidate
+        relatedMacs.insert(*mpos); // is a candidate
+        if (commonSsids>maxCommonSsids) {
+          mostCommonMac = *mpos; // this is the mac with most common ssids
+          if (mostCommonMac->person) mostProbablePerson = mostCommonMac->person; // this is the person of the mac with the most common ssids -> most likely the correct one
+        }
+      }
+    }
+    // determine person
+    if (!person) {
+      if (mostProbablePerson) {
+        person = mostProbablePerson;
+      }
+      else {
+        // none of the related macs has a person, or we have no related macs at all -> we need to create a person
+        person = WTPersonPtr(new WTPerson);
+        persons.insert(person);
+        person->imageIndex = rand() % numPersonImages;
+        person->color = hsbToPixel(rand() % 360);
+        aMac->person = person;
+      }
+    }
+    if (person) {
+      // assign to all macs found related
+      person->macs.insert(aMac); // the new one
+      for (WTMacSet::iterator mpos = relatedMacs.begin(); mpos!=relatedMacs.end(); ++mpos) {
+        (*mpos)->person = person;
+        person->macs.insert(*mpos); // all others
       }
     }
   }
-}
-
-
-void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid)
-{
-  string s;
-  const char* sep = "";
-  for (WTSSidMap::iterator pos = aMac->ssids.begin(); pos!=aMac->ssids.end(); ++pos) {
-    string sstr = pos->second->ssid;
-    if (sstr.empty()) sstr = "<undefined>";
-    string_format_append(s, "%s%s (%ld)", sep, sstr.c_str(), pos->second->seenCount);
-    sep = ", ";
-  }
-  LOG(LOG_NOTICE, "MAC=%s (%ld), RSSI=%d,%d,%d : %s", macAddressToString(aMac->mac,':').c_str(), aMac->seenCount, aMac->worstRssi, aMac->lastRssi, aMac->bestRssi, s.c_str());
-  if (!aMac->hidden && aMac->seenLast>aMac->shownLast+minShowInterval) {
-    // pick SSID with the least mac links as most unique name
-    long minMacs = 999999999;
-    WTSSidPtr relevantSSid;
-    for (WTSSidMap::iterator pos = aMac->ssids.begin(); pos!=aMac->ssids.end(); ++pos) {
-      if (!pos->second->hidden && pos->second->macs.size()<minMacs && !pos->first.empty()) {
-        minMacs = pos->second->seenCount;
-        relevantSSid = pos->second;
+  // person determined, if any
+  if (person) {
+    // seen the person, update it
+    person->seenCount++;
+    person->seenLast = aMac->seenLast;
+    person->lastRssi = aMac->lastRssi;
+    if (person->bestRssi<person->lastRssi) person->bestRssi = person->lastRssi;
+    if (person->worstRssi>person->lastRssi) person->worstRssi = person->lastRssi;
+    if (person->seenFirst==Never) person->seenFirst = person->seenLast;
+    // show person?
+    if (!person->hidden && person->seenLast>person->shownLast+minShowInterval) {
+      // determine name
+      string nameToShow = person->name;
+      if (nameToShow.empty()) {
+        // pick SSID with the least mac links as most relevant (because: unique) name
+        long minMacs = 999999999;
+        WTSSidPtr relevantSSid;
+        for (WTSSidSet::iterator pos = aMac->ssids.begin(); pos!=aMac->ssids.end(); ++pos) {
+          if (!(*pos)->hidden && (*pos)->macs.size()<minMacs && !(*pos)->ssid.empty()) {
+            minMacs = (*pos)->seenCount;
+            relevantSSid = (*pos);
+          }
+        }
+        LOG(LOG_DEBUG, "minMacs = %ld, relevantSSid='%s'", minMacs, relevantSSid ? relevantSSid->ssid.c_str() : "<none>");
+        if (relevantSSid) {
+          nameToShow = relevantSSid->ssid;
+        }
       }
-    }
-    LOG(LOG_DEBUG, "minMacs = %ld, relevantSSid='%s'", minMacs, relevantSSid ? relevantSSid->ssid.c_str() : "<none>");
-    if (relevantSSid) {
-      // show it
-      aMac->shownLast = aMac->seenLast;
-      LOG(LOG_NOTICE, "*** Hello %s! ***", relevantSSid->ssid.c_str());
-//      LethdApi::sharedApi()->runJsonScript("scripts/prepssid.json", boost::bind(&WifiTrack::ssidDispReady, this, relevantSSid->ssid), &scriptContext);
-      ssidDispReady(relevantSSid->ssid);
+      // compose message
+      string msg = string_format("P%d_%s - %s", person->imageIndex, pixelToWebColor(person->color).c_str(), nameToShow.c_str());
+      // show message
+      person->shownLast = person->seenLast;
+      LOG(LOG_NOTICE, "*** Hello %s! ***", msg.c_str());
+      JsonObjectPtr cmd = JsonObject::newObj();
+      cmd->add("feature", JsonObject::newString("text"));
+      cmd->add("text", JsonObject::newString(" "+msg));
+      LethdApi::sharedApi()->executeJson(cmd);
+      LethdApi::sharedApi()->runJsonScript("scripts/showssid.json", NULL, &scriptContext);
     }
   }
 }
-
-
-void WifiTrack::ssidDispReady(string aSSid)
-{
-  JsonObjectPtr cmd = JsonObject::newObj();
-  cmd->add("feature", JsonObject::newString("text"));
-  cmd->add("text", JsonObject::newString(" "+aSSid));
-  LethdApi::sharedApi()->executeJson(cmd);
-  LethdApi::sharedApi()->runJsonScript("scripts/showssid.json", NULL, &scriptContext);
-}
-
-

@@ -21,6 +21,7 @@
 #define __lethd_wifitrack_hpp__
 
 #include "feature.hpp"
+#include "view.hpp"
 
 #include <math.h>
 
@@ -30,10 +31,15 @@ namespace p44 {
   typedef boost::intrusive_ptr<WTMac> WTMacPtr;
   class WTSSid;
   typedef boost::intrusive_ptr<WTSSid> WTSSidPtr;
+  class WTPerson;
+  typedef boost::intrusive_ptr<WTPerson> WTPersonPtr;
 
   typedef std::map<uint64_t, WTMacPtr> WTMacMap;
   typedef std::map<string, WTSSidPtr> WTSSidMap;
-  typedef std::list<string> WTSSidBlackList;
+
+  typedef std::set<WTMacPtr> WTMacSet;
+  typedef std::set<WTSSidPtr> WTSSidSet;
+  typedef std::set<WTPersonPtr> WTPersonSet;
 
 
   class WTMac : public P44Obj
@@ -51,9 +57,8 @@ namespace p44 {
     uint64_t mac;
     bool hidden;
 
-    WTSSidMap ssids;
-
-    MLMicroSeconds shownLast;
+    WTSSidSet ssids;
+    WTPersonPtr person;
   };
 
 
@@ -68,7 +73,36 @@ namespace p44 {
     string ssid;
     bool hidden;
 
-    WTMacMap macs;
+    int beaconRssi;
+    MLMicroSeconds beaconSeenLast;
+
+    WTMacSet macs;
+
+  };
+
+
+
+  class WTPerson : public P44Obj
+  {
+  public:
+
+    WTPerson();
+
+    MLMicroSeconds seenLast;
+    MLMicroSeconds seenFirst;
+    long seenCount;
+    int lastRssi;
+    int bestRssi;
+    int worstRssi;
+
+    PixelColor color;
+    int imageIndex;
+    string name;
+    bool hidden;
+
+    MLMicroSeconds shownLast;
+
+    WTMacSet macs;
 
   };
 
@@ -88,11 +122,16 @@ namespace p44 {
 
     WTMacMap macs;
     WTSSidMap ssids;
+    WTPersonSet persons;
 
     // settings
     bool rememberWithoutSsid;
     MLMicroSeconds minShowInterval;
     int minRssi;
+    int tooCommonMacCount;
+    int minCommonSsidCount;
+    int numPersonImages;
+    string personImagePrefix;
 
   public:
 
@@ -126,8 +165,7 @@ namespace p44 {
     void dumpEnded(ErrorPtr aError);
     void gotDumpLine(ErrorPtr aError);
 
-    void processSighting(WTMacPtr aMac, WTSSidPtr aSSid);
-    void ssidDispReady(string aSSid);
+    void processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidForMac);
 
   };
 

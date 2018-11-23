@@ -111,7 +111,7 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--wifimonif en0"
+            argument = "--wifimonif moni0"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
@@ -136,11 +136,11 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-l 5"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-l 6"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-l 7"

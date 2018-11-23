@@ -23,6 +23,7 @@
 #define __pixelboardd_view_hpp__
 
 #include "p44utils_common.hpp"
+#include "colorutils.hpp"
 
 #ifndef ENABLE_VIEWCONFIG
   #define ENABLE_VIEWCONFIG 1
@@ -44,6 +45,7 @@ namespace p44 {
 
   const PixelColor transparent = { .r=0, .g=0, .b=0, .a=0 };
   const PixelColor black = { .r=0, .g=0, .b=0, .a=255 };
+  const PixelColor white = { .r=255, .g=255, .b=255, .a=255 };
 
 
   typedef struct {
@@ -128,6 +130,12 @@ namespace p44 {
   /// @param aPixelColor pixel color
   /// @return web color in RRGGBB style or AARRGGBB when alpha is not fully opaque (==255)
   string pixelToWebColor(const PixelColor aPixelColor);
+
+  /// get RGB from HSB
+  /// @param aHue hue, 0..360 degrees
+  /// @param aSaturation saturation, 0..255
+  /// @param aBrightness brightness, 0..255
+  PixelColor hsbToPixel(int aHue, uint8_t aSaturation = 255, uint8_t aBrightness = 255);
 
 
   /// @}

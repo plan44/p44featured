@@ -532,6 +532,22 @@ string p44::pixelToWebColor(const PixelColor aPixelColor)
 }
 
 
+
+PixelColor p44::hsbToPixel(int aHue, uint8_t aSaturation, uint8_t aBrightness)
+{
+  PixelColor p;
+  Row3 RGB, HSV = { (double)aHue, (double)aSaturation/255, (double)aBrightness/255 };
+  HSVtoRGB(HSV, RGB);
+  p.r = RGB[0]*255;
+  p.g = RGB[1]*255;
+  p.b = RGB[2]*255;
+  p.a = 255;
+  return p;
+}
+
+
+
+
 #if ENABLE_VIEWCONFIG
 
 // MARK: ===== view configuration
