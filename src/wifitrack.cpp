@@ -627,6 +627,7 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
       int maxCommonSsids = 0;
       for (WTMacSet::iterator mpos = aSSid->macs.begin(); mpos!=aSSid->macs.end(); ++mpos) {
         // - see how many other ssids this mac shares with the other one
+        if (*mpos==aMac) continue; // avoid comparing with myself!
         if ((*mpos)->ssids.size()<minCommonSsidCount) continue; // shortcut, candidate does not have enough ssids to possibly match at all -> next
         int commonSsids = 1; // we have at least aSSid in common by definition when we get here!
         for (WTSSidSet::iterator spos = (*mpos)->ssids.begin(); spos!=(*mpos)->ssids.end(); ++spos) {
@@ -660,15 +661,34 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
         persons.insert(person);
         person->imageIndex = rand() % numPersonImages;
         person->color = hsbToPixel(rand() % 360);
+        // link to this mac (without logging, as this happens for every new Mac seen)
         aMac->person = person;
+        person->macs.insert(aMac);
       }
     }
     if (person) {
       // assign to all macs found related
-      person->macs.insert(aMac); // the new one
+      if (person->macs.insert(aMac).second) {
+        LOG(LOG_NOTICE, "+++ Just sighted MAC %s via '%s' -> now linked to person '%s' (%d/#%s), MACs=%lu",
+          macAddressToString(aMac->mac,':').c_str(),
+          aSSid->ssid.c_str(),
+          person->name.c_str(),
+          person->imageIndex,
+          pixelToWebColor(person->color).c_str(),
+          person->macs.size()
+        );
+      }
       for (WTMacSet::iterator mpos = relatedMacs.begin(); mpos!=relatedMacs.end(); ++mpos) {
         (*mpos)->person = person;
-        person->macs.insert(*mpos); // all others
+        if (person->macs.insert(*mpos).second) {
+          LOG(LOG_NOTICE, "+++ Found other MAC %s related -> now linked to person '%s' (%d/#%s), macs=%lu",
+            macAddressToString((*mpos)->mac,':').c_str(),
+            person->name.c_str(),
+            person->imageIndex,
+            pixelToWebColor(person->color).c_str(),
+            person->macs.size()
+          );
+        }
       }
     }
   }
@@ -681,11 +701,11 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
     if (person->bestRssi<person->lastRssi) person->bestRssi = person->lastRssi;
     if (person->worstRssi>person->lastRssi) person->worstRssi = person->lastRssi;
     if (person->seenFirst==Never) person->seenFirst = person->seenLast;
-    LOG(LOG_INFO, "*** Recognized person%s, name='%s', color=%s, imgidx=%d, linked macs=%lu, via ssid='%s', mac=%s%s",
+    LOG(LOG_INFO, "*** Recognized person%s, '%s', (%d/#%s), linked macs=%lu, via ssid='%s', mac=%s%s",
       person->hidden ? " (hidden)" : "",
       person->name.c_str(),
-      pixelToWebColor(person->color).c_str(),
       person->imageIndex,
+      pixelToWebColor(person->color).c_str(),
       person->macs.size(),
       aSSid->ssid.c_str(),
       macAddressToString(aMac->mac,':').c_str(),
@@ -714,7 +734,14 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
       string msg = string_format("P%d_%s - %s", person->imageIndex, pixelToWebColor(person->color).c_str(), nameToShow.c_str());
       // show message
       person->shownLast = person->seenLast;
-      LOG(LOG_NOTICE, "*** Display person: %s", msg.c_str());
+      LOG(LOG_NOTICE, "*** Showing person '%s' (%d/#%s) via %s / '%s' : %s",
+        person->name.c_str(),
+        person->imageIndex,
+        pixelToWebColor(person->color).c_str(),
+        macAddressToString(aMac->mac,':').c_str(),
+        aSSid->ssid.c_str(),
+        msg.c_str()
+      );
       JsonObjectPtr cmd = JsonObject::newObj();
       cmd->add("feature", JsonObject::newString("text"));
       cmd->add("text", JsonObject::newString(" "+msg));

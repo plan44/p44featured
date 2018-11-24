@@ -78,6 +78,8 @@ void View::geometryChange(bool aStart)
         if (changedGeometry) {
           makeDirty();
           if (parentView) {
+            // Note: as we are passing in the frames, it is safe when the following calls recursively calls geometryChange again
+            //   except that it must not do so unconditionally to prevent endless recursion
             parentView->childGeometryChanged(this, previousFrame, previousContent);
           }
         }
