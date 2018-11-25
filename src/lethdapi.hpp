@@ -119,6 +119,7 @@ namespace p44 {
     JsonCommPtr connection;
 
     typedef std::map<string, FeaturePtr> FeatureMap;
+    typedef map<string, string> StringStringMap;
     FeatureMap featureMap;
 
     string gridcoordinate;
@@ -146,12 +147,21 @@ namespace p44 {
     /// execute JSON request(s) - can be called internally, no answer
     /// @param aJsonCmds a single JSON command request or a array with multiple requests
     /// @param aFinishedCallback called when all commands are done
+    /// @return ok or error
     ErrorPtr executeJson(JsonObjectPtr aJsonCmds, SimpleCB aFinishedCallback = NULL, ScriptContextPtr* aContextP = NULL);
+
+    /// execute JSON request(s) from a string
+    /// @param aJsonString JSON string to execute
+    /// @param aFinishedCallback called when all commands are done
+    /// @param aSubstitutionsP pointer to map of substitutions
+    /// @return ok or error
+    ErrorPtr runJsonString(string aJsonString, SimpleCB aFinishedCallback = NULL, ScriptContextPtr* aContextP = NULL, StringStringMap* aSubstitutionsP = NULL);
 
     /// execute JSON request(s) from a file
     /// @param aScriptPath resource dir relative (or absolute) path to script
     /// @param aFinishedCallback called when all commands are done
-    ErrorPtr runJsonScript(const string aScriptPath, SimpleCB aFinishedCallback = NULL, ScriptContextPtr* aContextP = NULL);
+    /// @return ok or error
+    ErrorPtr runJsonFile(const string aScriptPath, SimpleCB aFinishedCallback = NULL, ScriptContextPtr* aContextP = NULL, StringStringMap* aSubstitutionsP = NULL);
 
 
     /// get feature by name

@@ -321,7 +321,7 @@ void MixLoop::accelMeasure()
       accelStart = now;
       hitDetectorActive = true;
       LOG(LOG_NOTICE, "Hit detector activated with integral = %.0f", accelIntegral);
-      LethdApi::sharedApi()->runJsonScript("scripts/game.json", NULL, &scriptContext);
+      LethdApi::sharedApi()->runJsonFile("scripts/game.json", NULL, &scriptContext);
     }
   }
   // show
@@ -360,7 +360,7 @@ void MixLoop::showHit()
   }
   showTicket.executeOnce(boost::bind(&MixLoop::showHitEnd, this), hitFlashTime);
   // disp
-  LethdApi::sharedApi()->runJsonScript("scripts/hit.json", NULL, &scriptContext);
+  LethdApi::sharedApi()->runJsonFile("scripts/hit.json", NULL, &scriptContext);
 }
 
 
@@ -373,5 +373,5 @@ void MixLoop::showHitEnd()
 void MixLoop::dispNormal()
 {
   dispTicket.cancel();
-  LethdApi::sharedApi()->runJsonScript("scripts/normal.json", NULL, &scriptContext);
+  LethdApi::sharedApi()->runJsonFile("scripts/normal.json", NULL, &scriptContext);
 }

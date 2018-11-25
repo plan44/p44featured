@@ -194,7 +194,7 @@ public:
       )));
       // - wifitrack
       lethdApi->addFeature(FeaturePtr(new WifiTrack(
-        getOption("wifimonif","/dev/null")
+        getOption("wifimonif","")
       )));
       // - neuron
       lethdApi->addFeature(FeaturePtr(new Neuron(
@@ -212,7 +212,10 @@ public:
       // run the initialisation command file
       string initFile;
       if (getStringOption("initjson", initFile)) {
-        lethdApi->runJsonScript(initFile);
+        ErrorPtr err = lethdApi->runJsonFile(initFile);
+        if (!Error::isOK(err)) {
+          terminateAppWith(err);
+        }
       }
       // start lethd API server for leths server
       string apiport;

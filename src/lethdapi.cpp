@@ -100,13 +100,53 @@ LethdApi::~LethdApi()
 }
 
 
-ErrorPtr LethdApi::runJsonScript(const string aScriptPath, SimpleCB aFinishedCallback, ScriptContextPtr* aContextP)
+ErrorPtr LethdApi::runJsonFile(const string aScriptPath, SimpleCB aFinishedCallback, ScriptContextPtr* aContextP, StringStringMap* aSubstitutionsP)
 {
   ErrorPtr err;
-  JsonObjectPtr script = JsonObject::objFromFile(Application::sharedApplication()->resourcePath(aScriptPath).c_str(), &err);
+  string jsonText;
+  string fpath = Application::sharedApplication()->resourcePath(aScriptPath).c_str();
+  FILE* f = fopen(fpath.c_str(), "r");
+  if (f==NULL) {
+    err = SysError::errNo();
+    err->prefixMessage("cannot open JSON script file '%s': ", fpath.c_str());
+  }
+  else {
+    string_fgetfile(f, jsonText);
+    err = runJsonString(jsonText, aFinishedCallback, aContextP, aSubstitutionsP);
+  }
+  return err;
+}
+
+
+ErrorPtr LethdApi::runJsonString(string aJsonString, SimpleCB aFinishedCallback, ScriptContextPtr* aContextP, StringStringMap* aSubstitutionsP)
+{
+  ErrorPtr err;
+  if (aSubstitutionsP) {
+    // perform substitution: syntax of placeholders:
+    //   @{name}
+    size_t p = 0;
+    while ((p = aJsonString.find("@{",p))!=string::npos) {
+      size_t e = aJsonString.find("}",p+2);
+      if (e==string::npos) {
+        // syntactically incorrect, no closing "}"
+        err = TextError::err("unterminated placeholder: %s", aJsonString.c_str()+p);
+        break;
+      }
+      string var = aJsonString.substr(p+2,e-2-p);
+      StringStringMap::iterator pos = aSubstitutionsP->find(var);
+      if (pos==aSubstitutionsP->end()) {
+        err = TextError::err("unknown placeholder: %s", var.c_str());
+        break;
+      }
+      // replace, even if rep is empty
+      aJsonString.replace(p, e-p+1, pos->second);
+      p+=pos->second.size();
+    }
+  }
   if (Error::isOK(err)) {
-    if (script) {
-      return lethdApi->executeJson(script, aFinishedCallback, aContextP);
+    JsonObjectPtr script = JsonObject::objFromText(aJsonString.c_str(), -1, &err);
+    if (Error::isOK(err) && script) {
+      err = lethdApi->executeJson(script, aFinishedCallback, aContextP);
     }
   }
   return err;
@@ -162,7 +202,7 @@ void LethdApi::runCmd(JsonObjectPtr aCmds, int aIndex, ScriptContextPtr aContext
   JsonObjectPtr cmd = aCmds->arrayGet(aIndex);
   JsonObjectPtr o = cmd->get("callscript");
   if (o) {
-    runJsonScript(o->stringValue(), boost::bind(&LethdApi::executeNextCmd, this, aCmds, aIndex+1, aContext, aFinishedCallback), &aContext);
+    runJsonFile(o->stringValue(), boost::bind(&LethdApi::executeNextCmd, this, aCmds, aIndex+1, aContext, aFinishedCallback), &aContext);
     return;
   }
   ApiRequestPtr req = ApiRequestPtr(new InternalRequest(cmd));
@@ -290,7 +330,7 @@ ErrorPtr LethdApi::call(ApiRequestPtr aRequest)
   JsonObjectPtr reqData = aRequest->getRequest();
   JsonObjectPtr o = reqData->get("script");
   if (o) {
-    return runJsonScript(o->stringValue());
+    return runJsonFile(o->stringValue());
   }
   return LethdApiError::err("missing 'script' attribute");
 }
