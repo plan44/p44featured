@@ -100,7 +100,7 @@ LethdApi::~LethdApi()
 }
 
 
-ErrorPtr LethdApi::runJsonFile(const string aScriptPath, SimpleCB aFinishedCallback, ScriptContextPtr* aContextP, StringStringMap* aSubstitutionsP)
+ErrorPtr LethdApi::runJsonFile(const string aScriptPath, SimpleCB aFinishedCallback, ScriptContextPtr* aContextP, SubstitutionMap* aSubstitutionsP)
 {
   ErrorPtr err;
   string jsonText;
@@ -118,7 +118,7 @@ ErrorPtr LethdApi::runJsonFile(const string aScriptPath, SimpleCB aFinishedCallb
 }
 
 
-ErrorPtr LethdApi::runJsonString(string aJsonString, SimpleCB aFinishedCallback, ScriptContextPtr* aContextP, StringStringMap* aSubstitutionsP)
+ErrorPtr LethdApi::runJsonString(string aJsonString, SimpleCB aFinishedCallback, ScriptContextPtr* aContextP, SubstitutionMap* aSubstitutionsP)
 {
   ErrorPtr err;
   if (aSubstitutionsP) {
@@ -133,7 +133,7 @@ ErrorPtr LethdApi::runJsonString(string aJsonString, SimpleCB aFinishedCallback,
         break;
       }
       string var = aJsonString.substr(p+2,e-2-p);
-      StringStringMap::iterator pos = aSubstitutionsP->find(var);
+      SubstitutionMap::iterator pos = aSubstitutionsP->find(var);
       if (pos==aSubstitutionsP->end()) {
         err = TextError::err("unknown placeholder: %s", var.c_str());
         break;

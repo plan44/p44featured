@@ -771,5 +771,9 @@ void WifiTrack::displayMessage(int aImageIndex, PixelColor aColor, string aMessa
   cmd->add("feature", JsonObject::newString("text"));
   cmd->add("text", JsonObject::newString(" "+aMessage));
   LethdApi::sharedApi()->executeJson(cmd);
-  LethdApi::sharedApi()->runJsonFile("scripts/showssid.json", NULL, &scriptContext);
+  LethdApi::SubstitutionMap subst;
+  subst["MSG"] = aMessage;
+  subst["IMGIDX"] = string_format("%d", aImageIndex);
+  subst["COLOR"] = pixelToWebColor(aColor);
+  LethdApi::sharedApi()->runJsonFile("scripts/showssid.json", NULL, &scriptContext, &subst);
 }
