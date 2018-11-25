@@ -734,12 +734,13 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
       string msg = string_format("P%d_%s - %s", person->imageIndex, pixelToWebColor(person->color).c_str(), nameToShow.c_str());
       // show message
       person->shownLast = person->seenLast;
-      LOG(LOG_NOTICE, "*** Showing person '%s' (%d/#%s) via %s / '%s' : %s",
+      LOG(LOG_NOTICE, "*** Showing person '%s' (%d/#%s) via %s / '%s' (%d): %s",
         person->name.c_str(),
         person->imageIndex,
         pixelToWebColor(person->color).c_str(),
         macAddressToString(aMac->mac,':').c_str(),
         aSSid->ssid.c_str(),
+        person->lastRssi,
         msg.c_str()
       );
       JsonObjectPtr cmd = JsonObject::newObj();
