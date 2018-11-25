@@ -127,11 +127,11 @@ namespace p44 {
     // settings
     bool rememberWithoutSsid;
     MLMicroSeconds minShowInterval;
-    int minRssi;
+    int minRssi; ///< minimal rssi for detecting at all
+    int minShowRssi; ///< minimal rssi for triggering to show a person
     int tooCommonMacCount;
     int minCommonSsidCount;
     int numPersonImages;
-    string personImagePrefix;
 
   public:
 
@@ -167,7 +167,7 @@ namespace p44 {
 
     void processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidForMac);
 
-    void displayMessage(int aImageIndex, PixelColor aColor, string aMessage);
+    void displayMessage(string aIntro, int aImageIndex, PixelColor aColor, string aName);
 
   };
 

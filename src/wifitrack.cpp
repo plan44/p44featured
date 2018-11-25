@@ -85,10 +85,10 @@ WifiTrack::WifiTrack(const string aMonitorIf) :
   rememberWithoutSsid(false),
   minShowInterval(3*Minute),
   minRssi(-70),
+  minShowRssi(-65),
   tooCommonMacCount(20),
   minCommonSsidCount(3),
-  numPersonImages(24),
-  personImagePrefix("pers_")
+  numPersonImages(24)
 {
   // check for commandline-triggered standalone operation
   if (CmdLineApp::sharedCmdLineApp()->getOption("wifitrack")) {
@@ -131,13 +131,15 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
       return err ? err : Error::ok();
     }
     else if (cmd=="test") {
-      string msg = "<none>";
-      if (data->get("msg", o)) msg = o->stringValue();
+      string intro = "hi";
+      string name = "anonymus";
+      if (data->get("intro", o)) intro = o->stringValue();
+      if (data->get("name", o)) name = o->stringValue();
       int imgIdx = 0;
       if (data->get("imgidx", o)) imgIdx = o->int32Value() % numPersonImages;
       PixelColor col = white;
       if (data->get("color", o)) col = webColorToPixel(o->stringValue());
-      displayMessage(imgIdx, col, msg);
+      displayMessage(intro, imgIdx, col, name);
       return Error::ok();
     }
     else if (cmd=="hide") {
@@ -177,6 +179,9 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
     if (data->get("minRssi", o, true)) {
       minRssi = o->int32Value();
     }
+    if (data->get("minShowRssi", o, true)) {
+      minShowRssi = o->int32Value();
+    }
     if (data->get("tooCommonMacCount", o, true)) {
       tooCommonMacCount = o->int32Value();
     }
@@ -185,9 +190,6 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
     }
     if (data->get("numPersonImages", o, true)) {
       numPersonImages = o->int32Value();
-    }
-    if (data->get("personImagePrefix", o, true)) {
-      personImagePrefix = o->stringValue();
     }
     return err ? err : Error::ok();
   }
@@ -201,10 +203,10 @@ JsonObjectPtr WifiTrack::status()
     answer->add("minShowInterval", JsonObject::newDouble((double)minShowInterval/MilliSecond));
     answer->add("rememberWithoutSsid", JsonObject::newBool(rememberWithoutSsid));
     answer->add("minRssi", JsonObject::newInt32(minRssi));
+    answer->add("minShowRssi", JsonObject::newInt32(minShowRssi));
     answer->add("tooCommonMacCount", JsonObject::newInt32(tooCommonMacCount));
     answer->add("minCommonSsidCount", JsonObject::newInt32(minCommonSsidCount));
     answer->add("numPersonImages", JsonObject::newInt32(numPersonImages));
-    answer->add("personImagePrefix", JsonObject::newString(personImagePrefix));
   }
   return answer;
 }
@@ -301,6 +303,7 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
   JsonObjectPtr sobj;
   string ssidstr;
   while (sobjs->nextKeyValue(ssidstr, sobj)) {
+    if (ssidstr.empty() && !rememberWithoutSsid) continue; // skip empty SSID
     WTSSidPtr s;
     WTSSidMap::iterator spos = ssids.find(ssidstr);
     if (spos!=ssids.end()) {
@@ -344,8 +347,13 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
     JsonObjectPtr sarr = mobj->get("ssids");
     for (int i=0; i<sarr->arrayLength(); ++i) {
       string ssidstr = sarr->arrayGet(i)->stringValue();
-      if (!rememberWithoutSsid && ssidstr.empty() && sarr->arrayLength()==1) {
-        insertMac = false;
+      if (!rememberWithoutSsid && ssidstr.empty()) {
+        // empty SSID and we don't want empty ones!
+        if (sarr->arrayLength()==1) {
+          // also prevent inserting mac if the empty SSID is the only one
+          insertMac = false;
+        }
+        continue; // check next
       }
       WTSSidPtr s;
       WTSSidMap::iterator spos = ssids.find(ssidstr);
@@ -395,7 +403,6 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
     for (int pidx=0; pidx<pobjs->arrayLength(); pidx++) {
       JsonObjectPtr pobj = pobjs->arrayGet(pidx);
       WTPersonPtr p = WTPersonPtr(new WTPerson);
-      persons.insert(p);
       // links to macs
       JsonObjectPtr marr = pobj->get("macs");
       for (int i=0; i<marr->arrayLength(); ++i) {
@@ -407,6 +414,8 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
           mpos->second->person = p;
         }
       }
+      if (p->macs.size()==0) continue; // not linked to any mac -> invalid, skip
+      persons.insert(p);
       // other props
       JsonObjectPtr o;
       o = pobj->get("name");
@@ -439,7 +448,6 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
       l = Never;
       if (o) l = MainLoop::unixTimeToMainLoopTime(o->int64Value());
       if (l!=Never && p->seenFirst!=Never && l<p->seenFirst) p->seenFirst = l;
-
     }
   }
   return ErrorPtr();
@@ -600,12 +608,14 @@ void WifiTrack::gotDumpLine(ErrorPtr aError)
           m->lastRssi = rssi;
           if (rssi>m->bestRssi) m->bestRssi = rssi;
           if (rssi<m->worstRssi) m->worstRssi = rssi;
-          // - connection
-          if (m->ssids.find(s)==m->ssids.end()) {
-            newSSidForMac = true;
-            m->ssids.insert(s);
+          // - connection (if not empty ssid or empty ssids are allowed)
+          if (!s->ssid.empty() || rememberWithoutSsid) {
+            if (m->ssids.find(s)==m->ssids.end()) {
+              newSSidForMac = true;
+              m->ssids.insert(s);
+            }
+            s->macs.insert(m);
           }
-          s->macs.insert(m);
           // process sighting
           processSighting(m, s, newSSidForMac);
         }
@@ -633,7 +643,7 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
   // process
   if (aNewSSidForMac && aSSid->macs.size()<tooCommonMacCount) {
     // a new SSID for this Mac, not too commonly used
-    FOCUSLOG("- not too common (only %lu macs)", aSSid->macs.size());
+    FOCUSLOG("- not too common (only %lu MACs)", aSSid->macs.size());
     WTMacSet relatedMacs;
     WTMacPtr mostCommonMac;
     WTPersonPtr mostProbablePerson;
@@ -695,9 +705,22 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
         );
       }
       for (WTMacSet::iterator mpos = relatedMacs.begin(); mpos!=relatedMacs.end(); ++mpos) {
+        WTPersonPtr oldPerson = (*mpos)->person;
+        if (oldPerson && oldPerson!=person) {
+          oldPerson->macs.erase(*mpos); // remove this mac from the person
+          if (oldPerson->macs.size()==0) {
+            persons.erase(oldPerson); // delete person with zero macs assigned
+            LOG(LOG_NOTICE, "--- Person '%s' (%d/#%s) not linked to a MAC any more -> deleted",
+              oldPerson->name.c_str(),
+              oldPerson->imageIndex,
+              pixelToWebColor(oldPerson->color).c_str()
+            );
+          }
+        }
+        // assign new person
         (*mpos)->person = person;
         if (person->macs.insert(*mpos).second) {
-          LOG(LOG_NOTICE, "+++ Found other MAC %s related -> now linked to person '%s' (%d/#%s), macs=%lu",
+          LOG(LOG_NOTICE, "+++ Found other MAC %s related -> now linked to person '%s' (%d/#%s), MACs=%lu",
             macAddressToString((*mpos)->mac,':').c_str(),
             person->name.c_str(),
             person->imageIndex,
@@ -717,7 +740,7 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
     if (person->bestRssi<person->lastRssi) person->bestRssi = person->lastRssi;
     if (person->worstRssi>person->lastRssi) person->worstRssi = person->lastRssi;
     if (person->seenFirst==Never) person->seenFirst = person->seenLast;
-    LOG(LOG_INFO, "*** Recognized person%s, '%s', (%d/#%s), linked macs=%lu, via ssid='%s', mac=%s%s",
+    LOG(LOG_INFO, "*** Recognized person%s, '%s', (%d/#%s), linked MACs=%lu, via ssid='%s', MAC=%s%s",
       person->hidden ? " (hidden)" : "",
       person->name.c_str(),
       person->imageIndex,
@@ -728,7 +751,7 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
       aMac->hidden ? " (hidden)" : ""
     );
     // show person?
-    if (!aMac->hidden && !person->hidden && person->seenLast>person->shownLast+minShowInterval) {
+    if (!aMac->hidden && !person->hidden && person->lastRssi>=minShowRssi && person->seenLast>person->shownLast+minShowInterval) {
       // determine name
       string nameToShow = person->name;
       if (nameToShow.empty()) {
@@ -750,8 +773,8 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
       string msg = string_format("P%d_%s - %s", person->imageIndex, pixelToWebColor(person->color).c_str(), nameToShow.c_str());
       // show message
       person->shownLast = person->seenLast;
-      LOG(LOG_NOTICE, "*** Showing person '%s' (%d/#%s) via %s / '%s' (%d): %s",
-        person->name.c_str(),
+      LOG(LOG_NOTICE, "*** Showing person as '%s' (%d/#%s) via %s / '%s' (%d): %s",
+        nameToShow.c_str(),
         person->imageIndex,
         pixelToWebColor(person->color).c_str(),
         macAddressToString(aMac->mac,':').c_str(),
@@ -759,21 +782,18 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
         person->lastRssi,
         msg.c_str()
       );
-      displayMessage(person->imageIndex, person->color, msg);
+      displayMessage("hi", person->imageIndex, person->color, nameToShow);
     }
   }
 }
 
 
-void WifiTrack::displayMessage(int aImageIndex, PixelColor aColor, string aMessage)
+void WifiTrack::displayMessage(string aIntro, int aImageIndex, PixelColor aColor, string aName)
 {
-  JsonObjectPtr cmd = JsonObject::newObj();
-  cmd->add("feature", JsonObject::newString("text"));
-  cmd->add("text", JsonObject::newString(" "+aMessage));
-  LethdApi::sharedApi()->executeJson(cmd);
   LethdApi::SubstitutionMap subst;
-  subst["MSG"] = aMessage;
+  subst["INTRO"] = aIntro;
   subst["IMGIDX"] = string_format("%d", aImageIndex);
   subst["COLOR"] = pixelToWebColor(aColor);
+  subst["NAME"] = aName;
   LethdApi::sharedApi()->runJsonFile("scripts/showssid.json", NULL, &scriptContext, &subst);
 }
