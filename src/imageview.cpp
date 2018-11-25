@@ -77,8 +77,7 @@ ErrorPtr ImageView::loadPNG(const string aPNGFileName)
     LOG(LOG_INFO, "Image width = %d", pngImage.width);
     LOG(LOG_INFO, "Image height = %d", pngImage.height);
     LOG(LOG_INFO, "Image width*height = %d", pngImage.height*pngImage.width);
-    content.dx = pngImage.width;
-    content.dy = pngImage.height;
+    setContentSize({ (int)pngImage.width, (int)pngImage.height});
     if (pngBuffer==NULL) {
       return TextError::err("Could not allocate buffer for reading PNG file %s", aPNGFileName.c_str());
     }
