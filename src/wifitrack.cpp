@@ -130,12 +130,24 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
       err = load();
       return err ? err : Error::ok();
     }
+    else if (cmd=="test") {
+      string msg = "<none>";
+      if (data->get("msg", o)) msg = o->stringValue();
+      int imgIdx = 0;
+      if (data->get("imgidx", o)) imgIdx = o->int32Value() % numPersonImages;
+      PixelColor col = white;
+      if (data->get("color", o)) col = webColorToPixel(o->stringValue());
+      displayMessage(imgIdx, col, msg);
+      return Error::ok();
+    }
     else if (cmd=="hide") {
+      bool hide = true;
+      if (data->get("hide", o)) hide = o->boolValue();
       if (data->get("ssid", o)) {
         string s = o->stringValue();
         WTSSidMap::iterator pos = ssids.find(s);
         if (pos!=ssids.end()) {
-          pos->second->hidden = true;
+          pos->second->hidden = hide;
         }
       }
       else if (data->get("mac", o)) {
@@ -143,9 +155,9 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
         WTMacMap::iterator pos = macs.find(mac);
         if (pos!=macs.end()) {
           if (data->get("withperson", o)) {
-            if (pos->second->person && o->boolValue()) pos->second->person->hidden = true; // hide associated person
+            if (pos->second->person && o->boolValue()) pos->second->person->hidden = hide; // hide associated person
           }
-          pos->second->hidden = true;
+          pos->second->hidden = hide;
         }
       }
       return Error::ok();
@@ -202,7 +214,9 @@ JsonObjectPtr WifiTrack::status()
 
 ErrorPtr WifiTrack::load()
 {
-  JsonObjectPtr data = JsonObject::objFromFile(Application::sharedApplication()->dataPath(WIFITRACK_STATE_FILE_NAME).c_str(), NULL, 2048*1024);
+  ErrorPtr err;
+  JsonObjectPtr data = JsonObject::objFromFile(Application::sharedApplication()->dataPath(WIFITRACK_STATE_FILE_NAME).c_str(), &err);
+  if (err) return err; // no data to import
   return dataImport(data);
 }
 
@@ -447,22 +461,24 @@ void WifiTrack::initOperation()
   if (!Error::isOK(err)) {
     LOG(LOG_ERR, "could not load state: %s", Error::text(err).c_str());
   }
-  #if SCAN_APS
-  string cmd = string_format("tcpdump -e -i %s -s 2000 type mgt subtype probe-req or subtype beacon", monitorIf.c_str());
-  #else
-  string cmd = string_format("tcpdump -e -i %s -s 2000 type mgt subtype probe-req", monitorIf.c_str());
-  #endif
-#ifdef __APPLE__
-#warning "hardcoded access to mixloop hermel"
-  //cmd = "ssh -p 22 root@hermel-40a36bc18907.local. \"tcpdump -e -i moni0 -s 2000 type mgt subtype probe-req\"";
-  cmd = "ssh -p 22 root@1a8479bcaf76.cust.devices.plan44.ch \"" + cmd + "\"";
-#endif
-  int resultFd = -1;
-  dumpPid = MainLoop::currentMainLoop().fork_and_system(boost::bind(&WifiTrack::dumpEnded, this, _1), cmd.c_str(), true, &resultFd);
-  if (dumpPid>=0 && resultFd>=0) {
-    dumpStream = FdCommPtr(new FdComm(MainLoop::currentMainLoop()));
-    dumpStream->setFd(resultFd);
-    dumpStream->setReceiveHandler(boost::bind(&WifiTrack::gotDumpLine, this, _1), '\n');
+  if (!monitorIf.empty()) {
+    #if SCAN_APS
+    string cmd = string_format("tcpdump -e -i %s -s 2000 type mgt subtype probe-req or subtype beacon", monitorIf.c_str());
+    #else
+    string cmd = string_format("tcpdump -e -i %s -s 2000 type mgt subtype probe-req", monitorIf.c_str());
+    #endif
+    #ifdef __APPLE__
+    #warning "hardcoded access to mixloop hermel"
+    //cmd = "ssh -p 22 root@hermel-40a36bc18907.local. \"tcpdump -e -i moni0 -s 2000 type mgt subtype probe-req\"";
+    cmd = "ssh -p 22 root@1a8479bcaf76.cust.devices.plan44.ch \"" + cmd + "\"";
+    #endif
+    int resultFd = -1;
+    dumpPid = MainLoop::currentMainLoop().fork_and_system(boost::bind(&WifiTrack::dumpEnded, this, _1), cmd.c_str(), true, &resultFd);
+    if (dumpPid>=0 && resultFd>=0) {
+      dumpStream = FdCommPtr(new FdComm(MainLoop::currentMainLoop()));
+      dumpStream->setFd(resultFd);
+      dumpStream->setReceiveHandler(boost::bind(&WifiTrack::gotDumpLine, this, _1), '\n');
+    }
   }
   // ready
   setInitialized();
@@ -743,11 +759,17 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
         person->lastRssi,
         msg.c_str()
       );
-      JsonObjectPtr cmd = JsonObject::newObj();
-      cmd->add("feature", JsonObject::newString("text"));
-      cmd->add("text", JsonObject::newString(" "+msg));
-      LethdApi::sharedApi()->executeJson(cmd);
-      LethdApi::sharedApi()->runJsonScript("scripts/showssid.json", NULL, &scriptContext);
+      displayMessage(person->imageIndex, person->color, msg);
     }
   }
+}
+
+
+void WifiTrack::displayMessage(int aImageIndex, PixelColor aColor, string aMessage)
+{
+  JsonObjectPtr cmd = JsonObject::newObj();
+  cmd->add("feature", JsonObject::newString("text"));
+  cmd->add("text", JsonObject::newString(" "+aMessage));
+  LethdApi::sharedApi()->executeJson(cmd);
+  LethdApi::sharedApi()->runJsonFile("scripts/showssid.json", NULL, &scriptContext);
 }
