@@ -792,10 +792,12 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
         // pick SSID with the least mac links as most relevant (because: unique) name
         long minMacs = 999999999;
         WTSSidPtr relevantSSid;
-        for (WTSSidSet::iterator pos = aMac->ssids.begin(); pos!=aMac->ssids.end(); ++pos) {
-          if (!(*pos)->hidden && (*pos)->macs.size()<minMacs && !(*pos)->ssid.empty()) {
-            minMacs = (*pos)->seenCount;
-            relevantSSid = (*pos);
+        for (WTMacSet::iterator mpos = person->macs.begin(); mpos!=person->macs.end(); ++mpos) {
+          for (WTSSidSet::iterator spos = (*mpos)->ssids.begin(); spos!=(*mpos)->ssids.end(); ++spos) {
+            if (!(*spos)->hidden && (*spos)->macs.size()<minMacs && !(*spos)->ssid.empty()) {
+              minMacs = (*spos)->macs.size();
+              relevantSSid = (*spos);
+            }
           }
         }
         LOG(LOG_DEBUG, "minMacs = %ld, relevantSSid='%s'", minMacs, relevantSSid ? relevantSSid->ssid.c_str() : "<none>");
@@ -803,20 +805,22 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
           nameToShow = relevantSSid->ssid;
         }
       }
-      // compose message
-      string msg = string_format("P%d_%s - %s", person->imageIndex, pixelToWebColor(person->color).c_str(), nameToShow.c_str());
-      // show message
-      person->shownLast = person->seenLast;
-      LOG(LOG_NOTICE, "*** Showing person as '%s' (%d/#%s) via %s / '%s' (%d): %s",
-        nameToShow.c_str(),
-        person->imageIndex,
-        pixelToWebColor(person->color).c_str(),
-        macAddressToString(aMac->mac,':').c_str(),
-        aSSid->ssid.c_str(),
-        person->lastRssi,
-        msg.c_str()
-      );
-      displayMessage("hi", person->imageIndex, person->color, nameToShow);
+      if (!nameToShow.empty()) {
+        // compose message
+        string msg = string_format("P%d_%s - %s", person->imageIndex, pixelToWebColor(person->color).c_str(), nameToShow.c_str());
+        // show message
+        person->shownLast = person->seenLast;
+        LOG(LOG_NOTICE, "*** Showing person as '%s' (%d/#%s) via %s / '%s' (%d): %s",
+          nameToShow.c_str(),
+          person->imageIndex,
+          pixelToWebColor(person->color).c_str(),
+          macAddressToString(aMac->mac,':').c_str(),
+          aSSid->ssid.c_str(),
+          person->lastRssi,
+          msg.c_str()
+        );
+        displayMessage("hi", person->imageIndex, person->color, nameToShow);
+      }
     }
   }
 }
