@@ -164,6 +164,24 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
       }
       return Error::ok();
     }
+    else if (cmd=="rename") {
+      if (data->get("mac", o)) {
+        uint64_t mac = stringToMacAddress(o->stringValue().c_str());
+        WTMacMap::iterator pos = macs.find(mac);
+        if (pos!=macs.end() && pos->second->person) {
+          if (data->get("name", o)) {
+            pos->second->person->name = o->stringValue();
+          }
+          if (data->get("color", o)) {
+            pos->second->person->color = webColorToPixel(o->stringValue());
+          }
+          if (data->get("imgidx", o)) {
+            pos->second->person->imageIndex = o->int32Value() % numPersonImages;
+          }
+        }
+      }
+      return Error::ok();
+    }
     else {
       return inherited::processRequest(aRequest);
     }
