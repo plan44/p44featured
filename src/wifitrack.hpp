@@ -165,11 +165,12 @@ namespace p44 {
     void initOperation();
 
     void loadOUIs();
+    const char* ouiName(uint64_t aMac);
 
     ErrorPtr save();
     ErrorPtr load();
 
-    JsonObjectPtr dataDump(bool aSsids = true, bool aMacs = true, bool aPersons = true);
+    JsonObjectPtr dataDump(bool aSsids = true, bool aMacs = true, bool aPersons = true, bool aOUINames = false);
     ErrorPtr dataImport(JsonObjectPtr aData);
 
     void dumpEnded(ErrorPtr aError);

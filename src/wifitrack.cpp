@@ -123,10 +123,12 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
       bool ssids = true;
       bool macs = true;
       bool persons = true;
+      bool ouinames = true;
       if (data->get("ssids", o)) ssids = o->boolValue();
       if (data->get("macs", o)) macs = o->boolValue();
       if (data->get("persons", o)) persons = o->boolValue();
-      JsonObjectPtr ans = dataDump(ssids, macs, persons);
+      if (data->get("ouinames", o)) ouinames = o->boolValue();
+      JsonObjectPtr ans = dataDump(ssids, macs, persons, ouinames);
       aRequest->sendResponse(ans, ErrorPtr());
       return ErrorPtr();
     }
@@ -262,7 +264,7 @@ ErrorPtr WifiTrack::save()
 }
 
 
-JsonObjectPtr WifiTrack::dataDump(bool aSsids, bool aMacs, bool aPersons)
+JsonObjectPtr WifiTrack::dataDump(bool aSsids, bool aMacs, bool aPersons, bool aOUINames)
 {
   JsonObjectPtr ans = JsonObject::newObj();
   // summary info
@@ -298,6 +300,7 @@ JsonObjectPtr WifiTrack::dataDump(bool aSsids, bool aMacs, bool aPersons)
     JsonObjectPtr mans = JsonObject::newObj();
     for (WTMacMap::iterator mpos = macs.begin(); mpos!=macs.end(); ++mpos) {
       JsonObjectPtr m = JsonObject::newObj();
+      if (aOUINames && mpos->second->ouiName) m->add("ouiname", JsonObject::newString(mpos->second->ouiName));
       m->add("lastrssi", JsonObject::newInt32(mpos->second->lastRssi));
       m->add("bestrssi", JsonObject::newInt32(mpos->second->bestRssi));
       m->add("worstrssi", JsonObject::newInt32(mpos->second->worstRssi));
@@ -383,8 +386,7 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
     else {
       m = WTMacPtr(new WTMac);
       m->mac = mac;
-      OUIMap::iterator opos = ouis.find((uint32_t)(mac>>24));
-      if (opos!=ouis.end()) m->ouiName = opos->second;
+      m->ouiName = ouiName(mac);
       insertMac = true;
     }
     // links
@@ -499,6 +501,100 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
 
 // MARK: ==== OUI lookup
 
+
+const char* WifiTrack::ouiName(uint64_t aMac)
+{
+  // default to a /24 search
+  const char *n = NULL;
+  OUIMap::iterator opos = ouis.find((uint32_t)(aMac>>24));
+  if (opos!=ouis.end()) {
+    n = opos->second;
+    if ((intptr_t)n<256) {
+      // not a pointer, but subtable identifier byte
+      // Siiiiii, S: 0=/28, 1=/36, i=subtable identifier
+      uint32_t msrch = (uint32_t)((intptr_t)n<<24);
+      msrch |= (aMac>>(msrch&0x80000000 ? (48-36) : (48-28))) & 0xFFFFFF;
+      n = NULL;
+      OUIMap::iterator opos = ouis.find((uint32_t)(msrch));
+      if (opos!=ouis.end()) {
+        n = opos->second;
+      }
+    }
+  }
+  return n;
+}
+
+
+#ifdef __APPLE__
+
+// create a space saving version of the wireshark OUI table, by grouping /24 and /36 into sublists,
+// differentiating them by the first byte of the lookup key (0 for regular oui24)
+static void createOUItable()
+{
+  typedef std::map<uint32_t, uint8_t> SubgroupMap;
+  string line;
+  FILE *f = fopen(Application::sharedApplication()->resourcePath("oui_source.txt").c_str(), "r");
+  SubgroupMap subGroups;
+  if (!f) return;
+  while (string_fgetline(f, line)) {
+    if (line.size()<1 || line[0]=='#') continue; // skip comments and empty lines
+    string s;
+    const char *cursor = line.c_str();
+    if (!nextPart(cursor, s, '\t', true)) continue;
+    int msz = 24;
+    size_t n = s.find("/");
+    if (n!=string::npos) {
+      sscanf(s.c_str()+n+1, "%d", &msz);
+      s.erase(n);
+    }
+    string mb = hexToBinaryString(s.c_str(), false, 6);
+    if (mb.size()<3 || mb.size()>6) continue;
+    uint64_t mac = 0;
+    for (int i=0; i<mb.size(); i++) {
+      mac |= (uint64_t)((uint8_t)mb[i])<<(8*(5-i));
+    }
+    uint32_t oui24 = (uint32_t)(mac>>24);
+    uint32_t msrch;
+    // encode /24 and /36
+    if (msz!=24) {
+      SubgroupMap::iterator gpos = subGroups.find(oui24);
+      uint8_t gbyte;
+      if (gpos!=subGroups.end()) {
+        gbyte = gpos->second;
+      }
+      else {
+        gbyte = msz==36 ? 0x80 : 0;
+        gbyte |= (subGroups.size()+1); // new group id
+        subGroups[oui24] = gbyte;
+        printf("%X\t*%02u\n", oui24, gbyte); // extra oui24 group lookup line
+      }
+      msrch = (gbyte<<24) | ((mac>>(gbyte&0x80 ? (48-36) : (48-28))) & 0xFFFFFF);
+    }
+    else {
+      msrch = oui24;
+    }
+    // name
+    if (!nextPart(cursor, s, '\t', true)) continue;
+    if (s!="IeeeRegi") {
+      bool capallowed = true;
+      for (int i=0; i<s.size(); i++) {
+        char c = s[i];
+        if (!capallowed && isupper(c)) {
+          s.erase(i);
+          break;
+        }
+        // more caps only after non-alphanum
+        capallowed = !isalpha(c) || isupper(c);
+      }
+      printf("%X\t%s\n", msrch, s.c_str()); // extra oui24 group lookup line
+    }
+  }
+}
+
+#endif
+
+
+
 void WifiTrack::loadOUIs()
 {
   if (!ouiNames || !ouis.empty()) return; // prevent re-loading
@@ -508,26 +604,36 @@ void WifiTrack::loadOUIs()
   string line;
   FILE *f = fopen(Application::sharedApplication()->resourcePath("oui.txt").c_str(), "r");
   while (string_fgetline(f, line)) {
-    // mm:mm:mm[/nn]   wiresharkname
+    if (line.size()<1 || line[0]=='#') continue; // skip comments and empty lines
+    // mmmmm[/nn]   name
     string s;
     const char *cursor = line.c_str();
     if (!nextPart(cursor, s, '\t', true)) continue;
-    string mb = hexToBinaryString(s.c_str(), false, 3);
-    if (mb.size()!=3) continue;
-    uint32_t oui = ((uint8_t)mb[0]<<16)+((uint8_t)mb[1]<<8)+((uint8_t)mb[2]);
+    uint32_t msrch;
+    if (sscanf(s.c_str(), "%x", &msrch)!=1) continue;
+    // Name or oui24 group header
     if (!nextPart(cursor, s, '\t', true)) continue;
-    // always use same string for multiple occurrences
-    NameMap::iterator npos = nameMap.find(s);
-    const char *nameP = NULL;
-    if (npos==nameMap.end()) {
-      nameP = new char[s.size()+1];
-      strcpy((char *)nameP, s.c_str());
-      nameMap[s] = nameP;
+    if (s.size()<1) continue;
+    // - check for OUI24 group header
+    if (s[0]=='*') {
+      uint32_t gbyte;
+      if (sscanf(s.c_str()+1, "%u", &gbyte)!=1) continue;
+      ouis[msrch] = (const char *)gbyte; // not a pointer, but group header byte
     }
     else {
-      nameP = npos->second;
+      // always use same string for multiple occurrences
+      NameMap::iterator npos = nameMap.find(s);
+      const char *nameP = NULL;
+      if (npos==nameMap.end()) {
+        nameP = new char[s.size()+1];
+        strcpy((char *)nameP, s.c_str());
+        nameMap[s] = nameP;
+      }
+      else {
+        nameP = npos->second;
+      }
+      ouis[msrch] = nameP;
     }
-    ouis[oui] = nameP;
   }
   LOG(LOG_NOTICE, "Loaded %lu OUIs with %lu distinct names", ouis.size(), nameMap.size());
 }
@@ -541,9 +647,15 @@ void WifiTrack::loadOUIs()
 void WifiTrack::initOperation()
 {
   LOG(LOG_NOTICE, "initializing wifitrack");
-
+  #ifdef __APPLE__
+  //createOUItable();
+  #endif
   ErrorPtr err;
   loadOUIs();
+  #ifdef __APPLE__
+  uint64_t testMac = 0x40A36BC12345ll;
+  //printf("%llX = %s", testMac, ouiName(testMac));
+  #endif
   err = load();
   if (!Error::isOK(err)) {
     LOG(LOG_ERR, "could not load state: %s", Error::text(err).c_str());
@@ -677,8 +789,7 @@ void WifiTrack::gotDumpLine(ErrorPtr aError)
           if (!s->ssid.empty() || rememberWithoutSsid) {
             m = WTMacPtr(new WTMac);
             m->mac = mac;
-            OUIMap::iterator opos = ouis.find((uint32_t)(mac>>24));
-            if (opos!=ouis.end()) m->ouiName = opos->second;
+            m->ouiName = ouiName(mac);
             macs[mac] = m;
           }
         }
