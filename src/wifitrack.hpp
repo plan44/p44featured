@@ -159,7 +159,7 @@ namespace p44 {
     ErrorPtr save();
     ErrorPtr load();
 
-    JsonObjectPtr dataDump();
+    JsonObjectPtr dataDump(bool aSsids = true, bool aMacs = true, bool aPersons = true);
     ErrorPtr dataImport(JsonObjectPtr aData);
 
     void dumpEnded(ErrorPtr aError);

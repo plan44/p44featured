@@ -118,7 +118,13 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
   if (o) {
     string cmd = o->stringValue();
     if (cmd=="dump") {
-      JsonObjectPtr ans = dataDump();
+      bool ssids = true;
+      bool macs = true;
+      bool persons = true;
+      if (data->get("ssids", o)) ssids = o->boolValue();
+      if (data->get("macs", o)) macs = o->boolValue();
+      if (data->get("persons", o)) persons = o->boolValue();
+      JsonObjectPtr ans = dataDump(ssids, macs, persons);
       aRequest->sendResponse(ans, ErrorPtr());
       return ErrorPtr();
     }
@@ -248,65 +254,75 @@ ErrorPtr WifiTrack::save()
 }
 
 
-JsonObjectPtr WifiTrack::dataDump()
+JsonObjectPtr WifiTrack::dataDump(bool aSsids, bool aMacs, bool aPersons)
 {
   JsonObjectPtr ans = JsonObject::newObj();
+  // summary info
+  ans->add("numpersons", JsonObject::newInt64(persons.size()));
+  ans->add("nummacs", JsonObject::newInt64(macs.size()));
+  ans->add("numssids", JsonObject::newInt64(ssids.size()));
   // persons
-  JsonObjectPtr pans = JsonObject::newArray();
-  for (WTPersonSet::iterator ppos = persons.begin(); ppos!=persons.end(); ++ppos) {
-    JsonObjectPtr p = JsonObject::newObj();
-    p->add("lastrssi", JsonObject::newInt32((*ppos)->lastRssi));
-    p->add("bestrssi", JsonObject::newInt32((*ppos)->bestRssi));
-    p->add("worstrssi", JsonObject::newInt32((*ppos)->worstRssi));
-    if ((*ppos)->hidden) p->add("hidden", JsonObject::newBool(true));
-    p->add("count", JsonObject::newInt64((*ppos)->seenCount));
-    p->add("last", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime((*ppos)->seenLast)));
-    p->add("first", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime((*ppos)->seenFirst)));
-    p->add("color", JsonObject::newString(pixelToWebColor((*ppos)->color)));
-    p->add("imgidx", JsonObject::newInt64((*ppos)->imageIndex));
-    p->add("name", JsonObject::newString((*ppos)->name));
-    JsonObjectPtr marr = JsonObject::newArray();
-    for (WTMacSet::iterator mpos = (*ppos)->macs.begin(); mpos!=(*ppos)->macs.end(); ++mpos) {
-      marr->arrayAppend(JsonObject::newString(macAddressToString((*mpos)->mac, ':').c_str()));
+  if (aPersons) {
+    JsonObjectPtr pans = JsonObject::newArray();
+    for (WTPersonSet::iterator ppos = persons.begin(); ppos!=persons.end(); ++ppos) {
+      JsonObjectPtr p = JsonObject::newObj();
+      p->add("lastrssi", JsonObject::newInt32((*ppos)->lastRssi));
+      p->add("bestrssi", JsonObject::newInt32((*ppos)->bestRssi));
+      p->add("worstrssi", JsonObject::newInt32((*ppos)->worstRssi));
+      if ((*ppos)->hidden) p->add("hidden", JsonObject::newBool(true));
+      p->add("count", JsonObject::newInt64((*ppos)->seenCount));
+      p->add("last", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime((*ppos)->seenLast)));
+      p->add("first", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime((*ppos)->seenFirst)));
+      p->add("color", JsonObject::newString(pixelToWebColor((*ppos)->color)));
+      p->add("imgidx", JsonObject::newInt64((*ppos)->imageIndex));
+      p->add("name", JsonObject::newString((*ppos)->name));
+      JsonObjectPtr marr = JsonObject::newArray();
+      for (WTMacSet::iterator mpos = (*ppos)->macs.begin(); mpos!=(*ppos)->macs.end(); ++mpos) {
+        marr->arrayAppend(JsonObject::newString(macAddressToString((*mpos)->mac, ':').c_str()));
+      }
+      p->add("macs", marr);
+      pans->arrayAppend(p);
     }
-    p->add("macs", marr);
-    pans->arrayAppend(p);
+    ans->add("persons", pans);
   }
-  ans->add("persons", pans);
-  // macs
-  JsonObjectPtr mans = JsonObject::newObj();
-  for (WTMacMap::iterator mpos = macs.begin(); mpos!=macs.end(); ++mpos) {
-    JsonObjectPtr m = JsonObject::newObj();
-    m->add("lastrssi", JsonObject::newInt32(mpos->second->lastRssi));
-    m->add("bestrssi", JsonObject::newInt32(mpos->second->bestRssi));
-    m->add("worstrssi", JsonObject::newInt32(mpos->second->worstRssi));
-    if (mpos->second->hidden) m->add("hidden", JsonObject::newBool(true));
-    m->add("count", JsonObject::newInt64(mpos->second->seenCount));
-    m->add("last", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(mpos->second->seenLast)));
-    m->add("first", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(mpos->second->seenFirst)));
-    JsonObjectPtr sarr = JsonObject::newArray();
-    for (WTSSidSet::iterator spos = mpos->second->ssids.begin(); spos!=mpos->second->ssids.end(); ++spos) {
-      sarr->arrayAppend(JsonObject::newString((*spos)->ssid));
+  if (aMacs) {
+    // macs
+    JsonObjectPtr mans = JsonObject::newObj();
+    for (WTMacMap::iterator mpos = macs.begin(); mpos!=macs.end(); ++mpos) {
+      JsonObjectPtr m = JsonObject::newObj();
+      m->add("lastrssi", JsonObject::newInt32(mpos->second->lastRssi));
+      m->add("bestrssi", JsonObject::newInt32(mpos->second->bestRssi));
+      m->add("worstrssi", JsonObject::newInt32(mpos->second->worstRssi));
+      if (mpos->second->hidden) m->add("hidden", JsonObject::newBool(true));
+      m->add("count", JsonObject::newInt64(mpos->second->seenCount));
+      m->add("last", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(mpos->second->seenLast)));
+      m->add("first", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(mpos->second->seenFirst)));
+      JsonObjectPtr sarr = JsonObject::newArray();
+      for (WTSSidSet::iterator spos = mpos->second->ssids.begin(); spos!=mpos->second->ssids.end(); ++spos) {
+        sarr->arrayAppend(JsonObject::newString((*spos)->ssid));
+      }
+      m->add("ssids", sarr);
+      mans->add(macAddressToString(mpos->first, ':').c_str(), m);
     }
-    m->add("ssids", sarr);
-    mans->add(macAddressToString(mpos->first, ':').c_str(), m);
+    ans->add("macs", mans);
   }
-  ans->add("macs", mans);
-  // ssid details
-  JsonObjectPtr sans = JsonObject::newObj();
-  for (WTSSidMap::iterator spos = ssids.begin(); spos!=ssids.end(); ++spos) {
-    JsonObjectPtr s = JsonObject::newObj();
-    s->add("count", JsonObject::newInt64(spos->second->seenCount));
-    s->add("last", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(spos->second->seenLast)));
-    s->add("maccount", JsonObject::newInt64(spos->second->macs.size()));
-    if (spos->second->hidden) s->add("hidden", JsonObject::newBool(true));
-    if (spos->second->beaconSeenLast!=Never) {
-      s->add("lastbeacon", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(spos->second->beaconSeenLast)));
-      s->add("beaconrssi", JsonObject::newInt32(spos->second->beaconRssi));
+  if (aSsids) {
+    // ssid details
+    JsonObjectPtr sans = JsonObject::newObj();
+    for (WTSSidMap::iterator spos = ssids.begin(); spos!=ssids.end(); ++spos) {
+      JsonObjectPtr s = JsonObject::newObj();
+      s->add("count", JsonObject::newInt64(spos->second->seenCount));
+      s->add("last", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(spos->second->seenLast)));
+      s->add("maccount", JsonObject::newInt64(spos->second->macs.size()));
+      if (spos->second->hidden) s->add("hidden", JsonObject::newBool(true));
+      if (spos->second->beaconSeenLast!=Never) {
+        s->add("lastbeacon", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(spos->second->beaconSeenLast)));
+        s->add("beaconrssi", JsonObject::newInt32(spos->second->beaconRssi));
+      }
+      sans->add(spos->first.c_str(), s);
     }
-    sans->add(spos->first.c_str(), s);
+    ans->add("ssids", sans);
   }
-  ans->add("ssids", sans);
   return ans;
 }
 
