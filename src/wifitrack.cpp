@@ -38,6 +38,7 @@ WTMac::WTMac() :
   seenLast(Never),
   seenFirst(Never),
   seenCount(0),
+  ouiName(NULL),
   lastRssi(-9999),
   bestRssi(-9999),
   worstRssi(9999),
@@ -83,6 +84,7 @@ WifiTrack::WifiTrack(const string aMonitorIf) :
   monitorIf(aMonitorIf),
   dumpPid(-1),
   rememberWithoutSsid(false),
+  ouiNames(true),
   minShowInterval(3*Minute),
   minRssi(-70),
   minShowRssi(-65),
@@ -139,13 +141,15 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
     else if (cmd=="test") {
       string intro = "hi";
       string name = "anonymus";
+      string brand = "any";
       if (data->get("intro", o)) intro = o->stringValue();
       if (data->get("name", o)) name = o->stringValue();
+      if (data->get("brand", o)) brand = o->stringValue();
       int imgIdx = 0;
       if (data->get("imgidx", o)) imgIdx = o->int32Value() % numPersonImages;
       PixelColor col = white;
       if (data->get("color", o)) col = webColorToPixel(o->stringValue());
-      displayMessage(intro, imgIdx, col, name);
+      displayMessage(intro, imgIdx, col, name, brand);
       return Error::ok();
     }
     else if (cmd=="hide") {
@@ -200,6 +204,9 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
     if (data->get("rememberWithoutSsid", o, true)) {
       rememberWithoutSsid = o->boolValue();
     }
+    if (data->get("ouiNames", o, true)) {
+      ouiNames = o->boolValue();
+    }
     if (data->get("minRssi", o, true)) {
       minRssi = o->int32Value();
     }
@@ -226,6 +233,7 @@ JsonObjectPtr WifiTrack::status()
   if (answer->isType(json_type_object)) {
     answer->add("minShowInterval", JsonObject::newDouble((double)minShowInterval/MilliSecond));
     answer->add("rememberWithoutSsid", JsonObject::newBool(rememberWithoutSsid));
+    answer->add("ouiNames", JsonObject::newBool(ouiNames));
     answer->add("minRssi", JsonObject::newInt32(minRssi));
     answer->add("minShowRssi", JsonObject::newInt32(minShowRssi));
     answer->add("tooCommonMacCount", JsonObject::newInt32(tooCommonMacCount));
@@ -375,6 +383,8 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
     else {
       m = WTMacPtr(new WTMac);
       m->mac = mac;
+      OUIMap::iterator opos = ouis.find((uint32_t)(mac>>24));
+      if (opos!=ouis.end()) m->ouiName = opos->second;
       insertMac = true;
     }
     // links
@@ -487,6 +497,40 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
   return ErrorPtr();
 }
 
+// MARK: ==== OUI lookup
+
+void WifiTrack::loadOUIs()
+{
+  if (!ouiNames || !ouis.empty()) return; // prevent re-loading
+  LOG(LOG_NOTICE, "Loading OUIs");
+  typedef std::map<string, const char*> NameMap;
+  NameMap nameMap;
+  string line;
+  FILE *f = fopen(Application::sharedApplication()->resourcePath("oui.txt").c_str(), "r");
+  while (string_fgetline(f, line)) {
+    // mm:mm:mm[/nn]   wiresharkname
+    string s;
+    const char *cursor = line.c_str();
+    if (!nextPart(cursor, s, '\t', true)) continue;
+    string mb = hexToBinaryString(s.c_str(), false, 3);
+    if (mb.size()!=3) continue;
+    uint32_t oui = ((uint8_t)mb[0]<<16)+((uint8_t)mb[1]<<8)+((uint8_t)mb[2]);
+    if (!nextPart(cursor, s, '\t', true)) continue;
+    // always use same string for multiple occurrences
+    NameMap::iterator npos = nameMap.find(s);
+    const char *nameP = NULL;
+    if (npos==nameMap.end()) {
+      nameP = new char[s.size()+1];
+      strncpy((char *)nameP, s.c_str(), s.size());
+      nameMap[s] = nameP;
+    }
+    else {
+      nameP = npos->second;
+    }
+    ouis[oui] = nameP;
+  }
+  LOG(LOG_NOTICE, "Loaded %lu OUIs with %lu distinct names", ouis.size(), nameMap.size());
+}
 
 
 
@@ -499,6 +543,7 @@ void WifiTrack::initOperation()
   LOG(LOG_NOTICE, "initializing wifitrack");
 
   ErrorPtr err;
+  loadOUIs();
   err = load();
   if (!Error::isOK(err)) {
     LOG(LOG_ERR, "could not load state: %s", Error::text(err).c_str());
@@ -632,6 +677,8 @@ void WifiTrack::gotDumpLine(ErrorPtr aError)
           if (!s->ssid.empty() || rememberWithoutSsid) {
             m = WTMacPtr(new WTMac);
             m->mac = mac;
+            OUIMap::iterator opos = ouis.find((uint32_t)(mac>>24));
+            if (opos!=ouis.end()) m->ouiName = opos->second;
             macs[mac] = m;
           }
         }
@@ -672,7 +719,7 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
       string_format_append(s, "%s%s (%ld)", sep, sstr.c_str(), (*pos)->seenCount);
       sep = ", ";
     }
-    FOCUSLOG("Sighted%s: MAC=%s (%ld), RSSI=%d,%d,%d : %s", person ? " and already has person" : "", macAddressToString(aMac->mac,':').c_str(), aMac->seenCount, aMac->worstRssi, aMac->lastRssi, aMac->bestRssi, s.c_str());
+    FOCUSLOG("Sighted%s: MAC=%s, %s (%ld), RSSI=%d,%d,%d : %s", person ? " and already has person" : "", macAddressToString(aMac->mac,':').c_str(), nonNullCStr(aMac->ouiName), aMac->seenCount, aMac->worstRssi, aMac->lastRssi, aMac->bestRssi, s.c_str());
   }
   // process
   if (aNewSSidForMac && aSSid->macs.size()<tooCommonMacCount) {
@@ -729,8 +776,9 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
     if (person) {
       // assign to all macs found related
       if (person->macs.insert(aMac).second) {
-        LOG(LOG_NOTICE, "+++ Just sighted MAC %s via '%s' -> now linked to person '%s' (%d/#%s), MACs=%lu",
+        LOG(LOG_NOTICE, "+++ Just sighted MAC %s, %s via '%s' -> now linked to person '%s' (%d/#%s), MACs=%lu",
           macAddressToString(aMac->mac,':').c_str(),
+          nonNullCStr(aMac->ouiName),
           aSSid->ssid.c_str(),
           person->name.c_str(),
           person->imageIndex,
@@ -754,8 +802,9 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
         // assign new person
         (*mpos)->person = person;
         if (person->macs.insert(*mpos).second) {
-          LOG(LOG_NOTICE, "+++ Found other MAC %s related -> now linked to person '%s' (%d/#%s), MACs=%lu",
+          LOG(LOG_NOTICE, "+++ Found other MAC %s, %s related -> now linked to person '%s' (%d/#%s), MACs=%lu",
             macAddressToString((*mpos)->mac,':').c_str(),
+            nonNullCStr((*mpos)->ouiName),
             person->name.c_str(),
             person->imageIndex,
             pixelToWebColor(person->color).c_str(),
@@ -774,7 +823,7 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
     if (person->bestRssi<person->lastRssi) person->bestRssi = person->lastRssi;
     if (person->worstRssi>person->lastRssi) person->worstRssi = person->lastRssi;
     if (person->seenFirst==Never) person->seenFirst = person->seenLast;
-    LOG(LOG_INFO, "*** Recognized person%s, '%s', (%d/#%s), linked MACs=%lu, via ssid='%s', MAC=%s%s",
+    LOG(LOG_INFO, "*** Recognized person%s, '%s', (%d/#%s), linked MACs=%lu, via ssid='%s', MAC=%s, %s%s",
       person->hidden ? " (hidden)" : "",
       person->name.c_str(),
       person->imageIndex,
@@ -782,6 +831,7 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
       person->macs.size(),
       aSSid->ssid.c_str(),
       macAddressToString(aMac->mac,':').c_str(),
+      nonNullCStr(aMac->ouiName),
       aMac->hidden ? " (hidden)" : ""
     );
     // show person?
@@ -810,28 +860,30 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
         string msg = string_format("P%d_%s - %s", person->imageIndex, pixelToWebColor(person->color).c_str(), nameToShow.c_str());
         // show message
         person->shownLast = person->seenLast;
-        LOG(LOG_NOTICE, "*** Showing person as '%s' (%d/#%s) via %s / '%s' (%d): %s",
+        LOG(LOG_NOTICE, "*** Showing person as '%s' (%d/#%s) via %s, %s / '%s' (%d): %s",
           nameToShow.c_str(),
           person->imageIndex,
           pixelToWebColor(person->color).c_str(),
           macAddressToString(aMac->mac,':').c_str(),
+          nonNullCStr(aMac->ouiName),
           aSSid->ssid.c_str(),
           person->lastRssi,
           msg.c_str()
         );
-        displayMessage("hi", person->imageIndex, person->color, nameToShow);
+        displayMessage("hi", person->imageIndex, person->color, nameToShow, nonNullCStr(aMac->ouiName));
       }
     }
   }
 }
 
 
-void WifiTrack::displayMessage(string aIntro, int aImageIndex, PixelColor aColor, string aName)
+void WifiTrack::displayMessage(string aIntro, int aImageIndex, PixelColor aColor, string aName, string aBrand)
 {
   LethdApi::SubstitutionMap subst;
   subst["INTRO"] = aIntro;
   subst["IMGIDX"] = string_format("%d", aImageIndex);
   subst["COLOR"] = pixelToWebColor(aColor);
   subst["NAME"] = aName;
+  subst["BRAND"] = aBrand;
   LethdApi::sharedApi()->runJsonFile("scripts/showssid.json", NULL, &scriptContext, &subst);
 }

@@ -42,6 +42,10 @@ namespace p44 {
   typedef std::set<WTPersonPtr> WTPersonSet;
 
 
+  typedef std::map<uint32_t, const char*> OUIMap;
+
+
+
   class WTMac : public P44Obj
   {
   public:
@@ -55,6 +59,7 @@ namespace p44 {
     int bestRssi;
     int worstRssi;
     uint64_t mac;
+    const char *ouiName;
     bool hidden;
 
     WTSSidSet ssids;
@@ -124,7 +129,10 @@ namespace p44 {
     WTSSidMap ssids;
     WTPersonSet persons;
 
+    OUIMap ouis;
+
     // settings
+    bool ouiNames;
     bool rememberWithoutSsid;
     MLMicroSeconds minShowInterval;
     int minRssi; ///< minimal rssi for detecting at all
@@ -156,6 +164,8 @@ namespace p44 {
 
     void initOperation();
 
+    void loadOUIs();
+
     ErrorPtr save();
     ErrorPtr load();
 
@@ -167,7 +177,7 @@ namespace p44 {
 
     void processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidForMac);
 
-    void displayMessage(string aIntro, int aImageIndex, PixelColor aColor, string aName);
+    void displayMessage(string aIntro, int aImageIndex, PixelColor aColor, string aName, string aBrand);
 
   };
 
