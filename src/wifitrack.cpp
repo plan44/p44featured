@@ -521,7 +521,7 @@ void WifiTrack::loadOUIs()
     const char *nameP = NULL;
     if (npos==nameMap.end()) {
       nameP = new char[s.size()+1];
-      strncpy((char *)nameP, s.c_str(), s.size());
+      strcpy((char *)nameP, s.c_str());
       nameMap[s] = nameP;
     }
     else {
