@@ -780,12 +780,14 @@ TextView::TextView()
   exit(1);
   #endif
   textSpacing = 2;
+  visible = true;
 }
 
 
 void TextView::clear()
 {
   setText("");
+  visible = true;
 }
 
 
@@ -801,50 +803,60 @@ void TextView::setText(const string aText)
 }
 
 
+void TextView::setVisible(bool aVisible)
+{
+  visible = aVisible;
+  renderText();
+}
+
+
+
 void TextView::renderText()
 {
-  // convert to glyph indices
-  string glyphs;
-  size_t i = 0;
-  while (i<text.size()) {
-    uint8_t textbyte = text[i++];
-    unsigned char c = 0x7F; // placeholder for unknown
-    // Ä = C3 84
-    // Ö = C3 96
-    // Ü = C3 9C
-    // ä = C3 A4
-    // ö = C3 B6
-    // ü = C3 BC
-    if (textbyte==0xC3) {
-      if (i>=text.size()) break; // end of text
-      switch ((uint8_t)text[i++]) {
-        case 0x84: c = 0x80; break; // Ä
-        case 0x96: c = 0x81; break; // Ö
-        case 0x9C: c = 0x82; break; // Ü
-        case 0xA4: c = 0x83; break; // ä
-        case 0xB6: c = 0x84; break; // ö
-        case 0xBC: c = 0x85; break; // ü
-      }
-    }
-    else {
-      c = textbyte;
-    }
-    // convert to glyph number
-    if (c<0x20 || c>=0x20+numGlyphs) {
-      c = 0x7F; // placeholder for unknown
-    }
-    c -= 0x20;
-    glyphs += c;
-  }
-  // now render glyphs
   textPixelCols.clear();
-  for (size_t i = 0; i<glyphs.size(); ++i) {
-    const glyph_t &g = fontGlyphs[glyphs[i]];
-    for (int j = 0; j<g.width; ++j) {
-      textPixelCols.append(1, g.cols[j]);
+  if (visible) {
+    // convert to glyph indices
+    string glyphs;
+    size_t i = 0;
+    while (i<text.size()) {
+      uint8_t textbyte = text[i++];
+      unsigned char c = 0x7F; // placeholder for unknown
+      // Ä = C3 84
+      // Ö = C3 96
+      // Ü = C3 9C
+      // ä = C3 A4
+      // ö = C3 B6
+      // ü = C3 BC
+      if (textbyte==0xC3) {
+        if (i>=text.size()) break; // end of text
+        switch ((uint8_t)text[i++]) {
+          case 0x84: c = 0x80; break; // Ä
+          case 0x96: c = 0x81; break; // Ö
+          case 0x9C: c = 0x82; break; // Ü
+          case 0xA4: c = 0x83; break; // ä
+          case 0xB6: c = 0x84; break; // ö
+          case 0xBC: c = 0x85; break; // ü
+        }
+      }
+      else {
+        c = textbyte;
+      }
+      // convert to glyph number
+      if (c<0x20 || c>=0x20+numGlyphs) {
+        c = 0x7F; // placeholder for unknown
+      }
+      c -= 0x20;
+      glyphs += c;
     }
-    for (int j = 0; j<textSpacing; ++j) {
-      textPixelCols.append(1, 0);
+    // now render glyphs
+    for (size_t i = 0; i<glyphs.size(); ++i) {
+      const glyph_t &g = fontGlyphs[glyphs[i]];
+      for (int j = 0; j<g.width; ++j) {
+        textPixelCols.append(1, g.cols[j]);
+      }
+      for (int j = 0; j<textSpacing; ++j) {
+        textPixelCols.append(1, 0);
+      }
     }
   }
   // set content size
@@ -881,6 +893,9 @@ ErrorPtr TextView::configureView(JsonObjectPtr aViewConfig)
     JsonObjectPtr o;
     if (aViewConfig->get("text", o)) {
       setText(o->stringValue());
+    }
+    if (aViewConfig->get("visible", o)) {
+      setVisible(o->boolValue());
     }
     if (aViewConfig->get("spacing", o)) {
       setTextSpacing(o->int32Value());

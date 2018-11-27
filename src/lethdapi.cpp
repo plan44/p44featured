@@ -149,6 +149,7 @@ ErrorPtr LethdApi::runJsonString(string aJsonString, SimpleCB aFinishedCallback,
       err = lethdApi->executeJson(script, aFinishedCallback, aContextP);
     }
   }
+  if (!Error::isOK(err)) { LOG(LOG_WARNING, "Script execution error: %s", Error::text(err).c_str()); }
   return err;
 }
 

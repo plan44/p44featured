@@ -144,14 +144,16 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
       string intro = "hi";
       string name = "anonymus";
       string brand = "any";
+      string target = "wifi";
       if (data->get("intro", o)) intro = o->stringValue();
       if (data->get("name", o)) name = o->stringValue();
       if (data->get("brand", o)) brand = o->stringValue();
+      if (data->get("target", o)) target = o->stringValue();
       int imgIdx = 0;
       if (data->get("imgidx", o)) imgIdx = o->int32Value() % numPersonImages;
       PixelColor col = white;
       if (data->get("color", o)) col = webColorToPixel(o->stringValue());
-      displayMessage(intro, imgIdx, col, name, brand);
+      displayMessage(intro, imgIdx, col, name, brand, target);
       return Error::ok();
     }
     else if (cmd=="hide") {
@@ -981,20 +983,25 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
           person->lastRssi,
           msg.c_str()
         );
-        displayMessage("hi", person->imageIndex, person->color, nameToShow, nonNullCStr(aMac->ouiName));
+        displayMessage("hi", person->imageIndex, person->color, nameToShow!=aSSid->ssid ? nameToShow : "", nonNullCStr(aMac->ouiName), aSSid->ssid);
       }
     }
   }
 }
 
 
-void WifiTrack::displayMessage(string aIntro, int aImageIndex, PixelColor aColor, string aName, string aBrand)
+void WifiTrack::displayMessage(string aIntro, int aImageIndex, PixelColor aColor, string aName, string aBrand, string aTarget)
 {
   LethdApi::SubstitutionMap subst;
+  subst["HASINTRO"] = aIntro.size()>0 ? "1" : "0";
   subst["INTRO"] = aIntro;
   subst["IMGIDX"] = string_format("%d", aImageIndex);
   subst["COLOR"] = pixelToWebColor(aColor);
+  subst["HASNAME"] = aName.size()>0 ? "1" : "0";
   subst["NAME"] = aName;
+  subst["HASBRAND"] = aBrand.size()>0 ? "1" : "0";
   subst["BRAND"] = aBrand;
+  subst["HASTARGET"] = aTarget.size()>0 ? "1" : "0";
+  subst["TARGET"] = aTarget;
   LethdApi::sharedApi()->runJsonFile("scripts/showssid.json", NULL, &scriptContext, &subst);
 }

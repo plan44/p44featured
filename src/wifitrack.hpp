@@ -178,7 +178,7 @@ namespace p44 {
 
     void processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidForMac);
 
-    void displayMessage(string aIntro, int aImageIndex, PixelColor aColor, string aName, string aBrand);
+    void displayMessage(string aIntro, int aImageIndex, PixelColor aColor, string aName, string aBrand, string aTarget);
 
   };
 

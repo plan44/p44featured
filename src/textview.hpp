@@ -34,6 +34,7 @@ namespace p44 {
 
     // text rendering
     string text; ///< internal representation of text
+    bool visible; ///< if not set, text view is reduced to zero width
     int textSpacing; ///< pixels between characters
     string textPixelCols; ///< string of text column bytes
 
@@ -46,6 +47,9 @@ namespace p44 {
     /// set new text
     /// @note: sets the content size of the view according to the text
     void setText(const string aText);
+
+    /// set visibility
+    void setVisible(bool aVisible);
 
     /// get current text
     string getText() const { return text; }
