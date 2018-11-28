@@ -24,7 +24,7 @@
 #define ALWAYS_DEBUG 0
 // - set FOCUSLOGLEVEL to non-zero log level (usually, 5,6, or 7==LOG_DEBUG) to get focus (extensive logging) for this file
 //   Note: must be before including "logger.hpp" (or anything that includes "logger.hpp")
-#define FOCUSLOGLEVEL 6
+#define FOCUSLOGLEVEL 7
 
 #include "viewscroller.hpp"
 #include "viewstack.hpp"
@@ -70,6 +70,21 @@ void ViewScroller::clear()
 }
 
 
+void ViewScroller::setOffsetX(double aOffsetX)
+{
+  scrollOffsetX_milli = aOffsetX*1000l;
+  makeDirty();
+}
+
+
+void ViewScroller::setOffsetY(double aOffsetY)
+{
+  scrollOffsetY_milli = aOffsetY*1000l;
+  makeDirty();
+}
+
+
+
 MLMicroSeconds ViewScroller::step(MLMicroSeconds aPriorityUntil)
 {
   MLMicroSeconds now = MainLoop::now();
@@ -99,20 +114,20 @@ MLMicroSeconds ViewScroller::step(MLMicroSeconds aPriorityUntil)
         // Note: might need multiple rounds after scrolled view's content size has changed to get back in range
         if (scrolledView) {
           WrapMode wm = scrolledView->getWrapMode();
-          PixelCoord svcsz = scrolledView->getFrameSize();
+          PixelCoord svfsz = scrolledView->getFrameSize();
           if (wm&wrapX) {
-            long csx_milli = svcsz.x*1000;
-            while ((wm&wrapXmax) && scrollOffsetX_milli>=csx_milli && csx_milli>0)
-              scrollOffsetX_milli-=csx_milli;
-            while ((wm&wrapXmin) && scrollOffsetX_milli<0 && csx_milli>0)
-              scrollOffsetX_milli+=csx_milli;
+            long fsx_milli = svfsz.x*1000;
+            while ((wm&wrapXmax) && scrollOffsetX_milli>=fsx_milli && fsx_milli>0)
+              scrollOffsetX_milli-=fsx_milli;
+            while ((wm&wrapXmin) && scrollOffsetX_milli<0 && fsx_milli>0)
+              scrollOffsetX_milli+=fsx_milli;
           }
           if (wm&wrapY) {
-            long csy_milli = svcsz.y*1000;
-            while ((wm&wrapYmax) && scrollOffsetY_milli>=csy_milli && csy_milli>0)
-              scrollOffsetY_milli-=csy_milli;
-            while ((wm&wrapYmin) && scrollOffsetY_milli<0 && csy_milli>0)
-              scrollOffsetY_milli+=csy_milli;
+            long fsy_milli = svfsz.y*1000;
+            while ((wm&wrapYmax) && scrollOffsetY_milli>=fsy_milli && fsy_milli>0)
+              scrollOffsetY_milli-=fsy_milli;
+            while ((wm&wrapYmin) && scrollOffsetY_milli<0 && fsy_milli>0)
+              scrollOffsetY_milli+=fsy_milli;
           }
         }
         // check scroll end
@@ -149,10 +164,13 @@ MLMicroSeconds ViewScroller::step(MLMicroSeconds aPriorityUntil)
         PixelRect sf = scrolledView->getFrame();
         WrapMode w = scrolledView->getWrapMode();
         if (
-          ((w&wrapXmax)==0 && scrollOffsetX_milli/1000+frame.dx>sf.x+sf.dx)
-          // TODO: other directions!
+          ((w&wrapXmax)==0 && scrollOffsetX_milli/1000+frame.dx>sf.x+sf.dx) ||
+          ((w&wrapXmin)==0 && scrollOffsetX_milli/1000<sf.x) ||
+          ((w&wrapYmax)==0 && scrollOffsetY_milli/1000+frame.dy>sf.y+sf.dy) ||
+          ((w&wrapYmin)==0 && scrollOffsetY_milli/1000<sf.y)
         ) {
-          FOCUSLOG("Needs new content: scrollX = %.2f, scrollY=%.2f, frame=(%d,%d,%d,%d) scrolledframe=(%d,%d,%d,%d)",
+          FOCUSLOG("*** Scroller '%s' needs new content: scrollX = %.2f, scrollY=%.2f, frame=(%d,%d,%d,%d) scrolledframe=(%d,%d,%d,%d)",
+            label.c_str(),
             (double)scrollOffsetX_milli/1000, (double)scrollOffsetY_milli/1000,
             frame.x, frame.y, frame.dx, frame.dy,
             sf.x, sf.y, sf.dx, sf.dy
@@ -160,7 +178,14 @@ MLMicroSeconds ViewScroller::step(MLMicroSeconds aPriorityUntil)
           if (!needContentCB()) {
             stopScroll();
           }
-          if (autopurge) purgeScrolledOut();
+          if (autopurge) {
+            // remove views no longer in sight
+            purgeScrolledOut();
+            // re-adjust scroll offset to prevent getting out of range over time
+            // (even if that would take 2.7yrs @ 20mS/Pixel fast scroll)
+
+
+          }
         }
       }
     }

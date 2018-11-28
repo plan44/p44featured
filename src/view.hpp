@@ -194,8 +194,8 @@ namespace p44 {
       clipXmin = 0x10, /// clip content left of frame area
       clipXmax = 0x20, /// clip content right of frame area
       clipX = clipXmin|clipXmax, // clip content horizontally
-      clipYmin = 0x10, /// clip content below frame area
-      clipYmax = 0x20, /// clip content above frame area
+      clipYmin = 0x40, /// clip content below frame area
+      clipYmax = 0x80, /// clip content above frame area
       clipY = clipYmin|clipYmax, // clip content vertically
       clipXY = clipX|clipY, // clip content
     };
@@ -238,15 +238,15 @@ namespace p44 {
     void rotateCoord(PixelCoord &aCoord);
 
     /// content rectangle in frame coordinates
-    void contentRectInFrameCoord(PixelRect &aRect);
+    void contentRectAsViewCoord(PixelRect &aRect);
 
     /// transform frame to content coordinates
     /// @note transforming from frame to content coords is: flipCoordInFrame() -> rotateCoord() -> subtract content.x/y
-    void frameToContentCoord(PixelCoord &aCoord);
+    void inFrameToContentCoord(PixelCoord &aCoord);
 
     /// transform content to frame coordinates
     /// @note transforming from content to frame coords is: add content.x/y -> rotateCoord() -> flipCoordInFrame()
-    void contentToFrameCoord(PixelCoord &aCoord);
+    void contentToInFrameCoord(PixelCoord &aCoord);
 
 
     /// get content pixel color
@@ -310,6 +310,12 @@ namespace p44 {
     /// get current wrap mode
     /// @return current wrap mode
     WrapMode getWrapMode() { return contentWrapMode; }
+
+    /// set view label
+    /// @note this is for referencing views in reconfigure operations
+    /// @param aLabel the new label
+    void setLabel(const string aLabel) { label = aLabel; }
+
 
     /// set view's alpha
     /// @param aAlpha 0=fully transparent, 255=fully opaque

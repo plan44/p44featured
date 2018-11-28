@@ -71,6 +71,10 @@ namespace p44 {
     /// @param aView the view to remove from the stack
     void removeView(ViewPtr aView);
 
+    /// offset all subviews
+    /// @param aOffset will be added to all subview frame's x/y
+    void offsetSubviews(PixelCoord aOffset);
+
 
     /// clear stack, means remove all views
     virtual void clear() P44_OVERRIDE;

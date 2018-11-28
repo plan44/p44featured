@@ -24,7 +24,7 @@
 #define ALWAYS_DEBUG 0
 // - set FOCUSLOGLEVEL to non-zero log level (usually, 5,6, or 7==LOG_DEBUG) to get focus (extensive logging) for this file
 //   Note: must be before including "logger.hpp" (or anything that includes "logger.hpp")
-#define FOCUSLOGLEVEL 6
+#define FOCUSLOGLEVEL 7
 
 #include "view.hpp"
 #include "ledchaincomm.hpp" // for brightnessToPwm and pwmToBrightness
@@ -41,8 +41,8 @@ View::View() :
   setFrame(zeroRect);
   // default to normal orientation
   contentOrientation = right;
-  // default to no content wrap
-  contentWrapMode = noWrap;
+  // default to clip, no content wrap
+  contentWrapMode = clipXY;
   // default content size is same as view's
   setContent(zeroRect);
   backgroundColor = { .r=0, .g=0, .b=0, .a=0 }; // transparent background,
@@ -60,6 +60,8 @@ View::~View()
   clear();
 }
 
+
+// MARK: ===== frame and content
 
 bool View::isInContentSize(PixelCoord aPt)
 {
@@ -84,9 +86,11 @@ void View::geometryChange(bool aStart)
       if (geometryChanging==0) {
         if (changedGeometry) {
           if (changedGeometry) {
-            FOCUSLOG("View '%s' changed geometry: frame=(%d,%d,%d,%d), content=(%d,%d,%d,%d)",
+            FOCUSLOG("View '%s' changed geometry: frame=(%d,%d,%d,%d)->(%d,%d,%d,%d), content=(%d,%d,%d,%d)->(%d,%d,%d,%d)",
               label.c_str(),
+              previousFrame.x, previousFrame.y, previousFrame.dx, previousFrame.dy,
               frame.x, frame.y, frame.dx, frame.dy,
+              previousContent.x, previousContent.y, previousContent.dx, previousContent.dy,
               content.x, content.y, content.dx, content.dy
             );
           }
@@ -100,6 +104,45 @@ void View::geometryChange(bool aStart)
       }
     }
   }
+}
+
+
+
+void View::rotateCoord(PixelCoord &aCoord)
+{
+  if (contentOrientation & xy_swap) {
+    swap(aCoord.x, aCoord.y);
+  }
+}
+
+
+void View::flipCoordInFrame(PixelCoord &aCoord)
+{
+  // flip within frame if not zero sized
+  if ((contentOrientation & x_flip) && frame.dx>0) {
+    aCoord.x = frame.dx-aCoord.x-1;
+  }
+  if ((contentOrientation & y_flip) && frame.dy>0) {
+    aCoord.y = frame.dy-aCoord.y-1;
+  }
+}
+
+
+void View::inFrameToContentCoord(PixelCoord &aCoord)
+{
+  flipCoordInFrame(aCoord);
+  rotateCoord(aCoord);
+  aCoord.x -= content.x;
+  aCoord.y -= content.y;
+}
+
+
+void View::contentToInFrameCoord(PixelCoord &aCoord)
+{
+  aCoord.x += content.x;
+  aCoord.y += content.y;
+  rotateCoord(aCoord);
+  flipCoordInFrame(aCoord);
 }
 
 
@@ -144,7 +187,10 @@ void View::setContent(PixelRect aContent)
 {
   geometryChange(true);
   changeGeometryRect(content, aContent);
-  if (sizeToContent) moveFrameToContent(true);
+  if (sizeToContent) {
+    moveFrameToContent(true);
+    moveFrameToContent(true);
+  }
   geometryChange(false);
 };
 
@@ -153,7 +199,7 @@ void View::setContentSize(PixelCoord aSize)
 {
   geometryChange(true);
   changeGeometryRect(content, { content.x, content.y, aSize.x, aSize.y });
-  if (sizeToContent) moveFrameToContent(true);
+  if (changedGeometry && sizeToContent) moveFrameToContent(true);
   geometryChange(false);
 };
 
@@ -168,22 +214,24 @@ void View::setFullFrameContent()
 
 
 
-void View::contentRectInFrameCoord(PixelRect &aRect)
+void View::contentRectAsViewCoord(PixelRect &aRect)
 {
   // get opposite content rect corners
-  PixelCoord c1 = { content.x, content.y };
-  PixelCoord c2 = { content.x+content.dx-1, content.y+content.dy-1 };
-  // transform into frame coords
-  contentToFrameCoord(c1);
-  contentToFrameCoord(c2);
+  PixelCoord c1 = { 0, 0 };
+  contentToInFrameCoord(c1);
+  PixelCoord inset = { content.dx>0 ? 1 : 0, content.dy>0 ? 1 : 0 };
+  PixelCoord c2 = { content.dx-inset.x, content.dy-inset.y };
+  // transform into coords relative to frame origin
+  contentToInFrameCoord(c2);
   // make c2 the non-origin corner
   if (c1.x>c2.x) swap(c1.x, c2.x);
   if (c1.y>c2.y) swap(c1.y, c2.y);
-  aRect.x = c1.x;
-  aRect.dx = c2.x-c1.x+1;
-  aRect.y = c1.y;
-  aRect.dy = c2.y-c1.y+1;
-  FOCUSLOG("View '%s' frame=(%d,%d,%d,%d), content rect in frame coords=(%d,%d,%d,%d)",
+  // create view coord rectangle around current contents
+  aRect.x = c1.x + frame.x;
+  aRect.dx = c2.x-c1.x+inset.x;
+  aRect.y = c1.y + frame.y;
+  aRect.dy = c2.y-c1.y+inset.y;
+  FOCUSLOG("View '%s' frame=(%d,%d,%d,%d), content rect as view coords=(%d,%d,%d,%d)",
     label.c_str(),
     frame.x, frame.y, frame.dx, frame.dy,
     aRect.x, aRect.y, aRect.dx, aRect.dy
@@ -198,8 +246,11 @@ void View::moveFrameToContent(bool aResize)
   geometryChange(true);
   if (aResize) sizeFrameToContent();
   PixelRect f;
-  contentRectInFrameCoord(f);
+  contentRectAsViewCoord(f);
+  // move frame to the place where the content rectangle did appear so far...
   changeGeometryRect(frame, f);
+  // ...which means that no content offset is needed any more (we've compensated it by moving the frame)
+  content.x = 0; content.y = 0;
   geometryChange(false);
 }
 
@@ -220,6 +271,10 @@ void View::clear()
 {
   setContentSize({0, 0});
 }
+
+
+
+// MARK: ===== updating
 
 
 bool View::reportDirtyChilds()
@@ -314,44 +369,6 @@ void View::fadeTo(int aAlpha, MLMicroSeconds aWithIn, SimpleCB aCompletedCB)
 
 #define SHOW_ORIGIN 0
 
-void View::rotateCoord(PixelCoord &aCoord)
-{
-  if (contentOrientation & xy_swap) {
-    swap(aCoord.x, aCoord.y);
-  }
-}
-
-
-void View::flipCoordInFrame(PixelCoord &aCoord)
-{
-  // flip within frame
-  if (contentOrientation & x_flip) {
-    aCoord.x = frame.dx-aCoord.x-1;
-  }
-  if (contentOrientation & y_flip) {
-    aCoord.y = frame.dy-aCoord.y-1;
-  }
-}
-
-
-void View::frameToContentCoord(PixelCoord &aCoord)
-{
-  flipCoordInFrame(aCoord);
-  rotateCoord(aCoord);
-  aCoord.x -= content.x;
-  aCoord.y -= content.y;
-}
-
-
-void View::contentToFrameCoord(PixelCoord &aCoord)
-{
-  aCoord.x += content.x;
-  aCoord.y += content.y;
-  rotateCoord(aCoord);
-  flipCoordInFrame(aCoord);
-}
-
-
 
 PixelColor View::colorAt(PixelCoord aPt)
 {
@@ -386,7 +403,7 @@ PixelColor View::colorAt(PixelCoord aPt)
         while ((contentWrapMode&wrapYmax) && aPt.y>=frame.dy) aPt.y-=frame.dy;
       }
       // translate into content coordinates
-      frameToContentCoord(aPt);
+      inFrameToContentCoord(aPt);
       // now get content pixel in content coordinates
       pc = contentColorAt(aPt);
       if (contentIsMask) {

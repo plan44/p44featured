@@ -79,15 +79,15 @@ namespace p44 {
 
     /// set scroll offsets
     /// @param aOffsetX X direction scroll offset, subpixel distances allowed
-    /// @note the scroll offset describes the distance from this view's content origin (not its origin on the parent view!)
-    ///   to the scrolled view's origin (not its content origin)
-    void setOffsetX(double aOffsetX) { scrollOffsetX_milli = aOffsetX*1000l; makeDirty(); }
+    /// @note the scroll offset describes the distance from this view's content origin (not its frame origin on the parent view!)
+    ///   to the scrolled view's frame origin (not its content origin)
+    void setOffsetX(double aOffsetX);
 
     /// set scroll offsets
     /// @param aOffsetY Y direction scroll offset, subpixel distances allowed
     /// @note the scroll offset describes the distance from this view's content origin (not its origin on the parent view!)
     ///   to the scrolled view's origin (not its content origin)
-    void setOffsetY(double aOffsetY) { scrollOffsetY_milli = aOffsetY*1000l; makeDirty(); }
+    void setOffsetY(double aOffsetY);
 
     /// @return the current X scroll offset
     double getOffsetX() const { return (double)scrollOffsetX_milli/1000; };

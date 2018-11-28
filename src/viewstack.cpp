@@ -24,7 +24,7 @@
 #define ALWAYS_DEBUG 0
 // - set FOCUSLOGLEVEL to non-zero log level (usually, 5,6, or 7==LOG_DEBUG) to get focus (extensive logging) for this file
 //   Note: must be before including "logger.hpp" (or anything that includes "logger.hpp")
-#define FOCUSLOGLEVEL 6
+#define FOCUSLOGLEVEL 7
 
 
 #include "viewstack.hpp"
@@ -75,8 +75,11 @@ void ViewStack::pushView(ViewPtr aView, int aSpacing)
     else if (positioningMode&wrapYmin) {
       aView->frame.y = r.y-aView->frame.dy-aSpacing;
     }
+    if ((aView->getWrapMode()&clipXY)==0) {
+      LOG(LOG_WARNING, "ViewStack '%s', pushed view '%s' is not clipped, probably will obscure neigbours!", label.c_str(), aView->label.c_str());
+    }
   }
-  FOCUSLOG("ViewStack '%s' pushes subview with frame=(%d,%d,%d,%d)",
+  FOCUSLOG("+++ ViewStack '%s' pushes subview with frame=(%d,%d,%d,%d) - frame coords are relative to content origin",
     label.c_str(),
     aView->frame.x, aView->frame.y, aView->frame.dx, aView->frame.dy
   );
@@ -116,6 +119,7 @@ void ViewStack::purgeViews(int aKeepDx, int aKeepDy, bool aCompletely)
     r.x, r.y, r.dx, r.dy
   );
   ViewsList::iterator pos = viewStack.begin();
+  geometryChange(true);
   while (pos!=viewStack.end()) {
     ViewPtr v = *pos;
     if (
@@ -123,29 +127,48 @@ void ViewStack::purgeViews(int aKeepDx, int aKeepDy, bool aCompletely)
       (aCompletely && !rectContainsRect(r, v->frame))
     ) {
       // remove this view
-      FOCUSLOG("- purges subview with frame=(%d,%d,%d,%d)",
+      FOCUSLOG("--- purges subview with frame=(%d,%d,%d,%d)",
         v->frame.x, v->frame.y, v->frame.dx, v->frame.dy
       );
       pos = viewStack.erase(pos);
+      changedGeometry = true;
     }
     else {
       // test next
       ++pos;
     }
   }
-  if ((positioningMode&clipXY)==0) {
+  if (changedGeometry && (positioningMode&clipXY)==0) {
     recalculateContentArea();
   }
+  geometryChange(false);
 }
 
 
 void ViewStack::recalculateContentArea()
 {
+  // where is the actual content relative to the content origin?
   PixelRect r;
   getEnclosingContentRect(r);
+  // move actual content back to content origin
+  offsetSubviews({-r.x, -r.y});
+  // to avoid content moving seen from the outside, now modify content rectangle
   setContent(r);
 }
 
+
+void ViewStack::offsetSubviews(PixelCoord aOffset)
+{
+  geometryChange(true);
+  for (ViewsList::iterator pos = viewStack.begin(); pos!=viewStack.end(); ++pos) {
+    ViewPtr v = *pos;
+    PixelRect f = v->frame;
+    f.x += aOffset.x;
+    f.y += aOffset.y;
+    v->setFrame(f);
+  }
+  geometryChange(false);
+}
 
 
 void ViewStack::getEnclosingContentRect(PixelRect &aBounds)
@@ -177,20 +200,25 @@ void ViewStack::getEnclosingContentRect(PixelRect &aBounds)
 
 void ViewStack::popView()
 {
+  geometryChange(true);
   viewStack.pop_back();
-  makeDirty();
+  changedGeometry = true;
+  geometryChange(false);
 }
 
 
 void ViewStack::removeView(ViewPtr aView)
 {
+  geometryChange(true);
   for (ViewsList::iterator pos = viewStack.begin(); pos!=viewStack.end(); ++pos) {
     if ((*pos)==aView) {
+      (*pos)->setParent(NULL);
       viewStack.erase(pos);
-      makeDirty();
+      changedGeometry = true;
       break;
     }
   }
+  geometryChange(false);
 }
 
 
@@ -198,8 +226,8 @@ void ViewStack::clear()
 {
   geometryChange(true);
   viewStack.clear();
+  changedGeometry = true;
   inherited::clear();
-  geometryChange(false);
 }
 
 
@@ -236,10 +264,13 @@ void ViewStack::updated()
 
 void ViewStack::childGeometryChanged(ViewPtr aChildView, PixelRect aOldFrame, PixelRect aOldContent)
 {
-  if ((positioningMode&clipXY)==0) {
-    // current content bounds should not clip -> auto-adjust
-    recalculateContentArea();
-    moveFrameToContent(true);
+  if (geometryChanging==0) {
+    // only if not already in process of changing
+    if ((positioningMode&clipXY)==0) {
+      // current content bounds should not clip -> auto-adjust
+      recalculateContentArea();
+      moveFrameToContent(true);
+    }
   }
 }
 

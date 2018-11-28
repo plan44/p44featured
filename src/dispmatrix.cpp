@@ -49,6 +49,7 @@ DispPanel::DispPanel(const string aChainName, int aOffsetX, int aRows, int aCols
   chain->begin();
   // the scroller
   dispView = ViewScrollerPtr(new ViewScroller);
+  dispView->setLabel("DISPSCROLLER");
   dispView->setFrame({ 0, 0, cols-borderLeft-borderRight, rows });
   dispView->setFullFrameContent();
   dispView->setOrientation(orientation);
