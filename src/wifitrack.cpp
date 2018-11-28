@@ -27,7 +27,6 @@
 
 #include "wifitrack.hpp"
 #include "application.hpp"
-#include "dispmatrix.hpp"
 
 using namespace p44;
 
@@ -651,7 +650,7 @@ void WifiTrack::initOperation()
 {
   LOG(LOG_NOTICE, "initializing wifitrack");
   // display
-  DispMatrixPtr disp = boost::dynamic_pointer_cast<DispMatrix>(LethdApi::sharedApi()->getFeature("text"));
+  disp = boost::dynamic_pointer_cast<DispMatrix>(LethdApi::sharedApi()->getFeature("text"));
   if (disp) {
     disp->setNeedContentHandler(boost::bind(&WifiTrack::needContentHandler, this));
   }
@@ -999,18 +998,23 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
 
 void WifiTrack::displayMessage(string aIntro, int aImageIndex, PixelColor aColor, string aName, string aBrand, string aTarget)
 {
-  LethdApi::SubstitutionMap subst;
-  subst["HASINTRO"] = aIntro.size()>0 ? "1" : "0";
-  subst["INTRO"] = aIntro;
-  subst["IMGIDX"] = string_format("%d", aImageIndex);
-  subst["COLOR"] = pixelToWebColor(aColor);
-  subst["HASNAME"] = aName.size()>0 ? "1" : "0";
-  subst["NAME"] = aName;
-  subst["HASBRAND"] = aBrand.size()>0 ? "1" : "0";
-  subst["BRAND"] = aBrand;
-  subst["HASTARGET"] = aTarget.size()>0 ? "1" : "0";
-  subst["TARGET"] = aTarget;
-  LethdApi::sharedApi()->runJsonFile("scripts/showssid.json", NULL, &scriptContext, &subst);
+  if (disp && disp->getRemainingScrollTime(true)<30*Second) {
+    LethdApi::SubstitutionMap subst;
+    subst["HASINTRO"] = aIntro.size()>0 ? "1" : "0";
+    subst["INTRO"] = aIntro;
+    subst["IMGIDX"] = string_format("%d", aImageIndex);
+    subst["COLOR"] = pixelToWebColor(aColor);
+    subst["HASNAME"] = aName.size()>0 ? "1" : "0";
+    subst["NAME"] = aName;
+    subst["HASBRAND"] = aBrand.size()>0 ? "1" : "0";
+    subst["BRAND"] = aBrand;
+    subst["HASTARGET"] = aTarget.size()>0 ? "1" : "0";
+    subst["TARGET"] = aTarget;
+    LethdApi::sharedApi()->runJsonFile("scripts/showssid.json", NULL, &scriptContext, &subst);
+  }
+  else {
+    LOG(LOG_WARNING, "Cannot push to scroll text (not initialized or too full)");
+  }
 }
 
 

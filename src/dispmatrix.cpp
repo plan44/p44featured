@@ -505,3 +505,16 @@ void DispMatrix::setNeedContentHandler(NeedContentCB aNeedContentCB)
 {
   FOR_EACH_PANEL(dispView->setNeedContentHandler(aNeedContentCB));
 }
+
+
+MLMicroSeconds DispMatrix::getRemainingScrollTime(bool aLast)
+{
+  MLMicroSeconds rem = Infinite;
+  for (int i=0; i<usedPanels; ++i) {
+    MLMicroSeconds n = panels[i]->dispView->remainingScrollTime();
+    if (n!=Infinite) {
+      if (rem==Infinite || (aLast && n>rem) || (!aLast && n<rem)) rem = n;
+    }
+  }
+  return rem;
+}

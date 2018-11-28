@@ -161,20 +161,25 @@ MLMicroSeconds ViewScroller::step(MLMicroSeconds aPriorityUntil)
       } // while catchup
       if (needContentCB && scrolledView) {
         // check if we need more content (i.e. scrolled view does not cover frame of the scroller any more)
-        PixelRect sf = scrolledView->getFrame();
-        WrapMode w = scrolledView->getWrapMode();
-        if (
-          ((w&wrapXmax)==0 && scrollOffsetX_milli/1000+frame.dx>sf.x+sf.dx) ||
-          ((w&wrapXmin)==0 && scrollOffsetX_milli/1000<sf.x) ||
-          ((w&wrapYmax)==0 && scrollOffsetY_milli/1000+frame.dy>sf.y+sf.dy) ||
-          ((w&wrapYmin)==0 && scrollOffsetY_milli/1000<sf.y)
-        ) {
-          FOCUSLOG("*** Scroller '%s' needs new content: scrollX = %.2f, scrollY=%.2f, frame=(%d,%d,%d,%d) scrolledframe=(%d,%d,%d,%d)",
-            label.c_str(),
-            (double)scrollOffsetX_milli/1000, (double)scrollOffsetY_milli/1000,
-            frame.x, frame.y, frame.dx, frame.dy,
-            sf.x, sf.y, sf.dx, sf.dy
-          );
+//        PixelRect sf = scrolledView->getFrame();
+//        WrapMode w = scrolledView->getWrapMode();
+//        if (
+//          ((w&wrapXmax)==0 && scrollOffsetX_milli/1000+frame.dx>sf.x+sf.dx) ||
+//          ((w&wrapXmin)==0 && scrollOffsetX_milli/1000<sf.x) ||
+//          ((w&wrapYmax)==0 && scrollOffsetY_milli/1000+frame.dy>sf.y+sf.dy) ||
+//          ((w&wrapYmin)==0 && scrollOffsetY_milli/1000<sf.y)
+//        ) {
+        PixelCoord rem = remainingPixelsToScroll();
+        if (rem.x<0 || rem.y<0) {
+          if (FOCUSLOGENABLED) {
+            PixelRect sf = scrolledView->getFrame();
+            FOCUSLOG("*** Scroller '%s' needs new content: scrollX = %.2f, scrollY=%.2f, frame=(%d,%d,%d,%d) scrolledframe=(%d,%d,%d,%d)",
+              label.c_str(),
+              (double)scrollOffsetX_milli/1000, (double)scrollOffsetY_milli/1000,
+              frame.x, frame.y, frame.dx, frame.dy,
+              sf.x, sf.y, sf.dx, sf.dy
+            );
+          }
           if (!needContentCB()) {
             stopScroll();
           }
@@ -183,8 +188,7 @@ MLMicroSeconds ViewScroller::step(MLMicroSeconds aPriorityUntil)
             purgeScrolledOut();
             // re-adjust scroll offset to prevent getting out of range over time
             // (even if that would take 2.7yrs @ 20mS/Pixel fast scroll)
-
-
+            // FIXME: do it once we need it having run longer than 2 years ;-)
           }
         }
       }
@@ -192,6 +196,50 @@ MLMicroSeconds ViewScroller::step(MLMicroSeconds aPriorityUntil)
   }
   return nextCall;
 }
+
+
+PixelCoord ViewScroller::remainingPixelsToScroll()
+{
+  WrapMode w = scrolledView->getWrapMode();
+  PixelRect sf = scrolledView->getFrame();
+  PixelCoord rem = { INT_MAX, INT_MAX }; // assume forever
+  if ((w&wrapXmax)==0 && scrollStepX_milli>0) {
+    rem.x = (sf.x+sf.dx) - (int)(scrollOffsetX_milli/1000+frame.dx);
+  }
+  if ((w&wrapXmin)==0 && scrollStepX_milli<0) {
+    rem.x = (int)(scrollOffsetX_milli/1000) - sf.x;
+  }
+  if ((w&wrapYmax)==0 && scrollStepY_milli>0) {
+    rem.y = (sf.y+sf.dy) - (int)(scrollOffsetY_milli/1000+frame.dy);
+  }
+  if ((w&wrapYmin)==0 && scrollStepY_milli<0) {
+    rem.y = (int)(scrollOffsetY_milli/1000) - sf.y;
+  }
+  return rem;
+}
+
+
+MLMicroSeconds ViewScroller::remainingScrollTime()
+{
+  PixelCoord rem = remainingPixelsToScroll();
+  if (rem.x==INT_MAX && rem.y==INT_MAX) return Infinite; // no limit
+  int steps = INT_MAX;
+  if (scrollStepX_milli>0) {
+    int s = rem.x*1000/scrollStepX_milli;
+    if (s<steps) steps = s;
+  }
+  if (scrollStepY_milli>0) {
+    int s = rem.y*1000/scrollStepY_milli;
+    if (s<steps) steps = s;
+  }
+  if (steps==INT_MAX) return Infinite; // we can NOT scroll infinitely ;-)
+  return steps*scrollStepInterval;
+}
+
+
+
+
+
 
 
 bool ViewScroller::isDirty()
@@ -274,7 +322,6 @@ void ViewScroller::purgeScrolledOut()
     vs->purgeViews(frame.dx, frame.dy, false);
   }
 }
-
 
 
 #if ENABLE_VIEWCONFIG

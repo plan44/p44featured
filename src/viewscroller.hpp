@@ -130,6 +130,12 @@ namespace p44 {
     /// purge unneeded (scrolled off) views in content view (if it is a ViewStack)
     void purgeScrolledOut();
 
+    /// @return number of pixels in either direction to scroll until current content is exhausted
+    PixelCoord remainingPixelsToScroll();
+
+    /// @return number time until scroll will need more content
+    MLMicroSeconds remainingScrollTime();
+
     /// clear contents of this view
     virtual void clear() P44_OVERRIDE;
 

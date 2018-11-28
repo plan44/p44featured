@@ -22,6 +22,7 @@
 
 #include "feature.hpp"
 #include "view.hpp"
+#include "dispmatrix.hpp"
 
 #include <math.h>
 
@@ -140,6 +141,8 @@ namespace p44 {
     int tooCommonMacCount;
     int minCommonSsidCount;
     int numPersonImages;
+
+    DispMatrixPtr disp;
 
   public:
 
