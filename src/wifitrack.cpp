@@ -27,6 +27,7 @@
 
 #include "wifitrack.hpp"
 #include "application.hpp"
+#include "dispmatrix.hpp"
 
 using namespace p44;
 
@@ -649,6 +650,12 @@ void WifiTrack::loadOUIs()
 void WifiTrack::initOperation()
 {
   LOG(LOG_NOTICE, "initializing wifitrack");
+  // display
+  DispMatrixPtr disp = boost::dynamic_pointer_cast<DispMatrix>(LethdApi::sharedApi()->getFeature("text"));
+  if (disp) {
+    disp->setNeedContentHandler(boost::bind(&WifiTrack::needContentHandler, this));
+  }
+  // network scanning
   #ifdef __APPLE__
   //createOUItable();
   #endif
@@ -1004,4 +1011,11 @@ void WifiTrack::displayMessage(string aIntro, int aImageIndex, PixelColor aColor
   subst["HASTARGET"] = aTarget.size()>0 ? "1" : "0";
   subst["TARGET"] = aTarget;
   LethdApi::sharedApi()->runJsonFile("scripts/showssid.json", NULL, &scriptContext, &subst);
+}
+
+
+bool WifiTrack::needContentHandler()
+{
+  LethdApi::sharedApi()->runJsonFile("scripts/wifipause.json", NULL, &scriptContext, NULL);
+  return true; // keep scrolling
 }

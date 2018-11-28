@@ -184,18 +184,18 @@ namespace p44 {
 
     enum {
       noWrap = 0, /// do not wrap
-      wrapXmin = 0x01, /// wrap in X direction for X<0
-      wrapXmax = 0x02, /// wrap in X direction for X>=content size X
-      wrapX = wrapXmin|wrapXmax, /// wrap in X direction
-      wrapYmin = 0x04, /// wrap in Y direction for Y<0
-      wrapYmax = 0x08, /// wrap in Y direction for Y>=content size Y
-      wrapY = wrapYmin|wrapYmax, /// wrap in Y direction
-      wrapXY = wrapX|wrapY, /// wrap in both directions
-      clipXmin = 0x10, /// clip content left of content area
-      clipXmax = 0x20, /// clip content right of content area
+      wrapXmin = 0x01, /// wrap in X direction for X<frame area
+      wrapXmax = 0x02, /// wrap in X direction for X>=frame area
+      wrapX = wrapXmin|wrapXmax, /// wrap in both X directions
+      wrapYmin = 0x04, /// wrap in Y direction for Y<frame area
+      wrapYmax = 0x08, /// wrap in Y direction for Y>=frame area
+      wrapY = wrapYmin|wrapYmax, /// wrap in both Y directions
+      wrapXY = wrapX|wrapY, /// wrap in all directions
+      clipXmin = 0x10, /// clip content left of frame area
+      clipXmax = 0x20, /// clip content right of frame area
       clipX = clipXmin|clipXmax, // clip content horizontally
-      clipYmin = 0x10, /// clip content below content area
-      clipYmax = 0x20, /// clip content above content area
+      clipYmin = 0x10, /// clip content below frame area
+      clipYmax = 0x20, /// clip content above frame area
       clipY = clipYmin|clipYmax, // clip content vertically
       clipXY = clipX|clipY, // clip content
     };
@@ -219,7 +219,7 @@ namespace p44 {
     // content
     PixelRect content; ///< content offset and size relative to frame (but in content coordinates, i.e. possibly orientation translated!)
     Orientation contentOrientation; ///< orientation of content in frame
-    WrapMode contentWrapMode; ///< content wrap mode
+    WrapMode contentWrapMode; ///< content wrap mode in frame area
     bool contentIsMask; ///< if set, only alpha of content is used on foreground color
     bool localTimingPriority; ///< if set, this view's timing requirements should be treated with priority over child view's
     MLMicroSeconds maskChildDirtyUntil; ///< if>0, child's dirty must not be reported until this time is reached
@@ -228,10 +228,26 @@ namespace p44 {
     string label; ///< label of the view for addressing it
     #endif
 
+    /// change rect and trigger geometry change when actually changed
+    void changeGeometryRect(PixelRect &aRect, PixelRect aNewRect);
 
-    /// re-orient point according to contentOrientation
-    /// @note works in both directions
-    void orientPoint(PixelCoord &aCoord);
+    /// apply flip operations within frame
+    void flipCoordInFrame(PixelCoord &aCoord);
+
+    /// rotate coordinate between frame and content (both ways)
+    void rotateCoord(PixelCoord &aCoord);
+
+    /// content rectangle in frame coordinates
+    void contentRectInFrameCoord(PixelRect &aRect);
+
+    /// transform frame to content coordinates
+    /// @note transforming from frame to content coords is: flipCoordInFrame() -> rotateCoord() -> subtract content.x/y
+    void frameToContentCoord(PixelCoord &aCoord);
+
+    /// transform content to frame coordinates
+    /// @note transforming from content to frame coords is: add content.x/y -> rotateCoord() -> flipCoordInFrame()
+    void contentToFrameCoord(PixelCoord &aCoord);
+
 
     /// get content pixel color
     /// @param aPt content coordinate
@@ -267,6 +283,9 @@ namespace p44 {
     /// set the frame within the parent coordinate system
     /// @param aFrame the new frame for the view
     virtual void setFrame(PixelRect aFrame);
+
+    /// @return current frame
+    PixelRect getFrame() { return frame; };
 
     /// @param aParentView parent view or NULL if none
     void setParent(ViewPtr aParentView);
@@ -329,18 +348,24 @@ namespace p44 {
     /// set content size (without changing offset)
     void setContentSize(PixelCoord aSize);
 
-    /// @return content size X
+    /// @return content size
     PixelCoord getContentSize() const { return { content.dx, content.dy }; }
 
-    /// @return content size Y
-    int getContentSizeY() const { return content.dy; }
-
+    /// @return frame size
+    PixelCoord getFrameSize() const { return { frame.dx, frame.dy }; }
 
     /// set content size to full frame content with same origin and orientation
     void setFullFrameContent();
 
-    /// set frame size to contain all content
+    /// size frame to content (but no move)
     void sizeFrameToContent();
+
+    /// move frame such that its new origin is at the point where the content area starts
+    /// @note the pixel that appears at the new frame origin is one corner of the contents, but not necessarily the origin,
+    ///   depending on orientation.
+    /// @note content does not move relative to view frame origin, but frame does
+    /// @param aResize if set, frame is also resized to fit contents
+    void moveFrameToContent(bool aResize);
 
     /// child view has changed geometry (frame, content rect)
     virtual void childGeometryChanged(ViewPtr aChildView, PixelRect aOldFrame, PixelRect aOldContent) {};

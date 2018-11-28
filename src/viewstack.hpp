@@ -118,7 +118,7 @@ namespace p44 {
   private:
 
     void getEnclosingContentRect(PixelRect &aBounds);
-    void recalculateContentSize();
+    void recalculateContentArea();
 
   };
   typedef boost::intrusive_ptr<ViewStack> ViewStackPtr;

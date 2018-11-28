@@ -180,6 +180,8 @@ namespace p44 {
 
     void displayMessage(string aIntro, int aImageIndex, PixelColor aColor, string aName, string aBrand, string aTarget);
 
+    bool needContentHandler();
+
   };
 
 } // namespace p44

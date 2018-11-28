@@ -498,3 +498,9 @@ void DispMatrix::step(MLTimer &aTimer)
   }
   MainLoop::currentMainLoop().retriggerTimer(aTimer, nextCall, 0, MainLoop::absolute);
 }
+
+
+void DispMatrix::setNeedContentHandler(NeedContentCB aNeedContentCB)
+{
+  FOR_EACH_PANEL(dispView->setNeedContentHandler(aNeedContentCB));
+}

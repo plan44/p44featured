@@ -19,6 +19,14 @@
 //  along with pixelboardd. If not, see <http://www.gnu.org/licenses/>.
 //
 
+// File scope debugging options
+// - Set ALWAYS_DEBUG to 1 to enable DBGLOG output even in non-DEBUG builds of this file
+#define ALWAYS_DEBUG 0
+// - set FOCUSLOGLEVEL to non-zero log level (usually, 5,6, or 7==LOG_DEBUG) to get focus (extensive logging) for this file
+//   Note: must be before including "logger.hpp" (or anything that includes "logger.hpp")
+#define FOCUSLOGLEVEL 7
+
+
 #include "imageview.hpp"
 
 #if ENABLE_VIEWCONFIG
@@ -73,10 +81,10 @@ ErrorPtr ImageView::loadPNG(const string aPNGFileName)
     // PNG_IMAGE_SIZE macro uses the information about the image (width,
     // height and format) stored in 'image'.
     pngBuffer = (png_bytep)malloc(PNG_IMAGE_SIZE(pngImage));
-    LOG(LOG_INFO, "Image size in bytes = %d", PNG_IMAGE_SIZE(pngImage));
-    LOG(LOG_INFO, "Image width = %d", pngImage.width);
-    LOG(LOG_INFO, "Image height = %d", pngImage.height);
-    LOG(LOG_INFO, "Image width*height = %d", pngImage.height*pngImage.width);
+    FOCUSLOG("Image size in bytes = %d", PNG_IMAGE_SIZE(pngImage));
+    FOCUSLOG("Image width = %d", pngImage.width);
+    FOCUSLOG("Image height = %d", pngImage.height);
+    FOCUSLOG("Image width*height = %d", pngImage.height*pngImage.width);
     setContentSize({ (int)pngImage.width, (int)pngImage.height});
     if (pngBuffer==NULL) {
       return TextError::err("Could not allocate buffer for reading PNG file %s", aPNGFileName.c_str());

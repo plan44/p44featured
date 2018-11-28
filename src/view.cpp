@@ -19,6 +19,13 @@
 //  along with pixelboardd. If not, see <http://www.gnu.org/licenses/>.
 //
 
+// File scope debugging options
+// - Set ALWAYS_DEBUG to 1 to enable DBGLOG output even in non-DEBUG builds of this file
+#define ALWAYS_DEBUG 0
+// - set FOCUSLOGLEVEL to non-zero log level (usually, 5,6, or 7==LOG_DEBUG) to get focus (extensive logging) for this file
+//   Note: must be before including "logger.hpp" (or anything that includes "logger.hpp")
+#define FOCUSLOGLEVEL 6
+
 #include "view.hpp"
 #include "ledchaincomm.hpp" // for brightnessToPwm and pwmToBrightness
 
@@ -76,6 +83,13 @@ void View::geometryChange(bool aStart)
       geometryChanging--;
       if (geometryChanging==0) {
         if (changedGeometry) {
+          if (changedGeometry) {
+            FOCUSLOG("View '%s' changed geometry: frame=(%d,%d,%d,%d), content=(%d,%d,%d,%d)",
+              label.c_str(),
+              frame.x, frame.y, frame.dx, frame.dy,
+              content.x, content.y, content.dx, content.dy
+            );
+          }
           makeDirty();
           if (parentView) {
             // Note: as we are passing in the frames, it is safe when the following calls recursively calls geometryChange again
@@ -89,13 +103,33 @@ void View::geometryChange(bool aStart)
 }
 
 
+/// change rect and trigger geometry change when actually changed
+void View::changeGeometryRect(PixelRect &aRect, PixelRect aNewRect)
+{
+  if (aNewRect.x!=aRect.x) {
+    changedGeometry = true;
+    aRect.x = aNewRect.x;
+  }
+  if (aNewRect.y!=aRect.y) {
+    changedGeometry = true;
+    aRect.y = aNewRect.y;
+  }
+  if (aNewRect.dx!=aRect.dx) {
+    changedGeometry = true;
+    aRect.dx = aNewRect.dx;
+  }
+  if (aNewRect.dy!=aRect.dy) {
+    changedGeometry = true;
+    aRect.dy = aNewRect.dy;
+  }
+}
+
+
 
 void View::setFrame(PixelRect aFrame)
 {
   geometryChange(true);
-  changedGeometry = true;
-  frame = aFrame;
-  makeDirty();
+  changeGeometryRect(frame, aFrame);
   geometryChange(false);
 }
 
@@ -109,10 +143,8 @@ void View::setParent(ViewPtr aParentView)
 void View::setContent(PixelRect aContent)
 {
   geometryChange(true);
-  changedGeometry = true;
-  content = aContent;
-  if (sizeToContent) sizeFrameToContent();
-  makeDirty();
+  changeGeometryRect(content, aContent);
+  if (sizeToContent) moveFrameToContent(true);
   geometryChange(false);
 };
 
@@ -120,11 +152,8 @@ void View::setContent(PixelRect aContent)
 void View::setContentSize(PixelCoord aSize)
 {
   geometryChange(true);
-  changedGeometry = true;
-  content.dx = aSize.x;
-  content.dy = aSize.y;
-  if (sizeToContent) sizeFrameToContent();
-  makeDirty();
+  changeGeometryRect(content, { content.x, content.y, aSize.x, aSize.y });
+  if (sizeToContent) moveFrameToContent(true);
   geometryChange(false);
 };
 
@@ -133,22 +162,58 @@ void View::setFullFrameContent()
 {
   PixelCoord sz = getContentSize();
   setOrientation(View::right);
-  orientPoint(sz);
-  setContent({ 0, 0, frame.dx, frame.dy });
+  rotateCoord(sz);
+  setContent({ 0, 0, sz.x, sz.y });
+}
+
+
+
+void View::contentRectInFrameCoord(PixelRect &aRect)
+{
+  // get opposite content rect corners
+  PixelCoord c1 = { content.x, content.y };
+  PixelCoord c2 = { content.x+content.dx-1, content.y+content.dy-1 };
+  // transform into frame coords
+  contentToFrameCoord(c1);
+  contentToFrameCoord(c2);
+  // make c2 the non-origin corner
+  if (c1.x>c2.x) swap(c1.x, c2.x);
+  if (c1.y>c2.y) swap(c1.y, c2.y);
+  aRect.x = c1.x;
+  aRect.dx = c2.x-c1.x+1;
+  aRect.y = c1.y;
+  aRect.dy = c2.y-c1.y+1;
+  FOCUSLOG("View '%s' frame=(%d,%d,%d,%d), content rect in frame coords=(%d,%d,%d,%d)",
+    label.c_str(),
+    frame.x, frame.y, frame.dx, frame.dy,
+    aRect.x, aRect.y, aRect.dx, aRect.dy
+  );
+}
+
+
+/// move frame such that its origin is at the actual content's origin
+/// @note content does not move relative to view frame origin, but frame does
+void View::moveFrameToContent(bool aResize)
+{
+  geometryChange(true);
+  if (aResize) sizeFrameToContent();
+  PixelRect f;
+  contentRectInFrameCoord(f);
+  changeGeometryRect(frame, f);
+  geometryChange(false);
 }
 
 
 void View::sizeFrameToContent()
 {
-  geometryChange(true);
-  changedGeometry = true;
-  PixelCoord sz = getContentSize();
-  orientPoint(sz);
-  frame.dx = sz.x;
-  frame.dy = sz.y;
-  makeDirty();
-  geometryChange(false);
+  PixelCoord sz = { content.dx, content.dy };
+  rotateCoord(sz);
+  PixelRect f = frame;
+  f.dx = sz.x;
+  f.dy = sz.y;
+  changeGeometryRect(frame, f);
 }
+
 
 
 void View::clear()
@@ -249,19 +314,41 @@ void View::fadeTo(int aAlpha, MLMicroSeconds aWithIn, SimpleCB aCompletedCB)
 
 #define SHOW_ORIGIN 0
 
-
-void View::orientPoint(PixelCoord &aCoord)
+void View::rotateCoord(PixelCoord &aCoord)
 {
-  // translate between content and frame coordinates
   if (contentOrientation & xy_swap) {
     swap(aCoord.x, aCoord.y);
   }
+}
+
+
+void View::flipCoordInFrame(PixelCoord &aCoord)
+{
+  // flip within frame
   if (contentOrientation & x_flip) {
-    aCoord.x = content.dx-aCoord.x-1;
+    aCoord.x = frame.dx-aCoord.x-1;
   }
   if (contentOrientation & y_flip) {
-    aCoord.y = content.dy-aCoord.y-1;
+    aCoord.y = frame.dy-aCoord.y-1;
   }
+}
+
+
+void View::frameToContentCoord(PixelCoord &aCoord)
+{
+  flipCoordInFrame(aCoord);
+  rotateCoord(aCoord);
+  aCoord.x -= content.x;
+  aCoord.y -= content.y;
+}
+
+
+void View::contentToFrameCoord(PixelCoord &aCoord)
+{
+  aCoord.x += content.x;
+  aCoord.y += content.y;
+  rotateCoord(aCoord);
+  flipCoordInFrame(aCoord);
 }
 
 
@@ -277,31 +364,31 @@ PixelColor View::colorAt(PixelCoord aPt)
     // calculate coordinate relative to the frame's origin
     aPt.x -= frame.x;
     aPt.y -= frame.y;
-    // translate into content coordinates
-    orientPoint(aPt);
-    // optionally clip content
+    // optionally clip content to frame
     if (contentWrapMode&clipXY && (
       ((contentWrapMode&clipXmin) && aPt.x<0) ||
-      ((contentWrapMode&clipXmax) && aPt.x>=content.dx) ||
+      ((contentWrapMode&clipXmax) && aPt.x>=frame.dx) ||
       ((contentWrapMode&clipYmin) && aPt.y<0) ||
-      ((contentWrapMode&clipYmax) && aPt.y>=content.dy)
+      ((contentWrapMode&clipYmax) && aPt.y>=frame.dy)
     )) {
       // clip
       pc.a = 0; // invisible
     }
     else {
       // not clipped
-      // optionally wrap content
-      if (content.dx>0) {
-        while ((contentWrapMode&wrapXmin) && aPt.x<0) aPt.x+=content.dx;
-        while ((contentWrapMode&wrapXmax) && aPt.x>=content.dx) aPt.x-=content.dx;
+      // optionally wrap content (repeat frame contents in selected directions)
+      if (frame.dx>0) {
+        while ((contentWrapMode&wrapXmin) && aPt.x<0) aPt.x+=frame.dx;
+        while ((contentWrapMode&wrapXmax) && aPt.x>=frame.dx) aPt.x-=frame.dx;
       }
-      if (content.dy>0) {
-        while ((contentWrapMode&wrapYmin) && aPt.y<0) aPt.y+=content.dy;
-        while ((contentWrapMode&wrapYmax) && aPt.y>=content.dy) aPt.y-=content.dy;
+      if (frame.dy>0) {
+        while ((contentWrapMode&wrapYmin) && aPt.y<0) aPt.y+=frame.dy;
+        while ((contentWrapMode&wrapYmax) && aPt.y>=frame.dy) aPt.y-=frame.dy;
       }
-      // now get content pixel (possibly shifted by content origin)
-      pc = contentColorAt({aPt.x+content.x, aPt.y+content.y});
+      // translate into content coordinates
+      frameToContentCoord(aPt);
+      // now get content pixel in content coordinates
+      pc = contentColorAt(aPt);
       if (contentIsMask) {
         // use only alpha of content, color comes from foregroundColor
         pc.r = foregroundColor.r;
@@ -624,7 +711,7 @@ ErrorPtr View::configureView(JsonObjectPtr aViewConfig)
     localTimingPriority = o->boolValue();
   }
   if (changedGeometry && sizeToContent) {
-    sizeFrameToContent();
+    moveFrameToContent(true);
   }
   geometryChange(false);
   return ErrorPtr();

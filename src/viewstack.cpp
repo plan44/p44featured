@@ -19,6 +19,14 @@
 //  along with pixelboardd. If not, see <http://www.gnu.org/licenses/>.
 //
 
+// File scope debugging options
+// - Set ALWAYS_DEBUG to 1 to enable DBGLOG output even in non-DEBUG builds of this file
+#define ALWAYS_DEBUG 0
+// - set FOCUSLOGLEVEL to non-zero log level (usually, 5,6, or 7==LOG_DEBUG) to get focus (extensive logging) for this file
+//   Note: must be before including "logger.hpp" (or anything that includes "logger.hpp")
+#define FOCUSLOGLEVEL 6
+
+
 #include "viewstack.hpp"
 
 #if ENABLE_VIEWCONFIG
@@ -68,9 +76,13 @@ void ViewStack::pushView(ViewPtr aView, int aSpacing)
       aView->frame.y = r.y-aView->frame.dy-aSpacing;
     }
   }
+  FOCUSLOG("ViewStack '%s' pushes subview with frame=(%d,%d,%d,%d)",
+    label.c_str(),
+    aView->frame.x, aView->frame.y, aView->frame.dx, aView->frame.dy
+  );
   viewStack.push_back(aView);
   if (adjust) {
-    recalculateContentSize();
+    recalculateContentArea();
   }
   aView->setParent(this);
   makeDirty();
@@ -99,6 +111,10 @@ void ViewStack::purgeViews(int aKeepDx, int aKeepDy, bool aCompletely)
     r.dy = aKeepDy;
   }
   // now purge views
+  FOCUSLOG("ViewStack '%s' purges with keep rectangle=(%d,%d,%d,%d)",
+    label.c_str(),
+    r.x, r.y, r.dx, r.dy
+  );
   ViewsList::iterator pos = viewStack.begin();
   while (pos!=viewStack.end()) {
     ViewPtr v = *pos;
@@ -107,6 +123,9 @@ void ViewStack::purgeViews(int aKeepDx, int aKeepDy, bool aCompletely)
       (aCompletely && !rectContainsRect(r, v->frame))
     ) {
       // remove this view
+      FOCUSLOG("- purges subview with frame=(%d,%d,%d,%d)",
+        v->frame.x, v->frame.y, v->frame.dx, v->frame.dy
+      );
       pos = viewStack.erase(pos);
     }
     else {
@@ -115,18 +134,16 @@ void ViewStack::purgeViews(int aKeepDx, int aKeepDy, bool aCompletely)
     }
   }
   if ((positioningMode&clipXY)==0) {
-    recalculateContentSize();
+    recalculateContentArea();
   }
 }
 
 
-void ViewStack::recalculateContentSize()
+void ViewStack::recalculateContentArea()
 {
-  geometryChange(true);
   PixelRect r;
   getEnclosingContentRect(r);
-  setContentSize({r.dx, r.dy});
-  geometryChange(false);
+  setContent(r);
 }
 
 
@@ -154,6 +171,7 @@ void ViewStack::getEnclosingContentRect(PixelRect &aBounds)
   aBounds.y = minY;
   aBounds.dx = maxX-minX; if (aBounds.dx<0) aBounds.dx = 0;
   aBounds.dy = maxY-minY; if (aBounds.dy<0) aBounds.dy = 0;
+  FOCUSLOG("ViewStack '%s': enclosingContentRect=(%d,%d,%d,%d)", label.c_str(), aBounds.x, aBounds.y, aBounds.dx, aBounds.dy);
 }
 
 
@@ -220,8 +238,8 @@ void ViewStack::childGeometryChanged(ViewPtr aChildView, PixelRect aOldFrame, Pi
 {
   if ((positioningMode&clipXY)==0) {
     // current content bounds should not clip -> auto-adjust
-    recalculateContentSize();
-    sizeFrameToContent();
+    recalculateContentArea();
+    moveFrameToContent(true);
   }
 }
 

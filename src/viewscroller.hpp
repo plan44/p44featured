@@ -26,6 +26,11 @@
 
 namespace p44 {
 
+
+  /// Content reload handler
+  /// @return true if scrolling should continue
+  typedef boost::function<bool ()> NeedContentCB;
+
   /// Smooth scrolling (subpixel resolution)
   class ViewScroller : public View
   {
@@ -43,9 +48,12 @@ namespace p44 {
     long scrollStepX_milli; ///< in millipixel, X distance to scroll per scrollStepInterval
     long scrollStepY_milli; ///< in millipixel, Y distance to scroll per scrollStepInterval
     long scrollSteps; ///< >0: number of remaining scroll steps, <0 = scroll forever, 0=scroll stopped
+    bool timingPriority; ///< if set, timing has priority (and multi-step jumps can occur to catch up delays)
     MLMicroSeconds scrollStepInterval; ///< interval between scroll steps
     MLMicroSeconds nextScrollStepAt; ///< exact time when next step should occur
     SimpleCB scrollCompletedCB; ///< called when one scroll is done
+    NeedContentCB needContentCB; ///< called when we need new scroll content
+    bool autopurge; ///< when set, and needContentCB is set, will try to purge completely scrolled off views
 
   protected:
 
@@ -113,6 +121,14 @@ namespace p44 {
 
     /// @return the time interval between two scroll steps
     MLMicroSeconds getScrollStepInterval() const { return scrollStepInterval; }
+
+    /// set handler to be called when new content is needed (current scrolledView does no longer provide content for scrolling further)
+    /// @param aNeedContentCB handler to be called when content has scrolled so far that it no longer fills the frame
+    /// @param aAutoPurge if set (default), subviews of scrolled view (if it is a ViewStack) that are no longer in the frame will be purged
+    void setNeedContentHandler(NeedContentCB aNeedContentCB, bool aAutoPurge = true) { needContentCB = aNeedContentCB; autopurge = aAutoPurge; };
+
+    /// purge unneeded (scrolled off) views in content view (if it is a ViewStack)
+    void purgeScrolledOut();
 
     /// clear contents of this view
     virtual void clear() P44_OVERRIDE;

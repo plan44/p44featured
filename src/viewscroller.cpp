@@ -19,7 +19,15 @@
 //  along with pixelboardd. If not, see <http://www.gnu.org/licenses/>.
 //
 
+// File scope debugging options
+// - Set ALWAYS_DEBUG to 1 to enable DBGLOG output even in non-DEBUG builds of this file
+#define ALWAYS_DEBUG 0
+// - set FOCUSLOGLEVEL to non-zero log level (usually, 5,6, or 7==LOG_DEBUG) to get focus (extensive logging) for this file
+//   Note: must be before including "logger.hpp" (or anything that includes "logger.hpp")
+#define FOCUSLOGLEVEL 6
+
 #include "viewscroller.hpp"
+#include "viewstack.hpp"
 
 #if ENABLE_VIEWCONFIG
   #include "viewfactory.hpp"
@@ -38,7 +46,13 @@ ViewScroller::ViewScroller() :
   scrollStepY_milli(0),
   scrollSteps(0),
   scrollStepInterval(Never),
-  nextScrollStepAt(Never)
+  nextScrollStepAt(Never),
+  #ifdef __APPLE__
+  timingPriority(false),
+  #else
+  timingPriority(true),
+  #endif
+  autopurge(false)
 {
 }
 
@@ -85,7 +99,7 @@ MLMicroSeconds ViewScroller::step(MLMicroSeconds aPriorityUntil)
         // Note: might need multiple rounds after scrolled view's content size has changed to get back in range
         if (scrolledView) {
           WrapMode wm = scrolledView->getWrapMode();
-          PixelCoord svcsz = scrolledView->getContentSize();
+          PixelCoord svcsz = scrolledView->getFrameSize();
           if (wm&wrapX) {
             long csx_milli = svcsz.x*1000;
             while ((wm&wrapXmax) && scrollOffsetX_milli>=csx_milli && csx_milli>0)
@@ -115,13 +129,40 @@ MLMicroSeconds ViewScroller::step(MLMicroSeconds aPriorityUntil)
           }
         }
         // advance to next step
-        next += scrollStepInterval;
-        nextScrollStepAt += scrollStepInterval;
-        updateNextCall(nextCall, nextScrollStepAt, aPriorityUntil); // scrolling has priority
-        if (next<0) {
-          LOG(LOG_DEBUG, "ViewScroller: needs to catch-up steps -> call step() more often!");
+        if (timingPriority) {
+          // try to catch up
+          next += scrollStepInterval;
+          nextScrollStepAt += scrollStepInterval;
+          if (next<0) {
+            LOG(LOG_DEBUG, "ViewScroller: needs to catch-up steps -> call step() more often!");
+          }
         }
+        else {
+          // time next from now, even if we are (pussibly much) late
+          next = scrollStepInterval;
+          nextScrollStepAt = now+scrollStepInterval;
+        }
+        updateNextCall(nextCall, nextScrollStepAt, aPriorityUntil); // scrolling has priority
       } // while catchup
+      if (needContentCB && scrolledView) {
+        // check if we need more content (i.e. scrolled view does not cover frame of the scroller any more)
+        PixelRect sf = scrolledView->getFrame();
+        WrapMode w = scrolledView->getWrapMode();
+        if (
+          ((w&wrapXmax)==0 && scrollOffsetX_milli/1000+frame.dx>sf.x+sf.dx)
+          // TODO: other directions!
+        ) {
+          FOCUSLOG("Needs new content: scrollX = %.2f, scrollY=%.2f, frame=(%d,%d,%d,%d) scrolledframe=(%d,%d,%d,%d)",
+            (double)scrollOffsetX_milli/1000, (double)scrollOffsetY_milli/1000,
+            frame.x, frame.y, frame.dx, frame.dy,
+            sf.x, sf.y, sf.dx, sf.dy
+          );
+          if (!needContentCB()) {
+            stopScroll();
+          }
+          if (autopurge) purgeScrolledOut();
+        }
+      }
     }
   }
   return nextCall;
@@ -201,6 +242,15 @@ void ViewScroller::stopScroll()
   scrollSteps = 0;
 }
 
+void ViewScroller::purgeScrolledOut()
+{
+  ViewStackPtr vs = boost::dynamic_pointer_cast<ViewStack>(scrolledView);
+  if (vs) {
+    vs->purgeViews(frame.dx, frame.dy, false);
+  }
+}
+
+
 
 #if ENABLE_VIEWCONFIG
 
@@ -222,6 +272,12 @@ ErrorPtr ViewScroller::configureView(JsonObjectPtr aViewConfig)
     }
     if (aViewConfig->get("offsety", o)) {
       setOffsetY(o->doubleValue());
+    }
+    if (aViewConfig->get("timingpriority", o)) {
+      timingPriority = o->boolValue();
+    }
+    if (aViewConfig->get("autopurge", o)) {
+      autopurge = o->boolValue();
     }
     // scroll
     double stepX = 0;
