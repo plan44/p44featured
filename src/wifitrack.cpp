@@ -28,6 +28,8 @@
 #include "wifitrack.hpp"
 #include "application.hpp"
 
+#define WIFITRACK_STATE_FILE_NAME "wifitrack_state.json"
+
 using namespace p44;
 
 
@@ -90,7 +92,11 @@ WifiTrack::WifiTrack(const string aMonitorIf) :
   minShowRssi(-65),
   tooCommonMacCount(20),
   minCommonSsidCount(3),
-  numPersonImages(24)
+  numPersonImages(24),
+  saveTempInterval(10*Minute),
+  saveDataInterval(7*Day),
+  lastTempAutoSave(Never),
+  lastDataAutoSave(Never)
 {
   // check for commandline-triggered standalone operation
   if (CmdLineApp::sharedCmdLineApp()->getOption("wifitrack")) {
@@ -133,11 +139,15 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
       return ErrorPtr();
     }
     else if (cmd=="save") {
-      err = save();
+      string path = Application::sharedApplication()->dataPath(WIFITRACK_STATE_FILE_NAME);
+      if (data->get("path", o)) path = o->stringValue();
+      err = save(path);
       return err ? err : Error::ok();
     }
     else if (cmd=="load") {
-      err = load();
+      string path = Application::sharedApplication()->dataPath(WIFITRACK_STATE_FILE_NAME);
+      if (data->get("path", o)) path = o->stringValue();
+      err = load(path);
       return err ? err : Error::ok();
     }
     else if (cmd=="test") {
@@ -203,7 +213,7 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
   else {
     // decode properties
     if (data->get("minShowInterval", o, true)) {
-      minShowInterval = o->doubleValue()*MilliSecond;
+      minShowInterval = o->doubleValue()*Second;
     }
     if (data->get("rememberWithoutSsid", o, true)) {
       rememberWithoutSsid = o->boolValue();
@@ -226,6 +236,12 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
     if (data->get("numPersonImages", o, true)) {
       numPersonImages = o->int32Value();
     }
+    if (data->get("saveTempInterval", o, true)) {
+      saveTempInterval = o->doubleValue()*Second;
+    }
+    if (data->get("saveDataInterval", o, true)) {
+      saveDataInterval = o->doubleValue()*Second;
+    }
     return err ? err : Error::ok();
   }
 }
@@ -235,7 +251,7 @@ JsonObjectPtr WifiTrack::status()
 {
   JsonObjectPtr answer = inherited::status();
   if (answer->isType(json_type_object)) {
-    answer->add("minShowInterval", JsonObject::newDouble((double)minShowInterval/MilliSecond));
+    answer->add("minShowInterval", JsonObject::newDouble((double)minShowInterval/Second));
     answer->add("rememberWithoutSsid", JsonObject::newBool(rememberWithoutSsid));
     answer->add("ouiNames", JsonObject::newBool(ouiNames));
     answer->add("minRssi", JsonObject::newInt32(minRssi));
@@ -243,26 +259,27 @@ JsonObjectPtr WifiTrack::status()
     answer->add("tooCommonMacCount", JsonObject::newInt32(tooCommonMacCount));
     answer->add("minCommonSsidCount", JsonObject::newInt32(minCommonSsidCount));
     answer->add("numPersonImages", JsonObject::newInt32(numPersonImages));
+    answer->add("saveTempInterval", JsonObject::newDouble((double)saveTempInterval/Second));
+    answer->add("saveDataInterval", JsonObject::newDouble((double)saveDataInterval/Second));
   }
   return answer;
 }
 
 
-#define WIFITRACK_STATE_FILE_NAME "wifitrack_state.json"
 
-ErrorPtr WifiTrack::load()
+ErrorPtr WifiTrack::load(const string aPath)
 {
   ErrorPtr err;
-  JsonObjectPtr data = JsonObject::objFromFile(Application::sharedApplication()->dataPath(WIFITRACK_STATE_FILE_NAME).c_str(), &err);
+  JsonObjectPtr data = JsonObject::objFromFile(Application::sharedApplication()->tempPath(aPath).c_str(), &err);
   if (err) return err; // no data to import
   return dataImport(data);
 }
 
 
-ErrorPtr WifiTrack::save()
+ErrorPtr WifiTrack::save(const string aPath)
 {
   JsonObjectPtr data = dataDump();
-  return data->saveToFile(Application::sharedApplication()->dataPath(WIFITRACK_STATE_FILE_NAME).c_str());
+  return data->saveToFile(Application::sharedApplication()->tempPath(aPath).c_str());
 }
 
 
@@ -664,8 +681,16 @@ void WifiTrack::initOperation()
   uint64_t testMac = 0x40A36BC12345ll;
   //printf("%llX = %s", testMac, ouiName(testMac));
   #endif
-  err = load();
+  err = load(Application::sharedApplication()->tempPath(WIFITRACK_STATE_FILE_NAME));
   if (!Error::isOK(err)) {
+    err = load(Application::sharedApplication()->dataPath(WIFITRACK_STATE_FILE_NAME));
+  }
+  if (Error::isOK(err)) {
+    // assume data secured
+    lastTempAutoSave = MainLoop::now();
+    lastDataAutoSave = lastTempAutoSave;
+  }
+  else {
     LOG(LOG_ERR, "could not load state: %s", Error::text(err).c_str());
   }
   if (!monitorIf.empty()) {
@@ -992,6 +1017,18 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
         displayMessage("hi", person->imageIndex, person->color, nameToShow!=aSSid->ssid ? nameToShow : "", nonNullCStr(aMac->ouiName), aSSid->ssid);
       }
     }
+  }
+  // check for regular saves
+  MLMicroSeconds now = MainLoop::now();
+  if (saveTempInterval!=Never && now>lastTempAutoSave+saveTempInterval) {
+    lastTempAutoSave = now;
+    LOG(LOG_NOTICE,">>> auto-saving data to temp file")
+    save(Application::sharedApplication()->tempPath(WIFITRACK_STATE_FILE_NAME));
+  }
+  if (saveDataInterval!=Never && now>lastDataAutoSave+saveDataInterval) {
+    lastDataAutoSave = now;
+    LOG(LOG_NOTICE,">>> auto-saving data to (persistent) data file")
+    save(Application::sharedApplication()->dataPath(WIFITRACK_STATE_FILE_NAME));
   }
 }
 

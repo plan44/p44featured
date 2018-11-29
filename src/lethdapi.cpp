@@ -427,7 +427,7 @@ void LethdApi::start(const string aApiPort)
   apiServer = SocketCommPtr(new SocketComm(MainLoop::currentMainLoop()));
   apiServer->setConnectionParams(NULL, aApiPort.c_str(), SOCK_STREAM, AF_INET6);
   apiServer->setAllowNonlocalConnections(true);
-  apiServer->startServer(boost::bind(&LethdApi::apiConnectionHandler, this, _1), 3);
+  apiServer->startServer(boost::bind(&LethdApi::apiConnectionHandler, this, _1), 10);
   LOG(LOG_INFO, "LEthDApi listening on %s", aApiPort.c_str());
 }
 

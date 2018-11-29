@@ -142,6 +142,12 @@ namespace p44 {
     int minCommonSsidCount;
     int numPersonImages;
 
+    MLMicroSeconds saveTempInterval;
+    MLMicroSeconds saveDataInterval;
+
+    MLMicroSeconds lastTempAutoSave;
+    MLMicroSeconds lastDataAutoSave;
+
     DispMatrixPtr disp;
 
   public:
@@ -170,8 +176,8 @@ namespace p44 {
     void loadOUIs();
     const char* ouiName(uint64_t aMac);
 
-    ErrorPtr save();
-    ErrorPtr load();
+    ErrorPtr save(const string aPath);
+    ErrorPtr load(const string aPath);
 
     JsonObjectPtr dataDump(bool aSsids = true, bool aMacs = true, bool aPersons = true, bool aOUINames = false);
     ErrorPtr dataImport(JsonObjectPtr aData);
