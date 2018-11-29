@@ -79,6 +79,7 @@ class LEthD : public CmdLineApp
 
   // API Server
   SocketCommPtr apiServer;
+  int requestsPending;
 
   // LED+Button
   ButtonInputPtr button;
@@ -96,7 +97,8 @@ class LEthD : public CmdLineApp
 
 public:
 
-  LEthD()
+  LEthD() :
+    requestsPending(0)
   {
   }
 
@@ -317,10 +319,14 @@ public:
           }
         }
         // request elements now: uri and data
+        requestsPending++;
+        LOG(LOG_INFO, "+++ New request pending, total now %d", requestsPending);
         if (processRequest(uri, data, action, boost::bind(&LEthD::requestHandled, this, aConnection, _1, _2))) {
           // done, callback will send response and close connection
           return;
         }
+        requestsPending--;
+        LOG(LOG_INFO, "--- Request handled, remaining pending now %d", requestsPending);
         // request cannot be processed, return error
         aError = WebError::webErr(404, "No handler found for request to %s", uri.c_str());
         LOG(LOG_ERR,"mg44 API: %s", aError->description().c_str());
@@ -337,6 +343,8 @@ public:
 
   void requestHandled(JsonCommPtr aConnection, JsonObjectPtr aResponse, ErrorPtr aError)
   {
+    requestsPending--;
+    LOG(LOG_INFO, "--- Request handled, remaining pending now %d", requestsPending);
     if (!aResponse) {
       aResponse = JsonObject::newObj(); // empty response
     }
