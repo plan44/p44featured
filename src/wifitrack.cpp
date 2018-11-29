@@ -288,6 +288,7 @@ ErrorPtr WifiTrack::save(const string aPath)
 
 JsonObjectPtr WifiTrack::dataDump(bool aSsids, bool aMacs, bool aPersons, bool aOUINames, bool aPersonSsids)
 {
+  MLMicroSeconds unixTimeOffset = -MainLoop::now()+MainLoop::unixtime();
   JsonObjectPtr ans = JsonObject::newObj();
   // summary info
   ans->add("numpersons", JsonObject::newInt64(persons.size()));
@@ -303,8 +304,8 @@ JsonObjectPtr WifiTrack::dataDump(bool aSsids, bool aMacs, bool aPersons, bool a
       p->add("worstrssi", JsonObject::newInt32((*ppos)->worstRssi));
       if ((*ppos)->hidden) p->add("hidden", JsonObject::newBool(true));
       p->add("count", JsonObject::newInt64((*ppos)->seenCount));
-      p->add("last", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime((*ppos)->seenLast)));
-      p->add("first", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime((*ppos)->seenFirst)));
+      p->add("last", JsonObject::newInt64((*ppos)->seenLast+unixTimeOffset));
+      p->add("first", JsonObject::newInt64((*ppos)->seenFirst+unixTimeOffset));
       p->add("color", JsonObject::newString(pixelToWebColor((*ppos)->color)));
       p->add("imgidx", JsonObject::newInt64((*ppos)->imageIndex));
       p->add("name", JsonObject::newString((*ppos)->name));
@@ -342,8 +343,8 @@ JsonObjectPtr WifiTrack::dataDump(bool aSsids, bool aMacs, bool aPersons, bool a
       m->add("worstrssi", JsonObject::newInt32(mpos->second->worstRssi));
       if (mpos->second->hidden) m->add("hidden", JsonObject::newBool(true));
       m->add("count", JsonObject::newInt64(mpos->second->seenCount));
-      m->add("last", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(mpos->second->seenLast)));
-      m->add("first", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(mpos->second->seenFirst)));
+      m->add("last", JsonObject::newInt64(mpos->second->seenLast+unixTimeOffset));
+      m->add("first", JsonObject::newInt64(mpos->second->seenFirst+unixTimeOffset));
       JsonObjectPtr sarr = JsonObject::newArray();
       for (WTSSidSet::iterator spos = mpos->second->ssids.begin(); spos!=mpos->second->ssids.end(); ++spos) {
         sarr->arrayAppend(JsonObject::newString((*spos)->ssid));
@@ -359,11 +360,11 @@ JsonObjectPtr WifiTrack::dataDump(bool aSsids, bool aMacs, bool aPersons, bool a
     for (WTSSidMap::iterator spos = ssids.begin(); spos!=ssids.end(); ++spos) {
       JsonObjectPtr s = JsonObject::newObj();
       s->add("count", JsonObject::newInt64(spos->second->seenCount));
-      s->add("last", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(spos->second->seenLast)));
+      s->add("last", JsonObject::newInt64(spos->second->seenLast+unixTimeOffset));
       s->add("maccount", JsonObject::newInt64(spos->second->macs.size()));
       if (spos->second->hidden) s->add("hidden", JsonObject::newBool(true));
       if (spos->second->beaconSeenLast!=Never) {
-        s->add("lastbeacon", JsonObject::newInt64(MainLoop::mainLoopTimeToUnixTime(spos->second->beaconSeenLast)));
+        s->add("lastbeacon", JsonObject::newInt64(spos->second->beaconSeenLast+unixTimeOffset));
         s->add("beaconrssi", JsonObject::newInt32(spos->second->beaconRssi));
       }
       sans->add(spos->first.c_str(), s);
@@ -376,6 +377,7 @@ JsonObjectPtr WifiTrack::dataDump(bool aSsids, bool aMacs, bool aPersons, bool a
 
 ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
 {
+  MLMicroSeconds unixTimeOffset = -MainLoop::now()+MainLoop::unixtime();
   if (!aData || !aData->isType(json_type_object)) return TextError::err("invalid state data - must be JSON object");
   // insert ssids
   JsonObjectPtr sobjs = aData->get("ssids");
@@ -402,7 +404,7 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
     if (o) s->seenCount += o->int64Value();
     o = sobj->get("last");
     MLMicroSeconds l = Never;
-    if (o) l = MainLoop::unixTimeToMainLoopTime(o->int64Value());
+    if (o) l = o->int64Value()-unixTimeOffset;
     if (l>s->seenLast) s->seenLast = l;
   }
   // insert macs and links to ssids
@@ -469,7 +471,7 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
     if (r<m->worstRssi) m->worstRssi = r;
     o = mobj->get("last");
     MLMicroSeconds l = Never;
-    if (o) l = MainLoop::unixTimeToMainLoopTime(o->int64Value());
+    if (o) l = o->int64Value()-unixTimeOffset;
     if (l>m->seenLast) {
       m->seenLast = l;
       o = mobj->get("lastrssi");
@@ -477,7 +479,7 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
     }
     o = mobj->get("first");
     l = Never;
-    if (o) l = MainLoop::unixTimeToMainLoopTime(o->int64Value());
+    if (o) l = o->int64Value()-unixTimeOffset;
     if (l!=Never && m->seenFirst!=Never && l<m->seenFirst) m->seenFirst = l;
   }
   JsonObjectPtr pobjs = aData->get("persons");
@@ -520,7 +522,7 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
       if (r<p->worstRssi) p->worstRssi = r;
       o = pobj->get("last");
       MLMicroSeconds l = Never;
-      if (o) l = MainLoop::unixTimeToMainLoopTime(o->int64Value());
+      if (o) l = o->int64Value()-unixTimeOffset;
       if (l>p->seenLast) {
         p->seenLast = l;
         o = pobj->get("lastrssi");
@@ -528,7 +530,7 @@ ErrorPtr WifiTrack::dataImport(JsonObjectPtr aData)
       }
       o = pobj->get("first");
       l = Never;
-      if (o) l = MainLoop::unixTimeToMainLoopTime(o->int64Value());
+      if (o) l = o->int64Value()-unixTimeOffset;
       if (l!=Never && p->seenFirst!=Never && l<p->seenFirst) p->seenFirst = l;
     }
   }
