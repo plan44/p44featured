@@ -48,7 +48,7 @@ namespace p44 {
     long scrollStepX_milli; ///< in millipixel, X distance to scroll per scrollStepInterval
     long scrollStepY_milli; ///< in millipixel, Y distance to scroll per scrollStepInterval
     long scrollSteps; ///< >0: number of remaining scroll steps, <0 = scroll forever, 0=scroll stopped
-    bool timingPriority; ///< if set, timing has priority (and multi-step jumps can occur to catch up delays)
+    bool syncScroll; ///< if set, scroll timing has absolute priority (and multi-step jumps can occur to catch up delays)
     MLMicroSeconds scrollStepInterval; ///< interval between scroll steps
     MLMicroSeconds nextScrollStepAt; ///< exact time when next step should occur
     SimpleCB scrollCompletedCB; ///< called when one scroll is done

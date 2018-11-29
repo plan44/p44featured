@@ -48,9 +48,9 @@ ViewScroller::ViewScroller() :
   scrollStepInterval(Never),
   nextScrollStepAt(Never),
   #ifdef __APPLE__
-  timingPriority(false),
+  syncScroll(false),
   #else
-  timingPriority(true),
+  syncScroll(true),
   #endif
   autopurge(false)
 {
@@ -144,7 +144,7 @@ MLMicroSeconds ViewScroller::step(MLMicroSeconds aPriorityUntil)
           }
         }
         // advance to next step
-        if (timingPriority) {
+        if (syncScroll) {
           // try to catch up
           next += scrollStepInterval;
           nextScrollStepAt += scrollStepInterval;
@@ -161,14 +161,6 @@ MLMicroSeconds ViewScroller::step(MLMicroSeconds aPriorityUntil)
       } // while catchup
       if (needContentCB && scrolledView) {
         // check if we need more content (i.e. scrolled view does not cover frame of the scroller any more)
-//        PixelRect sf = scrolledView->getFrame();
-//        WrapMode w = scrolledView->getWrapMode();
-//        if (
-//          ((w&wrapXmax)==0 && scrollOffsetX_milli/1000+frame.dx>sf.x+sf.dx) ||
-//          ((w&wrapXmin)==0 && scrollOffsetX_milli/1000<sf.x) ||
-//          ((w&wrapYmax)==0 && scrollOffsetY_milli/1000+frame.dy>sf.y+sf.dy) ||
-//          ((w&wrapYmin)==0 && scrollOffsetY_milli/1000<sf.y)
-//        ) {
         PixelCoord rem = remainingPixelsToScroll();
         if (rem.x<0 || rem.y<0) {
           if (FOCUSLOGENABLED) {
@@ -345,8 +337,8 @@ ErrorPtr ViewScroller::configureView(JsonObjectPtr aViewConfig)
     if (aViewConfig->get("offsety", o)) {
       setOffsetY(o->doubleValue());
     }
-    if (aViewConfig->get("timingpriority", o)) {
-      timingPriority = o->boolValue();
+    if (aViewConfig->get("syncscroll", o)) {
+      syncScroll = o->boolValue();
     }
     if (aViewConfig->get("autopurge", o)) {
       autopurge = o->boolValue();
