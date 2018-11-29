@@ -179,7 +179,7 @@ namespace p44 {
     ErrorPtr save(const string aPath);
     ErrorPtr load(const string aPath);
 
-    JsonObjectPtr dataDump(bool aSsids = true, bool aMacs = true, bool aPersons = true, bool aOUINames = false);
+    JsonObjectPtr dataDump(bool aSsids = true, bool aMacs = true, bool aPersons = true, bool aOUINames = false, bool aPersonSsids = false);
     ErrorPtr dataImport(JsonObjectPtr aData);
 
     void dumpEnded(ErrorPtr aError);

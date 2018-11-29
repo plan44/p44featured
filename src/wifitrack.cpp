@@ -129,12 +129,14 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
       bool ssids = true;
       bool macs = true;
       bool persons = true;
+      bool personssids = false;
       bool ouinames = true;
       if (data->get("ssids", o)) ssids = o->boolValue();
       if (data->get("macs", o)) macs = o->boolValue();
       if (data->get("persons", o)) persons = o->boolValue();
+      if (data->get("personssids", o)) personssids = o->boolValue();
       if (data->get("ouinames", o)) ouinames = o->boolValue();
-      JsonObjectPtr ans = dataDump(ssids, macs, persons, ouinames);
+      JsonObjectPtr ans = dataDump(ssids, macs, persons, ouinames, personssids);
       aRequest->sendResponse(ans, ErrorPtr());
       return ErrorPtr();
     }
@@ -283,7 +285,7 @@ ErrorPtr WifiTrack::save(const string aPath)
 }
 
 
-JsonObjectPtr WifiTrack::dataDump(bool aSsids, bool aMacs, bool aPersons, bool aOUINames)
+JsonObjectPtr WifiTrack::dataDump(bool aSsids, bool aMacs, bool aPersons, bool aOUINames, bool aPersonSsids)
 {
   JsonObjectPtr ans = JsonObject::newObj();
   // summary info
@@ -306,10 +308,24 @@ JsonObjectPtr WifiTrack::dataDump(bool aSsids, bool aMacs, bool aPersons, bool a
       p->add("imgidx", JsonObject::newInt64((*ppos)->imageIndex));
       p->add("name", JsonObject::newString((*ppos)->name));
       JsonObjectPtr marr = JsonObject::newArray();
+      WTSSidSet pssids;
+      pssids.clear();
       for (WTMacSet::iterator mpos = (*ppos)->macs.begin(); mpos!=(*ppos)->macs.end(); ++mpos) {
         marr->arrayAppend(JsonObject::newString(macAddressToString((*mpos)->mac, ':').c_str()));
+        if (aPersonSsids) {
+          for (WTSSidSet::iterator spos = (*mpos)->ssids.begin(); spos!=(*mpos)->ssids.end(); ++spos) {
+            pssids.insert(*spos);
+          }
+        }
       }
       p->add("macs", marr);
+      if (aPersonSsids) {
+        JsonObjectPtr sarr = JsonObject::newArray();
+        for (WTSSidSet::iterator spos = pssids.begin(); spos!=pssids.end(); ++spos) {
+          sarr->arrayAppend(JsonObject::newString((*spos)->ssid));
+        }
+        p->add("ssids", sarr);
+      }
       pans->arrayAppend(p);
     }
     ans->add("persons", pans);
@@ -682,8 +698,15 @@ void WifiTrack::initOperation()
   //printf("%llX = %s", testMac, ouiName(testMac));
   #endif
   err = load(Application::sharedApplication()->tempPath(WIFITRACK_STATE_FILE_NAME));
-  if (!Error::isOK(err)) {
+  if (Error::isOK(err)) {
+    LOG(LOG_NOTICE, ">>> loaded data from temp file");
+  }
+  else {
+    // try persistent path
     err = load(Application::sharedApplication()->dataPath(WIFITRACK_STATE_FILE_NAME));
+    if (Error::isOK(err)) {
+      LOG(LOG_NOTICE, ">>> loaded data from persistent data file");
+    }
   }
   if (Error::isOK(err)) {
     // assume data secured
