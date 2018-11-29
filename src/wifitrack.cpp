@@ -96,7 +96,8 @@ WifiTrack::WifiTrack(const string aMonitorIf) :
   saveTempInterval(10*Minute),
   saveDataInterval(7*Day),
   lastTempAutoSave(Never),
-  lastDataAutoSave(Never)
+  lastDataAutoSave(Never),
+  loadingContent(false)
 {
   // check for commandline-triggered standalone operation
   if (CmdLineApp::sharedCmdLineApp()->getOption("wifitrack")) {
@@ -943,7 +944,7 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
     if (person) {
       // assign to all macs found related
       if (person->macs.insert(aMac).second) {
-        LOG(LOG_NOTICE, "+++ Just sighted MAC %s, %s via '%s' -> now linked to person '%s' (%d/#%s), MACs=%lu",
+        LOG(LOG_NOTICE, "+++ MAC %s, %s via '%s' (just sighted) -> now linked to person '%s' (%d/#%s), MACs=%lu",
           macAddressToString(aMac->mac,':').c_str(),
           nonNullCStr(aMac->ouiName),
           aSSid->ssid.c_str(),
@@ -990,7 +991,7 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
     if (person->bestRssi<person->lastRssi) person->bestRssi = person->lastRssi;
     if (person->worstRssi>person->lastRssi) person->worstRssi = person->lastRssi;
     if (person->seenFirst==Never) person->seenFirst = person->seenLast;
-    LOG(LOG_INFO, "*** Recognized person%s, '%s', (%d/#%s), linked MACs=%lu, via ssid='%s', MAC=%s, %s%s",
+    LOG(LOG_INFO, "=== Recognized person%s, '%s', (%d/#%s), linked MACs=%lu, via ssid='%s', MAC=%s, %s%s",
       person->hidden ? " (hidden)" : "",
       person->name.c_str(),
       person->imageIndex,
@@ -1080,6 +1081,17 @@ void WifiTrack::displayMessage(string aIntro, int aImageIndex, PixelColor aColor
 
 bool WifiTrack::needContentHandler()
 {
-  LethdApi::sharedApi()->runJsonFile("scripts/wifipause.json", NULL, &scriptContext, NULL);
-  return true; // keep scrolling
+  if (!loadingContent) {
+    loadingContent = true;
+    FOCUSLOG("Display needs content - calling wifipause script");
+    LethdApi::sharedApi()->runJsonFile("scripts/wifipause.json", boost::bind(&WifiTrack::contentLoaded, this), &scriptContext, NULL);
+  }
+  return true; // anyway, keep scrolling
+}
+
+
+void WifiTrack::contentLoaded()
+{
+  loadingContent = false;
+  FOCUSLOG("Content loading complete");
 }

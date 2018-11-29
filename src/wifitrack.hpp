@@ -149,6 +149,7 @@ namespace p44 {
     MLMicroSeconds lastDataAutoSave;
 
     DispMatrixPtr disp;
+    bool loadingContent;
 
   public:
 
@@ -190,6 +191,7 @@ namespace p44 {
     void displayMessage(string aIntro, int aImageIndex, PixelColor aColor, string aName, string aBrand, string aTarget);
 
     bool needContentHandler();
+    void contentLoaded();
 
   };
 
