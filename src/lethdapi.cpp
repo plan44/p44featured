@@ -112,6 +112,7 @@ ErrorPtr LethdApi::runJsonFile(const string aScriptPath, SimpleCB aFinishedCallb
   }
   else {
     string_fgetfile(f, jsonText);
+    fclose(f);
     err = runJsonString(jsonText, aFinishedCallback, aContextP, aSubstitutionsP);
   }
   return err;
