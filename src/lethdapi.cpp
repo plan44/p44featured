@@ -109,6 +109,7 @@ ErrorPtr LethdApi::runJsonFile(const string aScriptPath, SimpleCB aFinishedCallb
   if (f==NULL) {
     err = SysError::errNo();
     err->prefixMessage("cannot open JSON script file '%s': ", fpath.c_str());
+    LOG(LOG_WARNING, "Script loading error: %s", Error::text(err).c_str());
   }
   else {
     string_fgetfile(f, jsonText);
