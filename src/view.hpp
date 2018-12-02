@@ -204,8 +204,9 @@ namespace p44 {
 
   protected:
 
-    // parent view
-    ViewPtr parentView;
+    // parent view (pointer only, to avoid retain cycles)
+    // Containers must make sure their children's parent pointer gets reset before parent goes away
+    View* parentView;
 
     // outer frame
     PixelRect frame;

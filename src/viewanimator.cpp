@@ -40,6 +40,11 @@ ViewAnimator::ViewAnimator() :
 
 ViewAnimator::~ViewAnimator()
 {
+  for (SequenceVector::iterator pos = sequence.begin(); pos!=sequence.end(); ++pos) {
+    ViewPtr v = pos->view;
+    if (v) v->setParent(NULL);
+  }
+  sequence.clear();
 }
 
 

@@ -59,6 +59,10 @@ ViewScroller::ViewScroller() :
 
 ViewScroller::~ViewScroller()
 {
+  if (scrolledView) {
+    scrolledView->setParent(NULL);
+  }
+  scrolledView.reset();
 }
 
 

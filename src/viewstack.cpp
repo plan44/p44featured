@@ -47,6 +47,10 @@ ViewStack::ViewStack()
 
 ViewStack::~ViewStack()
 {
+  for (ViewsList::iterator pos = viewStack.begin(); pos!=viewStack.end(); ++pos) {
+    (*pos)->setParent(NULL);
+  }
+  viewStack.clear();
 }
 
 
@@ -201,8 +205,11 @@ void ViewStack::getEnclosingContentRect(PixelRect &aBounds)
 void ViewStack::popView()
 {
   geometryChange(true);
-  viewStack.pop_back();
-  changedGeometry = true;
+  if (!viewStack.empty()) {
+    viewStack.back()->setParent(NULL);
+    viewStack.pop_back();
+    changedGeometry = true;
+  }
   geometryChange(false);
 }
 

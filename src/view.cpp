@@ -34,6 +34,7 @@ using namespace p44;
 // MARK: ===== View
 
 View::View() :
+  parentView(NULL),
   geometryChanging(0),
   changedGeometry(false),
   sizeToContent(false)
@@ -179,7 +180,7 @@ void View::setFrame(PixelRect aFrame)
 
 void View::setParent(ViewPtr aParentView)
 {
-  parentView = aParentView;
+  parentView = aParentView.get();
 }
 
 

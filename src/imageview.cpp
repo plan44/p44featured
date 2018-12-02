@@ -48,6 +48,7 @@ ImageView::ImageView() :
 
 ImageView::~ImageView()
 {
+  clear();
 }
 
 
