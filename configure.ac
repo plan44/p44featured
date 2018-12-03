@@ -1,4 +1,4 @@
-AC_INIT([lethd], [1.94], [luz@plan44.ch], [lethd], [https://plan44.ch/])
+AC_INIT([lethd], [1.95], [luz@plan44.ch], [lethd], [https://plan44.ch/])
 AC_PREREQ([2.59])
 
 AC_CONFIG_AUX_DIR(configure_aux)

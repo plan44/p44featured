@@ -110,7 +110,9 @@ namespace p44 {
     void setNeedContentHandler(NeedContentCB aNeedContentCB);
 
     /// get the remaining time until the first (aLast==false) or the last (aLast==true) panel runs out of content
-    MLMicroSeconds getRemainingScrollTime(bool aLast);
+    /// @param aLast if set, get remaining scroll time of the last panel that will run out of content, if cleared, of the first
+    /// @param aPurge if set, scrolled out views will be purged
+    MLMicroSeconds getRemainingScrollTime(bool aLast, bool aPurge);
 
   private:
 

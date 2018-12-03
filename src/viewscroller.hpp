@@ -125,6 +125,9 @@ namespace p44 {
     /// set handler to be called when new content is needed (current scrolledView does no longer provide content for scrolling further)
     /// @param aNeedContentCB handler to be called when content has scrolled so far that it no longer fills the frame
     /// @param aAutoPurge if set (default), subviews of scrolled view (if it is a ViewStack) that are no longer in the frame will be purged
+    ///   every time after aNeedContentCB is called.
+    /// @note when the scrolled view does not run out of content, no auto-purging will happen. So make sure to call purgeScrolledOut()
+    ///   once in a while when content is added other than via the aNeedContentCB callback.
     void setNeedContentHandler(NeedContentCB aNeedContentCB, bool aAutoPurge = true) { needContentCB = aNeedContentCB; autopurge = aAutoPurge; };
 
     /// purge unneeded (scrolled off) views in content view (if it is a ViewStack)

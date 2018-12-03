@@ -141,6 +141,7 @@ namespace p44 {
     int tooCommonMacCount;
     int minCommonSsidCount;
     int numPersonImages;
+    MLMicroSeconds maxDisplayDelay;
 
     MLMicroSeconds saveTempInterval;
     MLMicroSeconds saveDataInterval;

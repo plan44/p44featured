@@ -93,6 +93,7 @@ WifiTrack::WifiTrack(const string aMonitorIf) :
   tooCommonMacCount(20),
   minCommonSsidCount(3),
   numPersonImages(24),
+  maxDisplayDelay(21*Second),
   saveTempInterval(10*Minute),
   saveDataInterval(7*Day),
   lastTempAutoSave(Never),
@@ -239,6 +240,9 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
     if (data->get("numPersonImages", o, true)) {
       numPersonImages = o->int32Value();
     }
+    if (data->get("maxDisplayDelay", o, true)) {
+      maxDisplayDelay = o->doubleValue()*Second;
+    }
     if (data->get("saveTempInterval", o, true)) {
       saveTempInterval = o->doubleValue()*Second;
     }
@@ -262,6 +266,7 @@ JsonObjectPtr WifiTrack::status()
     answer->add("tooCommonMacCount", JsonObject::newInt32(tooCommonMacCount));
     answer->add("minCommonSsidCount", JsonObject::newInt32(minCommonSsidCount));
     answer->add("numPersonImages", JsonObject::newInt32(numPersonImages));
+    answer->add("maxDisplayDelay", JsonObject::newDouble((double)maxDisplayDelay/Second));
     answer->add("saveTempInterval", JsonObject::newDouble((double)saveTempInterval/Second));
     answer->add("saveDataInterval", JsonObject::newDouble((double)saveDataInterval/Second));
   }
@@ -1061,22 +1066,26 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
 
 void WifiTrack::displayMessage(string aIntro, int aImageIndex, PixelColor aColor, string aName, string aBrand, string aTarget)
 {
-  if (disp && disp->getRemainingScrollTime(true)<30*Second) {
-    LethdApi::SubstitutionMap subst;
-    subst["HASINTRO"] = aIntro.size()>0 ? "1" : "0";
-    subst["INTRO"] = aIntro;
-    subst["IMGIDX"] = string_format("%d", aImageIndex);
-    subst["COLOR"] = pixelToWebColor(aColor);
-    subst["HASNAME"] = aName.size()>0 ? "1" : "0";
-    subst["NAME"] = aName;
-    subst["HASBRAND"] = aBrand.size()>0 ? "1" : "0";
-    subst["BRAND"] = aBrand;
-    subst["HASTARGET"] = aTarget.size()>0 ? "1" : "0";
-    subst["TARGET"] = aTarget;
-    LethdApi::sharedApi()->runJsonFile("scripts/showssid.json", NULL, &scriptContext, &subst);
-  }
-  else {
-    LOG(LOG_WARNING, "Cannot push to scroll text (not initialized or too full)");
+  if (disp) {
+    MLMicroSeconds rst = disp->getRemainingScrollTime(true, true); // purge old views
+    if (rst<maxDisplayDelay) {
+      LOG(LOG_INFO, "Remaining scroll time before this message will appear is %.2f Seconds", (double)rst/Second);
+      LethdApi::SubstitutionMap subst;
+      subst["HASINTRO"] = aIntro.size()>0 ? "1" : "0";
+      subst["INTRO"] = aIntro;
+      subst["IMGIDX"] = string_format("%d", aImageIndex);
+      subst["COLOR"] = pixelToWebColor(aColor);
+      subst["HASNAME"] = aName.size()>0 ? "1" : "0";
+      subst["NAME"] = aName;
+      subst["HASBRAND"] = aBrand.size()>0 ? "1" : "0";
+      subst["BRAND"] = aBrand;
+      subst["HASTARGET"] = aTarget.size()>0 ? "1" : "0";
+      subst["TARGET"] = aTarget;
+      LethdApi::sharedApi()->runJsonFile("scripts/showssid.json", NULL, &scriptContext, &subst);
+    }
+    else {
+      LOG(LOG_WARNING, "Cannot push to scroll text (scroll delay would be > %.1f Seconds)", maxDisplayDelay);
+    }
   }
 }
 

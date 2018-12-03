@@ -507,7 +507,7 @@ void DispMatrix::setNeedContentHandler(NeedContentCB aNeedContentCB)
 }
 
 
-MLMicroSeconds DispMatrix::getRemainingScrollTime(bool aLast)
+MLMicroSeconds DispMatrix::getRemainingScrollTime(bool aLast, bool aPurge)
 {
   MLMicroSeconds rem = Infinite;
   for (int i=0; i<usedPanels; ++i) {
@@ -515,6 +515,7 @@ MLMicroSeconds DispMatrix::getRemainingScrollTime(bool aLast)
     if (n!=Infinite) {
       if (rem==Infinite || (aLast && n>rem) || (!aLast && n<rem)) rem = n;
     }
+    if (aPurge) panels[i]->dispView->purgeScrolledOut();
   }
   return rem;
 }

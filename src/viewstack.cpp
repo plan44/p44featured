@@ -83,11 +83,12 @@ void ViewStack::pushView(ViewPtr aView, int aSpacing)
       LOG(LOG_WARNING, "ViewStack '%s', pushed view '%s' is not clipped, probably will obscure neigbours!", label.c_str(), aView->label.c_str());
     }
   }
-  FOCUSLOG("+++ ViewStack '%s' pushes subview with frame=(%d,%d,%d,%d) - frame coords are relative to content origin",
+  viewStack.push_back(aView);
+  FOCUSLOG("+++ ViewStack '%s' pushes subview #%lu with frame=(%d,%d,%d,%d) - frame coords are relative to content origin",
     label.c_str(),
+    viewStack.size(),
     aView->frame.x, aView->frame.y, aView->frame.dx, aView->frame.dy
   );
-  viewStack.push_back(aView);
   if (adjust) {
     recalculateContentArea();
   }
@@ -131,7 +132,8 @@ void ViewStack::purgeViews(int aKeepDx, int aKeepDy, bool aCompletely)
       (aCompletely && !rectContainsRect(r, v->frame))
     ) {
       // remove this view
-      FOCUSLOG("--- purges subview with frame=(%d,%d,%d,%d)",
+      FOCUSLOG("--- purges subview #%lu with frame=(%d,%d,%d,%d)",
+        viewStack.size(),
         v->frame.x, v->frame.y, v->frame.dx, v->frame.dy
       );
       pos = viewStack.erase(pos);
