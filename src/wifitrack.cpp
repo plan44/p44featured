@@ -167,7 +167,7 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
       if (data->get("imgidx", o)) imgIdx = o->int32Value() % numPersonImages;
       PixelColor col = white;
       if (data->get("color", o)) col = webColorToPixel(o->stringValue());
-      displayMessage(intro, imgIdx, col, name, brand, target);
+      displayEncounter(intro, imgIdx, col, name, brand, target);
       return Error::ok();
     }
     else if (cmd=="hide") {
@@ -1045,7 +1045,7 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
           person->lastRssi,
           msg.c_str()
         );
-        displayMessage("hi", person->imageIndex, person->color, nameToShow!=aSSid->ssid ? nameToShow : "", nonNullCStr(aMac->ouiName), aSSid->ssid);
+        displayEncounter("hi", person->imageIndex, person->color, nameToShow!=aSSid->ssid ? nameToShow : "", nonNullCStr(aMac->ouiName), aSSid->ssid);
       }
     }
   }
@@ -1064,7 +1064,8 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
 }
 
 
-void WifiTrack::displayMessage(string aIntro, int aImageIndex, PixelColor aColor, string aName, string aBrand, string aTarget)
+
+void WifiTrack::displayEncounter(string aIntro, int aImageIndex, PixelColor aColor, string aName, string aBrand, string aTarget)
 {
   if (disp) {
     MLMicroSeconds rst = disp->getRemainingScrollTime(true, true); // purge old views
@@ -1084,7 +1085,7 @@ void WifiTrack::displayMessage(string aIntro, int aImageIndex, PixelColor aColor
       LethdApi::sharedApi()->runJsonFile("scripts/showssid.json", NULL, &scriptContext, &subst);
     }
     else {
-      LOG(LOG_WARNING, "Cannot push to scroll text (scroll delay would be > %.1f Seconds)", maxDisplayDelay);
+      LOG(LOG_WARNING, "Cannot push to scroll text (scroll delay would be > %.1f Seconds)", (double)maxDisplayDelay/Second);
     }
   }
 }

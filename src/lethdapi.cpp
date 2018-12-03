@@ -333,7 +333,18 @@ ErrorPtr LethdApi::call(ApiRequestPtr aRequest)
   JsonObjectPtr reqData = aRequest->getRequest();
   JsonObjectPtr o = reqData->get("script");
   if (o) {
-    return runJsonFile(o->stringValue());
+    string scriptName = o->stringValue();
+    LethdApi::SubstitutionMap subst;
+    JsonObjectPtr o = reqData->get("substitutions");
+    if (o) {
+      string var;
+      JsonObjectPtr val;
+      o->resetKeyIteration();
+      while (o->nextKeyValue(var, val)) {
+        subst[var] = val->stringValue();
+      }
+    }
+    return runJsonFile(scriptName, NULL, NULL, &subst);
   }
   return LethdApiError::err("missing 'script' attribute");
 }
