@@ -133,7 +133,8 @@ namespace p44 {
     /// purge unneeded (scrolled off) views in content view (if it is a ViewStack)
     void purgeScrolledOut();
 
-    /// @return number of pixels in either direction to scroll until current content is exhausted
+    /// @return number of pixels in either direction to scroll until current content is exhausted.
+    ///   x/y are set to INT_MAX to signal "infinite" (if scrolled view's wrap mode is set in the scroll direction)
     PixelCoord remainingPixelsToScroll();
 
     /// @return number time until scroll will need more content

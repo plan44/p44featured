@@ -234,10 +234,6 @@ MLMicroSeconds ViewScroller::remainingScrollTime()
 
 
 
-
-
-
-
 bool ViewScroller::isDirty()
 {
   if (inherited::isDirty()) return true; // dirty anyway
@@ -315,7 +311,10 @@ void ViewScroller::purgeScrolledOut()
 {
   ViewStackPtr vs = boost::dynamic_pointer_cast<ViewStack>(scrolledView);
   if (vs) {
-    vs->purgeViews(frame.dx, frame.dy, false);
+    PixelCoord rem = remainingPixelsToScroll();
+    if (rem.x==INT_MAX) rem.x = 0;
+    if (rem.y==INT_MAX) rem.y = 0;
+    vs->purgeViews(frame.dx+rem.x, frame.dy+rem.y, false);
   }
 }
 
@@ -372,6 +371,11 @@ ErrorPtr ViewScroller::configureView(JsonObjectPtr aViewConfig)
     }
     if (doStart) {
       startScroll(stepX, stepY, interval, true, numSteps);
+    }
+    if (aViewConfig->get("purgenow", o)) {
+      if (o->boolValue()) {
+        purgeScrolledOut();
+      }
     }
   }
   return err;

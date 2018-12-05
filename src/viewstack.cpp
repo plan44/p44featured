@@ -100,7 +100,7 @@ void ViewStack::pushView(ViewPtr aView, int aSpacing)
 
 void ViewStack::purgeViews(int aKeepDx, int aKeepDy, bool aCompletely)
 {
-  if ((positioningMode&wrapXY)==0) return; // NOP
+  if ((positioningMode&wrapXY)==0) return; // no positioning -> NOP
   // calculate content bounds where to keep views
   PixelRect r;
   getEnclosingContentRect(r);
