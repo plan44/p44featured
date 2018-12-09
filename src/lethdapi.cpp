@@ -58,7 +58,7 @@ void LethdApiRequest::sendResponse(JsonObjectPtr aResponse, ErrorPtr aError)
 InternalRequest::InternalRequest(JsonObjectPtr aRequest) :
   inherited(aRequest)
 {
-  LOG(LOG_INFO,"Internal API request: %s", aRequest->c_strValue());
+  LOG(LOG_DEBUG,"Internal API request: %s", aRequest->c_strValue());
 }
 
 
@@ -69,7 +69,7 @@ InternalRequest::~InternalRequest()
 
 void InternalRequest::sendResponse(JsonObjectPtr aResponse, ErrorPtr aError)
 {
-  LOG(LOG_INFO,"Internal API answer: %s", aResponse->c_strValue());
+  LOG(LOG_DEBUG,"Internal API answer: %s", aResponse->c_strValue());
 }
 
 
