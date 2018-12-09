@@ -131,6 +131,7 @@ void ViewStack::purgeViews(int aKeepDx, int aKeepDy, bool aCompletely)
       !rectIntersectsRect(r, v->frame) ||
       (aCompletely && !rectContainsRect(r, v->frame))
     ) {
+      if (viewStack.size()<=1) break; // do not purge last view in stack
       // remove this view
       FOCUSLOG("--- purges subview #%lu with frame=(%d,%d,%d,%d)",
         viewStack.size(),

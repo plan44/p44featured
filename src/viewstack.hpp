@@ -62,6 +62,8 @@ namespace p44 {
     /// @param aKeepDx keep views with frame completely or partially within this new size (measured according to positioning mode)
     /// @param aKeepDy keep views with frame completely or partially within this new size (measured according to positioning mode)
     /// @param aCompletely if set, keep only views which are completely within the new size
+    /// @note views will be purged bottom-most first
+    /// @note the last view remaining in the stack will always be kept even when it is out of the keepDx/y range
     void purgeViews(int aKeepDx, int aKeepDy, bool aCompletely);
 
     /// remove topmost view
