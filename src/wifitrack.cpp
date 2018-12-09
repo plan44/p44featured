@@ -967,11 +967,28 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
           oldPerson->macs.erase(*mpos); // remove this mac from the person
           if (oldPerson->macs.size()==0) {
             persons.erase(oldPerson); // delete person with zero macs assigned
-            LOG(LOG_NOTICE, "--- Person '%s' (%d/#%s) not linked to a MAC any more -> deleted",
-              oldPerson->name.c_str(),
-              oldPerson->imageIndex,
-              pixelToWebColor(oldPerson->color).c_str()
-            );
+            if (oldPerson->seenFirst<person->seenFirst && !oldPerson->hidden && oldPerson->shownLast!=Never) {
+              // now orphaned person was older -> clone its appearance to maintain continuity as much as possible
+              person->color = oldPerson->color;
+              person->imageIndex = oldPerson->imageIndex;
+              person->name = oldPerson->name;
+              person->seenCount += oldPerson->seenCount; // cumulate count
+              person->seenFirst = oldPerson->seenFirst; // inherit age
+              if (person->bestRssi<oldPerson->bestRssi) person->bestRssi = oldPerson->bestRssi;
+              if (person->worstRssi>oldPerson->worstRssi) person->worstRssi = oldPerson->worstRssi;
+              LOG(LOG_NOTICE, "--- Using older appearance '%s' (%d/#%s) for new combined person from now on",
+                oldPerson->name.c_str(),
+                oldPerson->imageIndex,
+                pixelToWebColor(oldPerson->color).c_str()
+              );
+            }
+            else {
+              LOG(LOG_NOTICE, "--- Person '%s' (%d/#%s) not linked to a MAC any more -> deleted",
+                oldPerson->name.c_str(),
+                oldPerson->imageIndex,
+                pixelToWebColor(oldPerson->color).c_str()
+              );
+            }
           }
         }
         // assign new person
@@ -1031,19 +1048,16 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
         }
       }
       if (!nameToShow.empty()) {
-        // compose message
-        string msg = string_format("P%d_%s - %s", person->imageIndex, pixelToWebColor(person->color).c_str(), nameToShow.c_str());
         // show message
         person->shownLast = person->seenLast;
-        LOG(LOG_NOTICE, "*** Showing person as '%s' (%d/#%s) via %s, %s / '%s' (%d): %s",
+        LOG(LOG_NOTICE, "*** Showing person as '%s' (%d/#%s) via %s, %s / '%s' (%d)",
           nameToShow.c_str(),
           person->imageIndex,
           pixelToWebColor(person->color).c_str(),
           macAddressToString(aMac->mac,':').c_str(),
           nonNullCStr(aMac->ouiName),
           aSSid->ssid.c_str(),
-          person->lastRssi,
-          msg.c_str()
+          person->lastRssi
         );
         displayEncounter("hi", person->imageIndex, person->color, nameToShow!=aSSid->ssid ? nameToShow : "", nonNullCStr(aMac->ouiName), aSSid->ssid);
       }
