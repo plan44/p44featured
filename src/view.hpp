@@ -285,8 +285,11 @@ namespace p44 {
     /// @param aFrame the new frame for the view
     virtual void setFrame(PixelRect aFrame);
 
-    /// @return current frame
+    /// @return current frame rect
     PixelRect getFrame() { return frame; };
+
+    /// @return current content rect
+    PixelRect getContent() { return content; };
 
     /// @param aParentView parent view or NULL if none
     void setParent(ViewPtr aParentView);

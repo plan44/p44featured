@@ -77,6 +77,11 @@ namespace p44 {
     /// @param aOffset will be added to all subview frame's x/y
     void offsetSubviews(PixelCoord aOffset);
 
+    /// @return number of views in the stack
+    size_t numViews() { return viewStack.size(); }
+
+    /// @param aBounds will be set to rect (in content coords) enclosing all subviews
+    void getEnclosingContentRect(PixelRect &aBounds);
 
     /// clear stack, means remove all views
     virtual void clear() P44_OVERRIDE;
@@ -123,7 +128,6 @@ namespace p44 {
 
   private:
 
-    void getEnclosingContentRect(PixelRect &aBounds);
     void recalculateContentArea();
 
   };

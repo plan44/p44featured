@@ -106,6 +106,9 @@ namespace p44 {
     /// @return status information object for initialized feature, bool false for uninitialized
     virtual JsonObjectPtr status() override;
 
+    /// @return the first panel's base (scroller) view
+    ViewScrollerPtr firstPanelScroller();
+
     /// set a handler that is called when one of the panels runs out of display content
     void setNeedContentHandler(NeedContentCB aNeedContentCB);
 

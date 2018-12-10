@@ -443,6 +443,15 @@ ErrorPtr DispMatrix::processRequest(ApiRequestPtr aRequest)
 }
 
 
+ViewScrollerPtr DispMatrix::firstPanelScroller()
+{
+  if (usedPanels>0) {
+    return panels[0]->dispView;
+  }
+  return ViewScrollerPtr();
+}
+
+
 JsonObjectPtr DispMatrix::status()
 {
   JsonObjectPtr answer = inherited::status();

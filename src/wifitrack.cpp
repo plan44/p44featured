@@ -27,6 +27,7 @@
 
 #include "wifitrack.hpp"
 #include "application.hpp"
+#include "viewstack.hpp"
 
 #define WIFITRACK_STATE_FILE_NAME "wifitrack_state.json"
 
@@ -1084,7 +1085,16 @@ void WifiTrack::displayEncounter(string aIntro, int aImageIndex, PixelColor aCol
   if (disp) {
     MLMicroSeconds rst = disp->getRemainingScrollTime(true, true); // purge old views
     if (rst<maxDisplayDelay) {
-      LOG(LOG_INFO, "Remaining scroll time before this message will appear is %.2f Seconds", (double)rst/Second);
+      if (LOGENABLED(LOG_INFO)) {
+        ViewScrollerPtr sc = disp->firstPanelScroller();
+        ViewStackPtr st;
+        if (sc) st = dynamic_pointer_cast<ViewStack>(sc->getScrolledView());
+        if (st) {
+          PixelRect r;
+          st->getEnclosingContentRect(r);
+          LOG(LOG_INFO, "Remaining scroll time before this message will appear is %.2f Seconds, scrollX=%d, frame_x=%d/dx=%d, content_x=%d/dx=%d, enclosing_x=%d/dx=%d, stacksz=%zu", (double)rst/Second, (int)sc->getOffsetX(), st->getFrame().x, st->getFrame().dx, st->getContent().x, st->getContent().dx, r.x, r.dx, st->numViews());
+        }
+      }
       LethdApi::SubstitutionMap subst;
       subst["HASINTRO"] = aIntro.size()>0 ? "1" : "0";
       subst["INTRO"] = aIntro;
