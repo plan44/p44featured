@@ -1095,6 +1095,11 @@ void WifiTrack::displayEncounter(string aIntro, int aImageIndex, PixelColor aCol
           LOG(LOG_INFO, "Remaining scroll time before this message will appear is %.2f Seconds, scrollX=%d, frame_x=%d/dx=%d, content_x=%d/dx=%d, enclosing_x=%d/dx=%d, stacksz=%zu", (double)rst/Second, (int)sc->getOffsetX(), st->getFrame().x, st->getFrame().dx, st->getContent().x, st->getContent().dx, r.x, r.dx, st->numViews());
         }
       }
+      if (rst<-1*Second) {
+        // scrolling is derailed, re-sync
+        LOG(LOG_WARNING, "Scrolling de-synchronized (actual content out of view) -> reset scrolling");
+        disp->resetScroll();
+      }
       LethdApi::SubstitutionMap subst;
       subst["HASINTRO"] = aIntro.size()>0 ? "1" : "0";
       subst["INTRO"] = aIntro;

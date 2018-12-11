@@ -60,6 +60,7 @@ namespace p44 {
   private:
 
     void setOffsetX(double aOffsetX);
+    void resetScroll();
     void setText(const string aText);
     ErrorPtr installScene(JsonObjectPtr aSceneConfig);
     ErrorPtr reconfigure(const string aViewLabel, JsonObjectPtr aConfig);
@@ -116,6 +117,9 @@ namespace p44 {
     /// @param aLast if set, get remaining scroll time of the last panel that will run out of content, if cleared, of the first
     /// @param aPurge if set, scrolled out views will be purged
     MLMicroSeconds getRemainingScrollTime(bool aLast, bool aPurge);
+
+    /// resets scrolling: panels are reset to their initial scroll offset, scrolledView's frame is reset to 0,0
+    void resetScroll();
 
   private:
 

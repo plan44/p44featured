@@ -211,6 +211,21 @@ ErrorPtr DispPanel::installScene(JsonObjectPtr aSceneConfig)
 }
 
 
+void DispPanel::resetScroll()
+{
+  if (dispView) {
+    dispView->setOffsetX(0);
+    dispView->setOffsetY(0);
+    if (contents) {
+      PixelRect f = contents->getFrame();
+      f.x = 0;
+      f.y = 0;
+      contents->setFrame(f);
+    }
+  }
+}
+
+
 ErrorPtr DispPanel::reconfigure(const string aViewLabel, JsonObjectPtr aConfig)
 {
   ErrorPtr err;
@@ -527,4 +542,10 @@ MLMicroSeconds DispMatrix::getRemainingScrollTime(bool aLast, bool aPurge)
     if (aPurge) panels[i]->dispView->purgeScrolledOut();
   }
   return rem;
+}
+
+
+void DispMatrix::resetScroll()
+{
+  FOR_EACH_PANEL(resetScroll());
 }

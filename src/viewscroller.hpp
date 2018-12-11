@@ -72,7 +72,7 @@ namespace p44 {
 
     /// set the to be scrolled view
     /// @param aScrolledView the view of which a part should be shown in this view.
-    void setScrolledView(ViewPtr aScrolledView) { scrolledView = aScrolledView; makeDirty(); }
+    void setScrolledView(ViewPtr aScrolledView) { scrolledView = aScrolledView; if (aScrolledView) aScrolledView->setParent(this); makeDirty(); }
 
     /// @return the view being scrolled
     ViewPtr getScrolledView() { return scrolledView; }
