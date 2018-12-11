@@ -1016,7 +1016,7 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
     if (person->bestRssi<person->lastRssi) person->bestRssi = person->lastRssi;
     if (person->worstRssi>person->lastRssi) person->worstRssi = person->lastRssi;
     if (person->seenFirst==Never) person->seenFirst = person->seenLast;
-    LOG(LOG_INFO, "=== Recognized person%s, '%s', (%d/#%s), linked MACs=%lu, via ssid='%s', MAC=%s, %s%s",
+    LOG(person->hidden || aMac->hidden ? LOG_DEBUG : LOG_INFO, "=== Recognized person%s, '%s', (%d/#%s), linked MACs=%lu, via ssid='%s', MAC=%s, %s%s (%d, best: %d)",
       person->hidden ? " (hidden)" : "",
       person->name.c_str(),
       person->imageIndex,
@@ -1025,7 +1025,9 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
       aSSid->ssid.c_str(),
       macAddressToString(aMac->mac,':').c_str(),
       nonNullCStr(aMac->ouiName),
-      aMac->hidden ? " (hidden)" : ""
+      aMac->hidden ? " (hidden)" : "",
+      aMac->lastRssi,
+      aMac->bestRssi
     );
     // show person?
     if (!aMac->hidden && !person->hidden && person->lastRssi>=minShowRssi && person->seenLast>person->shownLast+minShowInterval) {
@@ -1051,14 +1053,15 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
       if (!nameToShow.empty()) {
         // show message
         person->shownLast = person->seenLast;
-        LOG(LOG_NOTICE, "*** Showing person as '%s' (%d/#%s) via %s, %s / '%s' (%d)",
+        LOG(LOG_NOTICE, "*** Showing person as '%s' (%d/#%s) via %s, %s / '%s' (%d, best: %d)",
           nameToShow.c_str(),
           person->imageIndex,
           pixelToWebColor(person->color).c_str(),
           macAddressToString(aMac->mac,':').c_str(),
           nonNullCStr(aMac->ouiName),
           aSSid->ssid.c_str(),
-          person->lastRssi
+          person->lastRssi,
+          person->bestRssi
         );
         displayEncounter("hi", person->imageIndex, person->color, nameToShow!=aSSid->ssid ? nameToShow : "", nonNullCStr(aMac->ouiName), aSSid->ssid);
       }
