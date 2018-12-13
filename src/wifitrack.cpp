@@ -1114,6 +1114,7 @@ void WifiTrack::displayEncounter(string aIntro, int aImageIndex, PixelColor aCol
       subst["BRAND"] = aBrand;
       subst["HASTARGET"] = aTarget.size()>0 ? "1" : "0";
       subst["TARGET"] = aTarget;
+      loadingContent = false; // because calling script will terminate previous script without callback, make sure loading is not kept in progress (would never get out)
       LethdApi::sharedApi()->runJsonFile("scripts/showssid.json", NULL, &scriptContext, &subst);
     }
     else {
@@ -1128,7 +1129,11 @@ bool WifiTrack::needContentHandler()
   if (!loadingContent) {
     loadingContent = true;
     FOCUSLOG("Display needs content - calling wifipause script");
-    LethdApi::sharedApi()->runJsonFile("scripts/wifipause.json", boost::bind(&WifiTrack::contentLoaded, this), &scriptContext, NULL);
+    ErrorPtr err = LethdApi::sharedApi()->runJsonFile("scripts/wifipause.json", boost::bind(&WifiTrack::contentLoaded, this), &scriptContext, NULL);
+    if (!Error::isOK(err)) {
+      loadingContent = false;
+      LOG(LOG_WARNING, "wifipause script could not be run: %s", Error::text(err).c_str());
+    }
   }
   return true; // anyway, keep scrolling
 }

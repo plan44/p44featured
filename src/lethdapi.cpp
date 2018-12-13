@@ -344,7 +344,9 @@ ErrorPtr LethdApi::call(ApiRequestPtr aRequest)
         subst[var] = val->stringValue();
       }
     }
-    return runJsonFile(scriptName, NULL, NULL, &subst);
+    ErrorPtr err = runJsonFile(scriptName, NULL, NULL, &subst);
+    if (Error::isOK(err)) return Error::ok();
+    return err;
   }
   return LethdApiError::err("missing 'script' attribute");
 }
