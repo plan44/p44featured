@@ -89,7 +89,9 @@ WifiTrack::WifiTrack(const string aMonitorIf) :
   rememberWithoutSsid(false),
   ouiNames(true),
   minShowInterval(3*Minute),
-  minRssi(-70),
+  minRssi(-80),
+  scanBeacons(true),
+  minProcessRssi(-99),
   minShowRssi(-65),
   tooCommonMacCount(20),
   minCommonSsidCount(3),
@@ -116,6 +118,7 @@ WifiTrack::~WifiTrack()
 
 ErrorPtr WifiTrack::initialize(JsonObjectPtr aInitData)
 {
+
   initOperation();
   return Error::ok();
 }
@@ -211,6 +214,10 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
       }
       return Error::ok();
     }
+    else if (cmd=="restart") {
+      restartScanner();
+      return Error::ok();
+    }
     else {
       return inherited::processRequest(aRequest);
     }
@@ -226,8 +233,22 @@ ErrorPtr WifiTrack::processRequest(ApiRequestPtr aRequest)
     if (data->get("ouiNames", o, true)) {
       ouiNames = o->boolValue();
     }
+    if (data->get("minProcessRssi", o, true)) {
+      minProcessRssi = o->int32Value();
+    }
     if (data->get("minRssi", o, true)) {
-      minRssi = o->int32Value();
+      int i = o->int32Value();
+      if (i!=minRssi) {
+        minRssi = i;
+        restartScanner();
+      }
+    }
+    if (data->get("scanBeacons", o, true)) {
+      bool b = o->boolValue();
+      if (b!=scanBeacons) {
+        scanBeacons = b;
+        restartScanner();
+      }
     }
     if (data->get("minShowRssi", o, true)) {
       minShowRssi = o->int32Value();
@@ -263,6 +284,7 @@ JsonObjectPtr WifiTrack::status()
     answer->add("rememberWithoutSsid", JsonObject::newBool(rememberWithoutSsid));
     answer->add("ouiNames", JsonObject::newBool(ouiNames));
     answer->add("minRssi", JsonObject::newInt32(minRssi));
+    answer->add("minProcessRssi", JsonObject::newInt32(minProcessRssi));
     answer->add("minShowRssi", JsonObject::newInt32(minShowRssi));
     answer->add("tooCommonMacCount", JsonObject::newInt32(tooCommonMacCount));
     answer->add("minCommonSsidCount", JsonObject::newInt32(minCommonSsidCount));
@@ -686,10 +708,9 @@ void WifiTrack::loadOUIs()
 
 // MARK: ==== wifitrack operation
 
-#define SCAN_APS 1
-
 void WifiTrack::initOperation()
 {
+  restartTicket.cancel(); // cancel pending restarts
   LOG(LOG_NOTICE, "initializing wifitrack");
   // display
   disp = boost::dynamic_pointer_cast<DispMatrix>(LethdApi::sharedApi()->getFeature("text"));
@@ -725,18 +746,33 @@ void WifiTrack::initOperation()
   else {
     LOG(LOG_ERR, "could not load state: %s", Error::text(err).c_str());
   }
+  startScanner();
+}
+
+
+
+void WifiTrack::startScanner()
+{
   if (!monitorIf.empty()) {
-    #if SCAN_APS
-    string cmd = string_format("tcpdump -e -i %s -s 2000 type mgt subtype probe-req or subtype beacon", monitorIf.c_str());
-    #else
-    string cmd = string_format("tcpdump -e -i %s -s 2000 type mgt subtype probe-req", monitorIf.c_str());
-    #endif
+    string cmd = string_format("tcpdump -e -i %s -s 256", monitorIf.c_str());
+    if (scanBeacons) {
+      string_format_append(cmd, " \\( type mgt subtype probe-req or subtype beacon \\)");
+    }
+    else {
+      string_format_append(cmd, " \\( type mgt subtype probe-req \\)");
+    }
+    if (minRssi!=0) {
+      uint16_t m = minRssi & 0xFF;
+      // Note: offset 0x16 into radio tap info to get rssi is specific to set of radio tap fields supported by the wifi driver
+      string_format_append(cmd, " and \\( radio[0x16] \\> 0x%02X \\)", m);
+    }
     #ifdef __APPLE__
     #warning "hardcoded access to mixloop hermel"
     //cmd = "ssh -p 22 root@hermel-40a36bc18907.local. \"tcpdump -e -i moni0 -s 2000 type mgt subtype probe-req\"";
     cmd = "ssh -p 22 root@1a8479bcaf76.cust.devices.plan44.ch \"" + cmd + "\"";
     #endif
     int resultFd = -1;
+    LOG(LOG_NOTICE, "Starting tcpdump: %s", cmd.c_str());
     dumpPid = MainLoop::currentMainLoop().fork_and_system(boost::bind(&WifiTrack::dumpEnded, this, _1), cmd.c_str(), true, &resultFd);
     if (dumpPid>=0 && resultFd>=0) {
       dumpStream = FdCommPtr(new FdComm(MainLoop::currentMainLoop()));
@@ -752,8 +788,22 @@ void WifiTrack::initOperation()
 void WifiTrack::dumpEnded(ErrorPtr aError)
 {
   LOG(LOG_NOTICE, "tcpdump terminated with status: %s", Error::text(aError).c_str());
-  restartTicket.executeOnce(boost::bind(&WifiTrack::initOperation, this), 5*Second);
+  restartTicket.executeOnce(boost::bind(&WifiTrack::startScanner, this), 5*Second);
 }
+
+
+void WifiTrack::restartScanner()
+{
+  if (dumpPid>=0) {
+    kill(dumpPid, SIGTERM);
+    dumpPid = -1;
+    // killing tcpdump should cause dumpEnded() and automatic restart
+  }
+  // anyway, if not restarted after 15 seconds, try anyway
+  restartTicket.executeOnce(boost::bind(&WifiTrack::startScanner, this), 15*Second);
+}
+
+
 
 
 void WifiTrack::gotDumpLine(ErrorPtr aError)
@@ -779,19 +829,18 @@ void WifiTrack::gotDumpLine(ErrorPtr aError)
       if (s!=string::npos) {
         sscanf(line.c_str()+s+1, "%d", &rssi);
       }
-      #if SCAN_APS
-      s = line.find("Beacon (", s);
-      if (s!=string::npos) {
-        // Is a beacon, get SSID
-        s += 8;
-        e = line.find(") ", s);
-        ssid = line.substr(s, e-s);
-        decoded = true;
-        beacon = true;
+      if (scanBeacons) {
+        s = line.find("Beacon (", s);
+        if (s!=string::npos) {
+          // Is a beacon, get SSID
+          s += 8;
+          e = line.find(") ", s);
+          ssid = line.substr(s, e-s);
+          decoded = true;
+          beacon = true;
+        }
       }
-      else
-      #endif
-      {
+      if (!decoded) {
         // must be Probe Request
         // - sender MAC (source address)
         s = line.find("SA:");
@@ -804,8 +853,8 @@ void WifiTrack::gotDumpLine(ErrorPtr aError)
             e = line.find(") ", s);
             ssid = line.substr(s, e-s);
             // - check min rssi
-            if (rssi<minRssi) {
-              FOCUSLOG("Too weak: RSSI=%d<%d, MAC=%s, SSID='%s'", rssi, minRssi, macAddressToString(mac,':').c_str(), ssid.c_str());
+            if (rssi<minProcessRssi) {
+              FOCUSLOG("Too weak: RSSI=%d<%d, MAC=%s, SSID='%s'", rssi, minProcessRssi, macAddressToString(mac,':').c_str(), ssid.c_str());
             }
             else {
               decoded = true;

@@ -136,7 +136,9 @@ namespace p44 {
     bool ouiNames;
     bool rememberWithoutSsid;
     MLMicroSeconds minShowInterval;
-    int minRssi; ///< minimal rssi for detecting at all
+    int minRssi; ///< minimal rssi, will be passed to tcpdump as packet filter if not 0
+    bool scanBeacons; ///< if set, beacons will be processed and remembered in addition to probe requests
+    int minProcessRssi; ///< minimal rssi to process packet
     int minShowRssi; ///< minimal rssi for triggering to show a person
     int tooCommonMacCount;
     int minCommonSsidCount;
@@ -174,6 +176,8 @@ namespace p44 {
   private:
 
     void initOperation();
+    void startScanner();
+    void restartScanner();
 
     void loadOUIs();
     const char* ouiName(uint64_t aMac);
