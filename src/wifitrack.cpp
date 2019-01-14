@@ -84,6 +84,8 @@ WTPerson::WTPerson() :
 
 WifiTrack::WifiTrack(const string aMonitorIf) :
   inherited("wifitrack"),
+  directDisplay(true),
+  apiNotify(false),
   monitorIf(aMonitorIf),
   dumpPid(-1),
   rememberWithoutSsid(false),
@@ -118,7 +120,15 @@ WifiTrack::~WifiTrack()
 
 ErrorPtr WifiTrack::initialize(JsonObjectPtr aInitData)
 {
-
+  LOG(LOG_NOTICE, "initializing wifitrack");
+  reset();
+  JsonObjectPtr o;
+  if (aInitData->get("directDisplay", o)) {
+    directDisplay = o->boolValue();
+  }
+  if (aInitData->get("apiNotify", o)) {
+    apiNotify = o->boolValue();
+  }
   initOperation();
   return Error::ok();
 }
@@ -713,9 +723,11 @@ void WifiTrack::initOperation()
   restartTicket.cancel(); // cancel pending restarts
   LOG(LOG_NOTICE, "initializing wifitrack");
   // display
-  disp = boost::dynamic_pointer_cast<DispMatrix>(LethdApi::sharedApi()->getFeature("text"));
-  if (disp) {
-    disp->setNeedContentHandler(boost::bind(&WifiTrack::needContentHandler, this));
+  if (directDisplay) {
+    disp = boost::dynamic_pointer_cast<DispMatrix>(LethdApi::sharedApi()->getFeature("text"));
+    if (disp) {
+      disp->setNeedContentHandler(boost::bind(&WifiTrack::needContentHandler, this));
+    }
   }
   // network scanning
   #ifdef __APPLE__
@@ -1134,7 +1146,7 @@ void WifiTrack::processSighting(WTMacPtr aMac, WTSSidPtr aSSid, bool aNewSSidFor
 
 void WifiTrack::displayEncounter(string aIntro, int aImageIndex, PixelColor aColor, string aName, string aBrand, string aTarget)
 {
-  if (disp) {
+  if (directDisplay && disp) {
     MLMicroSeconds rst = disp->getRemainingScrollTime(true, true); // purge old views
     if (rst<maxDisplayDelay) {
       if (LOGENABLED(LOG_INFO)) {
@@ -1169,6 +1181,22 @@ void WifiTrack::displayEncounter(string aIntro, int aImageIndex, PixelColor aCol
     else {
       LOG(LOG_WARNING, "Cannot push to scroll text (scroll delay would be > %.1f Seconds)", (double)maxDisplayDelay/Second);
     }
+  }
+  if (apiNotify) {
+    JsonObjectPtr message = JsonObject::newObj();
+    JsonObjectPtr personinfo = JsonObject::newObj();
+    personinfo->add("HASINTRO", JsonObject::newString(aIntro.size()>0 ? "1" : "0"));
+    personinfo->add("INTRO", JsonObject::newString(aIntro));
+    personinfo->add("IMGIDX", JsonObject::newString(string_format("%d", aImageIndex)));
+    personinfo->add("COLOR", JsonObject::newString(pixelToWebColor(aColor)));
+    personinfo->add("HASNAME", JsonObject::newString(aName.size()>0 ? "1" : "0"));
+    personinfo->add("NAME", JsonObject::newString(aName));
+    personinfo->add("HASBRAND", JsonObject::newString(aBrand.size()>0 ? "1" : "0"));
+    personinfo->add("BRAND", JsonObject::newString(aBrand));
+    personinfo->add("HASTARGET", JsonObject::newString(aTarget.size()>0 ? "1" : "0"));
+    personinfo->add("TARGET", JsonObject::newString(aTarget));
+    message->add("wifitrackshow", personinfo);
+    LethdApi::sharedApi()->sendMessage(message);
   }
 }
 

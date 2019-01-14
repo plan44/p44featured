@@ -151,6 +151,8 @@ namespace p44 {
     MLMicroSeconds lastTempAutoSave;
     MLMicroSeconds lastDataAutoSave;
 
+    bool directDisplay; ///< if set, local dispmatrix is used for display
+    bool apiNotify; ///< if set, send persons back to leths server via API
     DispMatrixPtr disp;
     bool loadingContent;
 
