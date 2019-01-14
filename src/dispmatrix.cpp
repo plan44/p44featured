@@ -393,6 +393,17 @@ ErrorPtr DispMatrix::processRequest(ApiRequestPtr aRequest)
       FOR_EACH_PANEL(dispView->startScroll(stepx, stepy, interval, roundoffsets, steps, start));
       return Error::ok();
     }
+    else if (cmd=="scrollstatus") {
+      bool last = true;
+      bool purge = false;
+      if (data->get("last", o)) last = o->boolValue();
+      if (data->get("purge", o)) purge = o->boolValue();
+      JsonObjectPtr answer = JsonObject::newObj();
+      answer->add("remainingtime", JsonObject::newDouble(getRemainingScrollTime(last, purge)/MilliSecond));
+      // - return
+      aRequest->sendResponse(answer, ErrorPtr());
+      return ErrorPtr();
+    }
     else if (cmd=="fade") {
       int to = 255;
       MLMicroSeconds t = 300*MilliSecond;
