@@ -91,6 +91,12 @@ ErrorPtr Neuron::processRequest(ApiRequestPtr aRequest)
   if (cmd=="fire") {
     return fire(aRequest);
   }
+  if (cmd=="glow") {
+    return glow(aRequest);
+  }
+  if (cmd=="mute") {
+    return mute(aRequest);
+  }
   return inherited::processRequest(aRequest);
 }
 
@@ -111,6 +117,27 @@ ErrorPtr Neuron::fire(ApiRequestPtr aRequest)
   return Error::ok();
 }
 
+
+ErrorPtr Neuron::glow(ApiRequestPtr aRequest)
+{
+  LOG(LOG_INFO, "neuron glow");
+  if(axonState != AxonIdle || bodyState != BodyIdle) return Error::ok();
+  phi = 0;
+  bodyState = BodyGlowing;
+  glowBrightness = 0.5;
+  ticketAnimateBody.executeOnce(boost::bind(&Neuron::animateBody, this, _1));
+  return Error::ok();
+}
+
+ErrorPtr Neuron::mute(ApiRequestPtr aRequest)
+{
+  JsonObjectPtr o = aRequest->getRequest()->get("on");
+  if (!o) {
+    return LethdApiError::err("missing 'on'");
+  }
+  isMuted = o->boolValue();
+  return Error::ok();
+}
 
 // MARK: ==== neuron operation
 
@@ -146,6 +173,7 @@ void Neuron::fire(double aValue)
   axonState = AxonFiring;
   phi = 0;
   bodyState = BodyGlowing;
+  glowBrightness = 1;
   ticketAnimateAxon.executeOnce(boost::bind(&Neuron::animateAxon, this, _1));
   ticketAnimateBody.executeOnce(boost::bind(&Neuron::animateBody, this, _1));
 }
@@ -154,7 +182,7 @@ void Neuron::measure(MLTimer &aTimer)
 {
   double value = sensor->value();
   avg = (avg * (movingAverageCount - 1) + value) / movingAverageCount;
-  if(avg > threshold) fire(avg);
+  if(!isMuted && avg > threshold) fire(avg);
   ticketMeasure.executeOnce(boost::bind(&Neuron::measure, this, _1), 10 * MilliSecond);
 }
 
@@ -194,9 +222,9 @@ void Neuron::animateBody(MLTimer &aTimer)
   for(int i = 0; i < numBodyLeds; i++) {
     uint8_t c = sin(phi) * 255;
     if(bodyState == BodyGlowing && abs(i - pos) < 4) {
-      if(ledChain2) ledChain2->setColorXY(i, 0, 0, 255, 178);
+      if(ledChain2) ledChain2->setColorXY(i, 0, 0, glowBrightness * 255.0, glowBrightness * 178);
     } else {
-      if(ledChain2) ledChain2->setColorXY(i, 0, 0, c, 0.7 * c);
+      if(ledChain2) ledChain2->setColorXY(i, 0, 0, glowBrightness * c, glowBrightness * 0.7 * c);
     }
   }
   if(ledChain2) ledChain2->show();
