@@ -331,24 +331,39 @@ ErrorPtr LethdApi::processRequest(ApiRequestPtr aRequest)
 ErrorPtr LethdApi::call(ApiRequestPtr aRequest)
 {
   JsonObjectPtr reqData = aRequest->getRequest();
-  JsonObjectPtr o = reqData->get("script");
+  JsonObjectPtr o;
+  // check for subsititutions
+  LethdApi::SubstitutionMap subst;
+  o = reqData->get("substitutions");
+  if (o) {
+    string var;
+    JsonObjectPtr val;
+    o->resetKeyIteration();
+    while (o->nextKeyValue(var, val)) {
+      subst[var] = val->stringValue();
+    }
+  }
+  o = reqData->get("script");
   if (o) {
     string scriptName = o->stringValue();
-    LethdApi::SubstitutionMap subst;
-    JsonObjectPtr o = reqData->get("substitutions");
-    if (o) {
-      string var;
-      JsonObjectPtr val;
-      o->resetKeyIteration();
-      while (o->nextKeyValue(var, val)) {
-        subst[var] = val->stringValue();
-      }
-    }
     ErrorPtr err = runJsonFile(scriptName, NULL, NULL, &subst);
     if (Error::isOK(err)) return Error::ok();
     return err;
   }
-  return LethdApiError::err("missing 'script' attribute");
+  o = reqData->get("scripttext");
+  if (o) {
+    string scriptText = o->stringValue();
+    ErrorPtr err = runJsonString(scriptText, NULL, NULL, &subst);
+    if (Error::isOK(err)) return Error::ok();
+    return err;
+  }
+  o = reqData->get("json");
+  if (o) {
+    ErrorPtr err = executeJson(o, NULL, NULL);
+    if (Error::isOK(err)) return Error::ok();
+    return err;
+  }
+  return LethdApiError::err("missing 'script', 'scripttext' or 'json' attribute");
 }
 
 
