@@ -446,13 +446,13 @@ void LethdApi::start(const string aApiPort)
   LOG(LOG_INFO, "LEthDApi listening on %s", aApiPort.c_str());
 }
 
-void LethdApi::send(double aValue)
+
+ErrorPtr LethdApi::sendMessage(JsonObjectPtr aMessage)
 {
-  if(!connection) return;
-  JsonObjectPtr aMessage = JsonObject::newObj();
-  aMessage->add("sensor", JsonObject::newDouble(aValue));
-  connection->sendMessage(aMessage);
+  if (!connection) return TextError::err("No API connection exists, cannot send message");
+  return connection->sendMessage(aMessage);
 }
+
 
 ErrorPtr LethdApiError::err(const char *aFmt, ...)
 {

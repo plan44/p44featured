@@ -202,8 +202,7 @@ public:
       lethdApi->addFeature(FeaturePtr(new Neuron(
         getOption("ledchain1","/dev/null"),
         getOption("ledchain2","/dev/null"),
-        sensor0,
-        boost::bind(&LEthD::neuronSpike, this, _1)
+        sensor0
       )));
       // - dispmatrix
       lethdApi->addFeature(FeaturePtr(new DispMatrix(
@@ -241,12 +240,6 @@ public:
   {
     LOG(LOG_NOTICE, "lethd initialize()");
   }
-
-
-  void neuronSpike(double aValue) {
-    lethdApi->send(aValue);
-  }
-
 
 
   // MARK: ==== Button

@@ -170,8 +170,12 @@ namespace p44 {
     /// @return feature or NULL if no such feature
     FeaturePtr getFeature(const string aFeatureName);
 
+    /// start the API
     void start(const string aApiPort);
-    void send(double aValue);
+
+    /// send (event) message to API
+    /// @return Ok if message could be sent, error if not (e.g. because no connection)
+    ErrorPtr sendMessage(JsonObjectPtr aMessage);
 
   private:
 
@@ -187,9 +191,6 @@ namespace p44 {
     ErrorPtr ping(ApiRequestPtr aRequest);
     ErrorPtr features(ApiRequestPtr aRequest);
     ErrorPtr call(ApiRequestPtr aRequest);
-
-    ErrorPtr fire(ApiRequestPtr aRequest);
-    ErrorPtr setText(ApiRequestPtr aRequest);
 
     /// send response via main API connection.
     /// @note: only for LethdApiRequest

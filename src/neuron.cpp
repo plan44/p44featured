@@ -25,13 +25,12 @@
 
 using namespace p44;
 
-Neuron::Neuron(const string aLedChain1Name, const string aLedChain2Name, AnalogIoPtr aSensor, NeuronSpikeCB aNeuronSpike) :
+Neuron::Neuron(const string aLedChain1Name, const string aLedChain2Name, AnalogIoPtr aSensor) :
   inherited("neuron")
 {
   ledChain1Name = aLedChain1Name;
   ledChain2Name = aLedChain2Name;
   sensor = aSensor;
-  neuronSpike = aNeuronSpike;
   // check for commandline-triggered standalone operation
   string s;
   if (CmdLineApp::sharedCmdLineApp()->getStringOption("neuron", s)) {
@@ -202,3 +201,12 @@ void Neuron::animateBody(MLTimer &aTimer)
   }
   if(ledChain2) ledChain2->show();
 }
+
+
+void Neuron::neuronSpike(double aValue) {
+  JsonObjectPtr message = JsonObject::newObj();
+  message->add("sensor", JsonObject::newDouble(aValue));
+  LethdApi::sharedApi()->sendMessage(message);
+}
+
+

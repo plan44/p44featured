@@ -31,8 +31,6 @@
 
 namespace p44 {
 
-  typedef boost::function<void (double)> NeuronSpikeCB;
-
   class Neuron : public Feature
   {
     typedef Feature inherited;
@@ -42,8 +40,6 @@ namespace p44 {
     string ledChain2Name;
     LEDChainCommPtr ledChain2;
     AnalogIoPtr sensor;
-
-    NeuronSpikeCB neuronSpike;
 
     double movingAverageCount = 20;
     double threshold = 250;
@@ -66,7 +62,7 @@ namespace p44 {
 
   public:
 
-    Neuron(const string aLedChain1Name, const string aLedChain2Name, AnalogIoPtr aSensor, NeuronSpikeCB aNeuronSpike);
+    Neuron(const string aLedChain1Name, const string aLedChain2Name, AnalogIoPtr aSensor);
 
     void start(double aMovingAverageCount, double aThreshold, int aNumAxonLeds, int aNumBodyLeds);
     void fire(double aValue = 0);
@@ -92,6 +88,8 @@ namespace p44 {
     void animateBody(MLTimer &aTimer);
 
     ErrorPtr fire(ApiRequestPtr aRequest);
+
+    void neuronSpike(double aValue);
 
   };
 
