@@ -24,7 +24,7 @@
 #define ALWAYS_DEBUG 0
 // - set FOCUSLOGLEVEL to non-zero log level (usually, 5,6, or 7==LOG_DEBUG) to get focus (extensive logging) for this file
 //   Note: must be before including "logger.hpp" (or anything that includes "logger.hpp")
-#define FOCUSLOGLEVEL 7
+#define FOCUSLOGLEVEL 6
 
 
 #include "viewstack.hpp"
@@ -81,6 +81,9 @@ void ViewStack::pushView(ViewPtr aView, int aSpacing)
     }
     if ((aView->getWrapMode()&clipXY)==0) {
       LOG(LOG_WARNING, "ViewStack '%s', pushed view '%s' is not clipped, probably will obscure neigbours!", label.c_str(), aView->label.c_str());
+    }
+    if (!sizeToContent) {
+      LOG(LOG_WARNING, "ViewStack '%s' does not size to content, autopositioned view '%s' might be outside frame and thus invisible!", label.c_str(), aView->label.c_str());
     }
   }
   viewStack.push_back(aView);
@@ -276,7 +279,8 @@ void ViewStack::childGeometryChanged(ViewPtr aChildView, PixelRect aOldFrame, Pi
 {
   if (geometryChanging==0) {
     // only if not already in process of changing
-    if ((positioningMode&clipXY)==0) {
+    //if ((positioningMode&clipXY)==0) {
+    if (sizeToContent) {
       // current content bounds should not clip -> auto-adjust
       recalculateContentArea();
       moveFrameToContent(true);
