@@ -134,10 +134,14 @@ PixelColor ImageView::contentColorAt(PixelCoord aPt)
 
 ErrorPtr ImageView::configureView(JsonObjectPtr aViewConfig)
 {
+  // will possibly set dx, dy and/or sizetocontent first
   ErrorPtr err = inherited::configureView(aViewConfig);
+  // now check for loading actual image
   if (Error::isOK(err)) {
     JsonObjectPtr o;
     if (aViewConfig->get("file", o)) {
+      // if no dx or dy is set when loading a new image, auto-enable sizeToContent
+      if (frame.dx==0 && frame.dy==0) sizeToContent = true;
       err = loadPNG(Application::sharedApplication()->resourcePath(o->stringValue()));
     }
   }
