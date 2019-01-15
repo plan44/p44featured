@@ -196,13 +196,7 @@ void Neuron::animateAxon(MLTimer &aTimer)
   if(pos++ < numAxonLeds) {
     ticketAnimateAxon.executeOnce(boost::bind(&Neuron::animateAxon, this, _1), 10 * MilliSecond);
   } else {
-    if(avg > threshold) {
-      neuronSpike(avg);
-      pos = 0;
-      ticketAnimateAxon.executeOnce(boost::bind(&Neuron::animateAxon, this, _1), 10 * MilliSecond);
-    } else {
-      axonState = AxonIdle;
-    }
+    axonState = AxonIdle;
   }
 }
 
