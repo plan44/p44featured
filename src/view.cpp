@@ -86,15 +86,13 @@ void View::geometryChange(bool aStart)
       geometryChanging--;
       if (geometryChanging==0) {
         if (changedGeometry) {
-          if (changedGeometry) {
-            FOCUSLOG("View '%s' changed geometry: frame=(%d,%d,%d,%d)->(%d,%d,%d,%d), content=(%d,%d,%d,%d)->(%d,%d,%d,%d)",
-              label.c_str(),
-              previousFrame.x, previousFrame.y, previousFrame.dx, previousFrame.dy,
-              frame.x, frame.y, frame.dx, frame.dy,
-              previousContent.x, previousContent.y, previousContent.dx, previousContent.dy,
-              content.x, content.y, content.dx, content.dy
-            );
-          }
+          FOCUSLOG("View '%s' changed geometry: frame=(%d,%d,%d,%d)->(%d,%d,%d,%d), content=(%d,%d,%d,%d)->(%d,%d,%d,%d)",
+            label.c_str(),
+            previousFrame.x, previousFrame.y, previousFrame.dx, previousFrame.dy,
+            frame.x, frame.y, frame.dx, frame.dy,
+            previousContent.x, previousContent.y, previousContent.dx, previousContent.dy,
+            content.x, content.y, content.dx, content.dy
+          );
           makeDirty();
           if (parentView) {
             // Note: as we are passing in the frames, it is safe when the following calls recursively calls geometryChange again
@@ -190,7 +188,6 @@ void View::setContent(PixelRect aContent)
   changeGeometryRect(content, aContent);
   if (sizeToContent) {
     moveFrameToContent(true);
-    moveFrameToContent(true);
   }
   geometryChange(false);
 };
@@ -207,7 +204,7 @@ void View::setContentSize(PixelCoord aSize)
 
 void View::setFullFrameContent()
 {
-  PixelCoord sz = getContentSize();
+  PixelCoord sz = getFrameSize();
   setOrientation(View::right);
   rotateCoord(sz);
   setContent({ 0, 0, sz.x, sz.y });
@@ -722,11 +719,11 @@ ErrorPtr View::configureView(JsonObjectPtr aViewConfig)
   if (aViewConfig->get("fullframe", o)) {
     if(o->boolValue()) setFullFrameContent();
   }
-  if (aViewConfig->get("sizetocontent", o)) {
-    sizeToContent = o->boolValue();
-  }
   if (aViewConfig->get("timingpriority", o)) {
     localTimingPriority = o->boolValue();
+  }
+  if (aViewConfig->get("sizetocontent", o)) {
+    sizeToContent = o->boolValue();
   }
   if (changedGeometry && sizeToContent) {
     moveFrameToContent(true);

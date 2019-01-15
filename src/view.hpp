@@ -161,9 +161,6 @@ namespace p44 {
     PixelRect previousFrame;
     PixelRect previousContent;
 
-    bool sizeToContent; ///< if set, frame is automatically resized with content
-
-
     void geometryChange(bool aStart);
 
   public:
@@ -210,6 +207,7 @@ namespace p44 {
 
     // outer frame
     PixelRect frame;
+    bool sizeToContent; ///< if set, frame is automatically resized with content
 
     // alpha (opacity)
     uint8_t alpha;
