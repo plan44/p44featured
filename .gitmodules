@@ -2,3 +2,7 @@
 	path = src/p44utils
 	url = ../p44utils.git
 	branch = leth
+[submodule "src/p44lrgraphics"]
+	path = src/p44lrgraphics
+	url = ssh://plan44@plan44.ch/home/plan44/sharedgit/p44lrgraphics.git
+	branch = luz
