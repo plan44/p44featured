@@ -24,6 +24,7 @@ lethd_LDADD = $(JSONC_LIBS) $(PTHREAD_LIBS) $(SQLITE3_LIBS) $(PNG_LIBS)
 
 lethd_CXXFLAGS = \
   -I ${srcdir}/src/p44utils \
+  -I ${srcdir}/src/p44lrgraphic \
   -I ${srcdir}/src/p44utils/thirdparty/civetweb \
   -I ${srcdir}/src/p44utils/thirdparty \
   -I ${srcdir}/src \
@@ -121,22 +122,22 @@ lethd_SOURCES = \
   src/p44utils/thirdparty/civetweb/hostcheck.inl \
   src/p44utils/thirdparty/civetweb/openssl_hostname_validation.inl \
   src/p44utils/p44utils_common.hpp \
-  src/viewfactory.cpp \
-  src/viewfactory.hpp \
-  src/lifeview.cpp \
-  src/lifeview.hpp \
-  src/view.cpp \
-  src/view.hpp \
-  src/textview.cpp \
-  src/textview.hpp \
-  src/imageview.cpp \
-  src/imageview.hpp \
-  src/viewscroller.cpp \
-  src/viewscroller.hpp \
-  src/viewstack.cpp \
-  src/viewstack.hpp \
-  src/viewanimator.cpp \
-  src/viewanimator.hpp \
+  src/p44lrgraphics/p44viewfactory.cpp \
+  src/p44lrgraphics/p44viewfactory.hpp \
+  src/p44lrgraphics/lifeview.cpp \
+  src/p44lrgraphics/lifeview.hpp \
+  src/p44lrgraphics/p44view.cpp \
+  src/p44lrgraphics/p44view.hpp \
+  src/p44lrgraphics/textview.cpp \
+  src/p44lrgraphics/textview.hpp \
+  src/p44lrgraphics/imageview.cpp \
+  src/p44lrgraphics/imageview.hpp \
+  src/p44lrgraphics/viewscroller.cpp \
+  src/p44lrgraphics/viewscroller.hpp \
+  src/p44lrgraphics/viewstack.cpp \
+  src/p44lrgraphics/viewstack.hpp \
+  src/p44lrgraphics/viewanimator.cpp \
+  src/p44lrgraphics/viewanimator.hpp \
   src/lethdapi.cpp \
   src/lethdapi.hpp \
   src/light.cpp \
