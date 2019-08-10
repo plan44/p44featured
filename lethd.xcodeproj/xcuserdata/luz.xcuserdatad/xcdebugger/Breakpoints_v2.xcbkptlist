@@ -1,37 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Bucket
+   uuid = "47017E80-F6C4-47A8-AC4E-D83CB8747CC2"
    type = "1"
    version = "2.0">
    <Breakpoints>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
+            uuid = "E44209B0-66FF-4E85-A496-AC1E269D6F7A"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/view.cpp"
-            timestampString = "565125326.732174"
+            timestampString = "569522646.256893"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "537"
-            endingLineNumber = "537"
-            landmarkName = "p44::mixinPixel(PixelColor &amp;aMainPixel, PixelColor aOutsidePixel, uint8_t aAmountOutside)"
+            startingLineNumber = "535"
+            endingLineNumber = "535"
+            landmarkName = "p44::mixinPixel(aMainPixel, aOutsidePixel, aAmountOutside)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
+            uuid = "A2FE2DF7-374D-4878-82AD-03B4B8ED3842"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             condition = "n&lt;0"
             continueAfterRunningActions = "No"
             filePath = "src/viewanimator.cpp"
-            timestampString = "565115575.760362"
+            timestampString = "569251214.874469"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "73"
-            endingLineNumber = "73"
+            startingLineNumber = "78"
+            endingLineNumber = "78"
             landmarkName = "ViewAnimator::step(MLMicroSeconds aPriorityUntil)"
             landmarkType = "7">
          </BreakpointContent>
@@ -39,15 +42,16 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
+            uuid = "0108C429-1191-467B-8A05-F7049EA9EED4"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/viewstack.cpp"
-            timestampString = "565125326.733705"
+            timestampString = "569522646.2572891"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "346"
-            endingLineNumber = "346"
+            startingLineNumber = "360"
+            endingLineNumber = "360"
             landmarkName = "ViewStack::configureView(JsonObjectPtr aViewConfig)"
             landmarkType = "7">
          </BreakpointContent>
@@ -55,11 +59,12 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
+            uuid = "640C033B-4191-426D-AEF5-8F691EF89BF1"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/lethdapi.cpp"
-            timestampString = "565125326.734688"
+            timestampString = "569522646.257706"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "159"
@@ -71,11 +76,12 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "Yes"
+            uuid = "C148D9A4-A15D-4488-910B-8E97D44A9D0E"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "Yes"
             filePath = "src/lethdapi.cpp"
-            timestampString = "565125326.734852"
+            timestampString = "569522646.2583129"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "194"
@@ -95,48 +101,16 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "src/wifitrack.cpp"
-            timestampString = "565125326.734895"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1019"
-            endingLineNumber = "1019"
-            landmarkName = "WifiTrack::needContentHandler()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            condition = "(int)strncmp(label.c_str(),&quot;STACK&quot;,5)==0"
-            continueAfterRunningActions = "No"
-            filePath = "src/viewstack.cpp"
-            timestampString = "565125326.735087"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "55"
-            endingLineNumber = "55"
-            landmarkName = "ViewStack::pushView(ViewPtr aView, int aSpacing)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
+            uuid = "CD6462D6-567A-41A7-9F1A-16E0CCCAA23F"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/viewstack.cpp"
-            timestampString = "565125326.735787"
+            timestampString = "569522646.2587039"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "133"
-            endingLineNumber = "133"
+            startingLineNumber = "143"
+            endingLineNumber = "143"
             landmarkName = "ViewStack::purgeViews(int aKeepDx, int aKeepDy, bool aCompletely)"
             landmarkType = "7">
          </BreakpointContent>
@@ -144,15 +118,16 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
+            uuid = "713FE462-5DF8-4E49-BD5F-1EDFE8DC1A3A"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/viewstack.cpp"
-            timestampString = "565125326.736635"
+            timestampString = "569522646.2589231"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "98"
-            endingLineNumber = "98"
+            startingLineNumber = "106"
+            endingLineNumber = "106"
             landmarkName = "ViewStack::purgeViews(int aKeepDx, int aKeepDy, bool aCompletely)"
             landmarkType = "7">
          </BreakpointContent>
@@ -160,12 +135,13 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
+            uuid = "8DA43F48-9A3F-402D-9840-A661E8AC013F"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             condition = "x-1==0 &amp;&amp; y==0"
             continueAfterRunningActions = "No"
             filePath = "src/dispmatrix.cpp"
-            timestampString = "565125326.737365"
+            timestampString = "569241691.384855"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "122"
@@ -177,80 +153,16 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "src/viewscroller.cpp"
-            timestampString = "565125326.737589"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "121"
-            endingLineNumber = "121"
-            landmarkName = "ViewScroller::step(MLMicroSeconds aPriorityUntil)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "src/viewscroller.cpp"
-            timestampString = "565125326.73841"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "123"
-            endingLineNumber = "123"
-            landmarkName = "ViewScroller::step(MLMicroSeconds aPriorityUntil)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            condition = "(aOffsetX*1000-scrollOffsetX_milli&gt;2000) || (scrollOffsetX_milli-aOffsetX*1000&gt;2000)"
-            continueAfterRunningActions = "No"
-            filePath = "src/viewscroller.cpp"
-            timestampString = "565125326.7390029"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "75"
-            endingLineNumber = "75"
-            landmarkName = "ViewScroller::setOffsetX(double aOffsetX)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
+            uuid = "6A723E17-D53F-46F9-A69A-E6F764BD91E6"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/viewstack.cpp"
-            timestampString = "565125326.739494"
+            timestampString = "569522646.259174"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "269"
-            endingLineNumber = "269"
-            landmarkName = "ViewStack::childGeometryChanged(ViewPtr aChildView, PixelRect aOldFrame, PixelRect aOldContent)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "src/viewstack.cpp"
-            timestampString = "565125326.74005"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "142"
-            endingLineNumber = "142"
+            startingLineNumber = "152"
+            endingLineNumber = "152"
             landmarkName = "ViewStack::purgeViews(int aKeepDx, int aKeepDy, bool aCompletely)"
             landmarkType = "7">
          </BreakpointContent>
@@ -258,64 +170,136 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
+            uuid = "B87040AE-02AD-4658-A66B-BACBD3297C5D"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/view.cpp"
-            timestampString = "565125326.740537"
+            timestampString = "569522646.259388"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "246"
-            endingLineNumber = "246"
-            landmarkName = "View::moveFrameToContent(bool aResize)"
+            startingLineNumber = "244"
+            endingLineNumber = "244"
+            landmarkName = "View::moveFrameToContent(aResize)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
+            uuid = "9D427BA9-F2AE-4068-8BBC-0063CDF150BF"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/dispmatrix.cpp"
-            timestampString = "565125326.741183"
+            timestampString = "569241691.3852839"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "220"
             endingLineNumber = "220"
-            landmarkName = "DispPanel::reconfigure(const string aViewLabel, JsonObjectPtr aConfig)"
+            landmarkName = "DispPanel::resetScroll()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "src/viewscroller.cpp"
-            timestampString = "565125326.741233"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "166"
-            endingLineNumber = "166"
-            landmarkName = "ViewScroller::step(MLMicroSeconds aPriorityUntil)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
+            uuid = "029A4273-2BBB-4967-8086-9BACBE4F25F0"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/view.cpp"
-            timestampString = "565125326.7416"
+            timestampString = "569522646.259613"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "191"
-            endingLineNumber = "191"
-            landmarkName = "View::setContent(PixelRect aContent)"
+            startingLineNumber = "190"
+            endingLineNumber = "190"
+            landmarkName = "View::setContent(aContent)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "02A50D33-AA8F-4812-B5C6-4F6F2B988FDD"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "src/viewscroller.cpp"
+            timestampString = "569338106.939472"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "232"
+            endingLineNumber = "232"
+            landmarkName = "ViewScroller::remainingScrollTime()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "AB83991B-CEE1-4118-AEC6-90A907FC4BB0"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "src/wifitrack.cpp"
+            timestampString = "569338106.939513"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "777"
+            endingLineNumber = "777"
+            landmarkName = "WifiTrack::startScanner()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "0C09E648-2413-41E5-8E62-E9C7327C3031"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "src/wifitrack.cpp"
+            timestampString = "569338106.939555"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "811"
+            endingLineNumber = "811"
+            landmarkName = "WifiTrack::restartScanner()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "4D81DF1B-169F-4A38-A54D-2650BA96DDB9"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "src/lethdapi.cpp"
+            timestampString = "569522646.2599241"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "333"
+            endingLineNumber = "333"
+            landmarkName = "LethdApi::call(ApiRequestPtr aRequest)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "53BD40DC-A15F-40AE-89D7-C101811DADBD"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "src/viewstack.cpp"
+            timestampString = "569522646.260325"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "59"
+            endingLineNumber = "59"
+            landmarkName = "ViewStack::pushView(ViewPtr aView, int aSpacing)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

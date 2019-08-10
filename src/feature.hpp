@@ -61,6 +61,10 @@ namespace p44 {
     /// @return status information object for initialized feature, bool false for uninitialized
     virtual JsonObjectPtr status();
 
+    /// command line tool mode
+    /// @return error if tool fails, ok otherwise
+    ErrorPtr runTool();
+
   protected:
 
     void setInitialized() { initialized = true; }

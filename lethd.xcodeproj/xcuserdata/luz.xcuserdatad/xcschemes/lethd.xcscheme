@@ -67,11 +67,19 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "--featuretool wifitrack"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "&quot;.* (-?\\d+)dBm signal antenna 0.*SA:([0123456789abcdef:]+).*Probe Request \\((.*)\\).*&quot;"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--resourcepath /Volumes/CaseSens/openwrt/feeds/plan44/hermel-config/files/resources"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--resourcepath /Volumes/CaseSens/openwrt/feeds/plan44/leth-config/files/resources"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
@@ -88,7 +96,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--lethdapiport 11200"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--ledchain1 /tmp/ledchainsim"
@@ -112,11 +120,11 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--wifimonif moni0"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--initjson initcmds.json"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--light"
@@ -151,7 +159,7 @@
       </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
-      buildConfiguration = "Release"
+      buildConfiguration = "Debug"
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
@@ -161,9 +169,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "ED53725B1DFC28D00066FF5A"
-            BuildableName = "p44banditd"
-            BlueprintName = "p44banditd"
-            ReferencedContainer = "container:p44banditd.xcodeproj">
+            BuildableName = "lethd"
+            BlueprintName = "lethd"
+            ReferencedContainer = "container:lethd.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

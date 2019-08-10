@@ -124,6 +124,7 @@ public:
       { 0  , "mixloop",        false, "start mixloop" },
       { 0  , "wifitrack",      false, "start wifitrack" },
       { 0  , "dispmatrix",     true,  "numcols;start display matrix" },
+      { 0  , "featuretool",    true,  "feature;start a feature's command line tool" },
       { 0  , "jsonapiport",    true,  "port;server port number for JSON API (default=none)" },
       { 0  , "jsonapinonlocal",false, "allow JSON API from non-local clients" },
       { 0  , "jsonapiipv6",    false, "JSON API on IPv6" },
@@ -210,26 +211,40 @@ public:
         getOption("ledchain2","/dev/null"),
         getOption("ledchain3","/dev/null")
       )));
-      // run the initialisation command file
-      string initFile;
-      if (getStringOption("initjson", initFile)) {
-        ErrorPtr err = lethdApi->runJsonFile(initFile);
-        if (!Error::isOK(err)) {
-          terminateAppWith(err);
+
+      // use feature tools, if specified
+      string featuretool;
+      if (getStringOption("featuretool", featuretool)) {
+        FeaturePtr tf = lethdApi->getFeature(featuretool);
+        if (tf) {
+          terminateAppWith(tf->runTool());
+        }
+        else {
+          terminateAppWith(TextError::err("No feature '%s' exists", featuretool.c_str()));
         }
       }
-      // start lethd API server for leths server
-      string apiport;
-      if (getStringOption("lethdapiport", apiport)) {
-        lethdApi->start(apiport);
-      }
-      // - create and start mg44 style API server for web interface
-      if (getStringOption("jsonapiport", apiport)) {
-        apiServer = SocketCommPtr(new SocketComm(MainLoop::currentMainLoop()));
-        apiServer->setConnectionParams(NULL, apiport.c_str(), SOCK_STREAM, getOption("jsonapiipv6") ? AF_INET6 : AF_INET);
-        apiServer->setAllowNonlocalConnections(getOption("jsonapinonlocal"));
-        apiServer->startServer(boost::bind(&LEthD::apiConnectionHandler, this, _1), 3);
-      }
+      if (!isTerminated()) {
+        // run the initialisation command file
+        string initFile;
+        if (getStringOption("initjson", initFile)) {
+          ErrorPtr err = lethdApi->runJsonFile(initFile);
+          if (!Error::isOK(err)) {
+            terminateAppWith(err);
+          }
+        }
+        // start lethd API server for leths server
+        string apiport;
+        if (getStringOption("lethdapiport", apiport)) {
+          lethdApi->start(apiport);
+        }
+        // - create and start mg44 style API server for web interface
+        if (getStringOption("jsonapiport", apiport)) {
+          apiServer = SocketCommPtr(new SocketComm(MainLoop::currentMainLoop()));
+          apiServer->setConnectionParams(NULL, apiport.c_str(), SOCK_STREAM, getOption("jsonapiipv6") ? AF_INET6 : AF_INET);
+          apiServer->setAllowNonlocalConnections(getOption("jsonapinonlocal"));
+          apiServer->startServer(boost::bind(&LEthD::apiConnectionHandler, this, _1), 3);
+        }
+      } // if !terminated
     } // if !terminated
     // app now ready to run (or cleanup when already terminated)
     return run();

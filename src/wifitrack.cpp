@@ -1221,3 +1221,9 @@ void WifiTrack::contentLoaded()
   loadingContent = false;
   FOCUSLOG("Content loading complete");
 }
+
+
+ErrorPtr WifiTrack::runTool()
+{
+  #error tbd
+}

@@ -65,3 +65,9 @@ void Feature::reset()
 {
   initialized = false;
 }
+
+
+ErrorPtr Feature::runTool()
+{
+  return TextError::err("Feature %s does not have command line tools", name.c_str());
+}
