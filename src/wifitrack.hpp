@@ -21,7 +21,7 @@
 #define __lethd_wifitrack_hpp__
 
 #include "feature.hpp"
-#include "view.hpp"
+#include "p44view.hpp"
 #include "dispmatrix.hpp"
 
 #include <math.h>
@@ -177,7 +177,7 @@ namespace p44 {
 
     /// command line tool mode
     /// @return error if tool fails, ok otherwise
-    ErrorPtr runTool() override;
+    virtual ErrorPtr runTool() override;
 
   private:
 

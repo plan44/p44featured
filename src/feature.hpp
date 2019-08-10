@@ -63,7 +63,7 @@ namespace p44 {
 
     /// command line tool mode
     /// @return error if tool fails, ok otherwise
-    ErrorPtr runTool();
+    virtual ErrorPtr runTool();
 
   protected:
 

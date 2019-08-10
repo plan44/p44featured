@@ -1225,5 +1225,7 @@ void WifiTrack::contentLoaded()
 
 ErrorPtr WifiTrack::runTool()
 {
-  #error tbd
+  // FIXME: tdb
+  #warning tbd
+  return TextError::err("Not yet implemented");
 }

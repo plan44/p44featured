@@ -35,7 +35,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "78"
             endingLineNumber = "78"
-            landmarkName = "ViewAnimator::step(MLMicroSeconds aPriorityUntil)"
+            landmarkName = "ViewAnimator::step(aPriorityUntil)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -52,7 +52,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "360"
             endingLineNumber = "360"
-            landmarkName = "ViewStack::configureView(JsonObjectPtr aViewConfig)"
+            landmarkName = "ViewStack::configureView(aViewConfig)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -111,7 +111,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "143"
             endingLineNumber = "143"
-            landmarkName = "ViewStack::purgeViews(int aKeepDx, int aKeepDy, bool aCompletely)"
+            landmarkName = "ViewStack::purgeViews(aKeepDx, aKeepDy, aCompletely)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -128,7 +128,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "106"
             endingLineNumber = "106"
-            landmarkName = "ViewStack::purgeViews(int aKeepDx, int aKeepDy, bool aCompletely)"
+            landmarkName = "ViewStack::purgeViews(aKeepDx, aKeepDy, aCompletely)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -163,7 +163,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "152"
             endingLineNumber = "152"
-            landmarkName = "ViewStack::purgeViews(int aKeepDx, int aKeepDy, bool aCompletely)"
+            landmarkName = "ViewStack::purgeViews(aKeepDx, aKeepDy, aCompletely)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -299,7 +299,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "59"
             endingLineNumber = "59"
-            landmarkName = "ViewStack::pushView(ViewPtr aView, int aSpacing)"
+            landmarkName = "ViewStack::pushView(aView, aSpacing)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

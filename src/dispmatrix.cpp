@@ -257,7 +257,7 @@ DispMatrix::DispMatrix(const string aChainName1, const string aChainName2, const
     int numRows = LED_MODULE_ROWS;
     sscanf(cfg.c_str(), "%d,%d", &numCols, &numRows);
     // instantiate a single panel
-    panels[usedPanels] = DispPanelPtr(new DispPanel(chainNames[usedPanels], 0, numRows, numCols, LED_MODULE_BORDER_LEFT, LED_MODULE_BORDER_RIGHT, View::right));
+    panels[usedPanels] = DispPanelPtr(new DispPanel(chainNames[usedPanels], 0, numRows, numCols, LED_MODULE_BORDER_LEFT, LED_MODULE_BORDER_RIGHT, P44View::right));
     usedPanels++;
     initOperation();
     // have standard message scrolling
@@ -300,7 +300,7 @@ ErrorPtr DispMatrix::initialize(JsonObjectPtr aInitData)
     int visiblecols = LED_MODULE_COLS;
     int borderLeft = LED_MODULE_BORDER_LEFT;
     int borderRight = LED_MODULE_BORDER_RIGHT;
-    int orientation = View::right;
+    int orientation = P44View::right;
     int offsetX = 0;
     // configure
     JsonObjectPtr o;
