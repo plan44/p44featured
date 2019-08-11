@@ -756,7 +756,7 @@ void WifiTrack::initOperation()
     lastDataAutoSave = lastTempAutoSave;
   }
   else {
-    LOG(LOG_ERR, "could not load state: %s", Error::text(err).c_str());
+    LOG(LOG_ERR, "could not load state: %s", Error::text(err));
   }
   startScanner();
 }
@@ -799,7 +799,7 @@ void WifiTrack::startScanner()
 
 void WifiTrack::dumpEnded(ErrorPtr aError)
 {
-  LOG(LOG_NOTICE, "tcpdump terminated with status: %s", Error::text(aError).c_str());
+  LOG(LOG_NOTICE, "tcpdump terminated with status: %s", Error::text(aError));
   restartTicket.executeOnce(boost::bind(&WifiTrack::startScanner, this), 5*Second);
 }
 
@@ -821,7 +821,7 @@ void WifiTrack::restartScanner()
 void WifiTrack::gotDumpLine(ErrorPtr aError)
 {
   if (!Error::isOK(aError)) {
-    LOG(LOG_ERR, "error reading from tcp output stream: %s", Error::text(aError).c_str());
+    LOG(LOG_ERR, "error reading from tcp output stream: %s", Error::text(aError));
     return;
   }
   string line;
@@ -1209,7 +1209,7 @@ bool WifiTrack::needContentHandler()
     ErrorPtr err = LethdApi::sharedApi()->runJsonFile("scripts/wifipause.json", boost::bind(&WifiTrack::contentLoaded, this), &scriptContext, NULL);
     if (!Error::isOK(err)) {
       loadingContent = false;
-      LOG(LOG_WARNING, "wifipause script could not be run: %s", Error::text(err).c_str());
+      LOG(LOG_WARNING, "wifipause script could not be run: %s", Error::text(err));
     }
   }
   return true; // anyway, keep scrolling

@@ -109,7 +109,7 @@ ErrorPtr LethdApi::runJsonFile(const string aScriptPath, SimpleCB aFinishedCallb
   if (f==NULL) {
     err = SysError::errNo();
     err->prefixMessage("cannot open JSON script file '%s': ", fpath.c_str());
-    LOG(LOG_WARNING, "Script loading error: %s", Error::text(err).c_str());
+    LOG(LOG_WARNING, "Script loading error: %s", Error::text(err));
   }
   else {
     string_fgetfile(f, jsonText);
@@ -151,7 +151,7 @@ ErrorPtr LethdApi::runJsonString(string aJsonString, SimpleCB aFinishedCallback,
       err = lethdApi->executeJson(script, aFinishedCallback, aContextP);
     }
   }
-  if (!Error::isOK(err)) { LOG(LOG_WARNING, "Script execution error: %s", Error::text(err).c_str()); }
+  if (!Error::isOK(err)) { LOG(LOG_WARNING, "Script execution error: %s", Error::text(err)); }
   return err;
 }
 

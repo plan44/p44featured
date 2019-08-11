@@ -69,7 +69,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "159"
             endingLineNumber = "159"
-            landmarkName = "LethdApi::executeJson(JsonObjectPtr aJsonCmds, SimpleCB aFinishedCallback, ScriptContextPtr* aContextP)"
+            landmarkName = "LethdApi::executeJson(aJsonCmds, aFinishedCallback, aContextP)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -86,7 +86,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "194"
             endingLineNumber = "194"
-            landmarkName = "LethdApi::executeNextCmd(JsonObjectPtr aCmds, int aIndex, ScriptContextPtr aContext, SimpleCB aFinishedCallback)"
+            landmarkName = "LethdApi::executeNextCmd(aCmds, aIndex, aContext, aFinishedCallback)"
             landmarkType = "7">
             <Actions>
                <BreakpointActionProxy
@@ -282,7 +282,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "333"
             endingLineNumber = "333"
-            landmarkName = "LethdApi::call(ApiRequestPtr aRequest)"
+            landmarkName = "LethdApi::call(aRequest)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
