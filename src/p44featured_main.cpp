@@ -1,22 +1,22 @@
 //
-//  Copyright (c) 2016 plan44.ch / Lukas Zeller, Zurich, Switzerland
+//  Copyright (c) 2020 plan44.ch / Lukas Zeller, Zurich, Switzerland
 //
 //  Author: Lukas Zeller <luz@plan44.ch>
 //
-//  This file is part of lethd.
+//  This file is part of p44featured.
 //
-//  lethd is free software: you can redistribute it and/or modify
+//  p44featured is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 //
-//  lethd is distributed in the hope that it will be useful,
+//  p44featured is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details.
 //
 //  You should have received a copy of the GNU General Public License
-//  along with lethd. If not, see <http://www.gnu.org/licenses/>.
+//  along with p44featured. If not, see <http://www.gnu.org/licenses/>.
 //
 
 #include "application.hpp"
@@ -34,10 +34,28 @@
 #include "wifitrack.hpp"
 #include "dispmatrix.hpp"
 
+#if ENABLE_UBUS
+  #include "ubus.hpp"
+#endif
+
 
 using namespace p44;
 
 #define DEFAULT_LOGLEVEL LOG_NOTICE
+
+#if ENABLE_UBUS
+static const struct blobmsg_policy logapi_policy[] = {
+  { .name = "level", .type = BLOBMSG_TYPE_INT8 },
+  { .name = "deltastamps", .type = BLOBMSG_TYPE_BOOL },
+  { .name = NULL, .type = BLOBMSG_TYPE_INT32 },
+};
+
+static const struct blobmsg_policy p44featureapi_policy[] = {
+  { .name = "method", .type = BLOBMSG_TYPE_STRING },
+  { .name = NULL, .type = BLOBMSG_TYPE_UNSPEC },
+};
+#endif
+
 
 
 // MARK: ==== Application
@@ -46,40 +64,19 @@ using namespace p44;
 #define _MKSTR(s) #s
 
 
-typedef boost::function<void (JsonObjectPtr aResponse, ErrorPtr aError)> RequestDoneCB;
-
-
-class JsonWebAPIRequest : public ApiRequest
-{
-  typedef ApiRequest inherited;
-
-  RequestDoneCB requestDoneCB;
-
-public:
-
-  JsonWebAPIRequest(JsonObjectPtr aRequest, RequestDoneCB aRequestDoneCB) :
-    inherited(aRequest),
-    requestDoneCB(aRequestDoneCB)
-  {
-  };
-
-
-  void sendResponse(JsonObjectPtr aResponse, ErrorPtr aError) override
-  {
-    if (requestDoneCB) requestDoneCB(aResponse, aError);
-  }
-
-};
-
-
-
-class LEthD : public CmdLineApp
+class P44FeatureD : public CmdLineApp
 {
   typedef CmdLineApp inherited;
 
-  // API Server
-  SocketCommPtr apiServer;
+  // P44 device management JSON API Server
+  SocketCommPtr p44mgmtApiServer;
   int requestsPending;
+
+  #if ENABLE_UBUS
+  // ubus API for P44 device management
+  UbusServerPtr ubusApiServer;
+  #endif
+
 
   // LED+Button
   ButtonInputPtr button;
@@ -92,12 +89,12 @@ class LEthD : public CmdLineApp
   AnalogIoPtr pwmLeft;
   AnalogIoPtr pwmRight;
 
-  LethdApiPtr lethdApi;
+  FeatureApiPtr featureApi;
 
 
 public:
 
-  LEthD() :
+  P44FeatureD() :
     requestsPending(0)
   {
   }
@@ -116,7 +113,7 @@ public:
       { 0  , "ledchain2",      true,  "devicepath;ledchain2 device to use" },
       { 0  , "ledchain3",      true,  "devicepath;ledchain3 device to use" },
       { 0  , "wifimonif",      true,  "interface;wifi monitoring interface to use" },
-      { 0  , "lethdapiport",   true,  "port;server port number for lETHd JSON API (default=none)" },
+      { 0  , "featureapiport", true,  "port;server port number for Feature JSON API (default=none)" },
       { 0  , "initjson",       true,  "jsonfile;run the command(s) from the specified JSON text file." },
       { 0  , "neuron",         true,  "mvgAvgCnt,threshold,nAxonLeds,nBodyLeds;start neuron" },
       { 0  , "light",          false, "start light" },
@@ -125,7 +122,10 @@ public:
       { 0  , "wifitrack",      false, "start wifitrack" },
       { 0  , "dispmatrix",     true,  "numcols;start display matrix" },
       { 0  , "featuretool",    true,  "feature;start a feature's command line tool" },
-      { 0  , "jsonapiport",    true,  "port;server port number for JSON API (default=none)" },
+      { 0  , "jsonapiport",    true,  "port;server port number for management/web JSON API (default=none)" },
+      #if ENABLE_UBUS
+      { 0  , "ubusapi",        false, "enable ubus API for management/web" },
+      #endif
       { 0  , "jsonapinonlocal",false, "allow JSON API from non-local clients" },
       { 0  , "jsonapiipv6",    false, "JSON API on IPv6" },
       { 0  , "button",         true,  "input pinspec;device button" },
@@ -164,7 +164,7 @@ public:
 
       // create button input
       button = ButtonInputPtr(new ButtonInput(getOption("button","missing")));
-      button->setButtonHandler(boost::bind(&LEthD::buttonHandler, this, _1, _2, _3), true, Second);
+      button->setButtonHandler(boost::bind(&P44FeatureD::buttonHandler, this, _1, _2, _3), true, Second);
       // create LEDs
       greenLed = IndicatorOutputPtr(new IndicatorOutput(getOption("greenled","missing")));
       redLed = IndicatorOutputPtr(new IndicatorOutput(getOption("redled","missing")));
@@ -180,33 +180,33 @@ public:
       pwmRight = AnalogIoPtr(new AnalogIo(getOption("pwmright","missing"), true, 0)); // off to begin with
 
       // create API
-      lethdApi = LethdApi::sharedApi();
+      featureApi = FeatureApi::sharedApi();
       // add features
       // - light
-      lethdApi->addFeature(FeaturePtr(new Light(
+      featureApi->addFeature(FeaturePtr(new Light(
         pwmDimmer
       )));
       // - hermel
-      lethdApi->addFeature(FeaturePtr(new HermelShoot(
+      featureApi->addFeature(FeaturePtr(new HermelShoot(
         pwmLeft, pwmRight
       )));
       // - mixloop
-      lethdApi->addFeature(FeaturePtr(new MixLoop(
+      featureApi->addFeature(FeaturePtr(new MixLoop(
         getOption("ledchain2","/dev/null"),
         getOption("ledchain3","/dev/null")
       )));
       // - wifitrack
-      lethdApi->addFeature(FeaturePtr(new WifiTrack(
+      featureApi->addFeature(FeaturePtr(new WifiTrack(
         getOption("wifimonif","")
       )));
       // - neuron
-      lethdApi->addFeature(FeaturePtr(new Neuron(
+      featureApi->addFeature(FeaturePtr(new Neuron(
         getOption("ledchain1","/dev/null"),
         getOption("ledchain2","/dev/null"),
         sensor0
       )));
       // - dispmatrix
-      lethdApi->addFeature(FeaturePtr(new DispMatrix(
+      featureApi->addFeature(FeaturePtr(new DispMatrix(
         getOption("ledchain1","/dev/null"),
         getOption("ledchain2","/dev/null"),
         getOption("ledchain3","/dev/null")
@@ -215,7 +215,7 @@ public:
       // use feature tools, if specified
       string featuretool;
       if (getStringOption("featuretool", featuretool)) {
-        FeaturePtr tf = lethdApi->getFeature(featuretool);
+        FeaturePtr tf = featureApi->getFeature(featuretool);
         if (tf) {
           terminateAppWith(tf->runTool());
         }
@@ -227,23 +227,29 @@ public:
         // run the initialisation command file
         string initFile;
         if (getStringOption("initjson", initFile)) {
-          ErrorPtr err = lethdApi->runJsonFile(initFile);
+          ErrorPtr err = featureApi->runJsonFile(initFile);
           if (!Error::isOK(err)) {
             terminateAppWith(err);
           }
         }
-        // start lethd API server for leths server
+        // start p44featured TCP API server
         string apiport;
-        if (getStringOption("lethdapiport", apiport)) {
-          lethdApi->start(apiport);
+        if (getStringOption("featureapiport", apiport)) {
+          featureApi->start(apiport);
         }
         // - create and start mg44 style API server for web interface
         if (getStringOption("jsonapiport", apiport)) {
-          apiServer = SocketCommPtr(new SocketComm(MainLoop::currentMainLoop()));
-          apiServer->setConnectionParams(NULL, apiport.c_str(), SOCK_STREAM, getOption("jsonapiipv6") ? AF_INET6 : AF_INET);
-          apiServer->setAllowNonlocalConnections(getOption("jsonapinonlocal"));
-          apiServer->startServer(boost::bind(&LEthD::apiConnectionHandler, this, _1), 3);
+          p44mgmtApiServer = SocketCommPtr(new SocketComm(MainLoop::currentMainLoop()));
+          p44mgmtApiServer->setConnectionParams(NULL, apiport.c_str(), SOCK_STREAM, getOption("jsonapiipv6") ? AF_INET6 : AF_INET);
+          p44mgmtApiServer->setAllowNonlocalConnections(getOption("jsonapinonlocal"));
+          p44mgmtApiServer->startServer(boost::bind(&P44FeatureD::apiConnectionHandler, this, _1), 3);
         }
+        #if ENABLE_UBUS
+        // - create and start UBUS API server for web interface on OpenWrt
+        if (getOption("ubusapi")) {
+          initUbusApi();
+        }
+        #endif
       } // if !terminated
     } // if !terminated
     // app now ready to run (or cleanup when already terminated)
@@ -253,7 +259,7 @@ public:
 
   virtual void initialize()
   {
-    LOG(LOG_NOTICE, "lethd initialize()");
+    LOG(LOG_NOTICE, "p44featured initialize()");
   }
 
 
@@ -267,14 +273,84 @@ public:
 
 
 
+  // MARK: - ubus API
 
-  // MARK: ==== API access
+  #if ENABLE_UBUS
+
+  void initUbusApi()
+  {
+    ubusApiServer = UbusServerPtr(new UbusServer(MainLoop::currentMainLoop()));
+    UbusObjectPtr u = new UbusObject("p44featured", boost::bind(&P44mbcd::ubusApiRequestHandler, this, _1, _2, _3));
+    u->addMethod("log", logapi_policy);
+    u->addMethod("featureapi", p44featureapi_policy);
+    u->addMethod("quit");
+    ubusApiServer->registerObject(u);
+  }
+
+  void ubusApiRequestHandler(UbusRequestPtr aUbusRequest, const string aMethod, JsonObjectPtr aJsonRequest)
+  {
+    if (aMethod=="log") {
+      if (aJsonRequest) {
+        JsonObjectPtr o;
+        if (aJsonRequest->get("level", o)) {
+          int oldLevel = LOGLEVEL;
+          int newLevel = o->int32Value();
+          SETLOGLEVEL(newLevel);
+          LOG(newLevel, "\n\n========== changed log level from %d to %d ===============", oldLevel, newLevel);
+        }
+        if (aJsonRequest->get("deltastamps", o)) {
+          SETDELTATIME(o->boolValue());
+        }
+      }
+      aUbusRequest->sendResponse(JsonObjectPtr());
+    }
+    else if (aMethod=="quit") {
+      LOG(LOG_WARNING, "terminated via UBUS quit method");
+      terminateApp(1);
+      aUbusRequest->sendResponse(JsonObjectPtr());
+    }
+    else if (aMethod=="featureapi") {
+      ErrorPtr err;
+      JsonObjectPtr result;
+      if (aJsonRequest) {
+        // run on featureAPI
+        LOG(LOG_INFO,"ubus feature API request: %s", aJsonRequest->c_strValue());
+        ApiRequestPtr req = ApiRequestPtr(new APICallbackRequest(aJsonRequest, boost::bind(&P44FeatureD::ubusFeatureApiRequestDone, this, aUbusRequest, _1, _2)));
+        featureApi->handleRequest(req);
+        return true;
+      }
+      else {
+        err = TextError::err("missing API command object");
+      }
+      ubusFeatureApiRequestDone(aUbusRequest, JsonObjectPtr, err);
+    }
+    else {
+      // no other methods implemented yet
+      aUbusRequest->sendResponse(JsonObjectPtr(), UBUS_STATUS_INVALID_COMMAND);
+    }
+  }
+
+  void ubusFeatureApiRequestDone(UbusRequestPtr aUbusRequest, JsonObjectPtr aResult, ErrorPtr aError)
+  {
+    JsonObjectPtr response = JsonObject::newObj();
+    if (aResult) response->add("result", aResult);
+    if (aError) response->add("error", JsonObject::newString(err->description()));
+    LOG(LOG_INFO,"ubus feature API answer: %s", response->c_strValue());
+    aUbusRequest->sendResponse(response);
+  }
+
+
+  #endif // ENABLE_UBUS
+
+
+
+  // MARK: ==== p44 mg44 type API access
 
 
   SocketCommPtr apiConnectionHandler(SocketCommPtr aServerSocketComm)
   {
     JsonCommPtr conn = JsonCommPtr(new JsonComm(MainLoop::currentMainLoop()));
-    conn->setMessageHandler(boost::bind(&LEthD::apiRequestHandler, this, conn, _1, _2));
+    conn->setMessageHandler(boost::bind(&P44FeatureD::apiRequestHandler, this, conn, _1, _2));
     conn->setClearHandlersAtClose(); // close must break retain cycles so this object won't cause a mem leak
     return conn;
   }
@@ -329,7 +405,7 @@ public:
         // request elements now: uri and data
         requestsPending++;
         LOG(LOG_INFO, "+++ New request pending, total now %d", requestsPending);
-        if (processRequest(uri, data, action, boost::bind(&LEthD::requestHandled, this, aConnection, _1, _2))) {
+        if (processRequest(uri, data, action, boost::bind(&P44FeatureD::requestHandled, this, aConnection, _1, _2))) {
           // done, callback will send response and close connection
           return;
         }
@@ -369,13 +445,13 @@ public:
   {
     ErrorPtr err;
     JsonObjectPtr o;
-    if (aUri=="lethd") {
-      // lethd API wrapper
+    if (aUri=="featureapi") {
+      // p44featured API wrapper
       if (!aIsAction) {
-        aRequestDoneCB(JsonObjectPtr(), WebError::webErr(415, "lethd API calls must be action-type (e.g. POST)"));
+        aRequestDoneCB(JsonObjectPtr(), WebError::webErr(415, "p44featured API calls must be action-type (e.g. POST)"));
       }
-      ApiRequestPtr req = ApiRequestPtr(new JsonWebAPIRequest(aData, aRequestDoneCB));
-      lethdApi->handleRequest(req);
+      ApiRequestPtr req = ApiRequestPtr(new APICallbackRequest(aData, aRequestDoneCB));
+      featureApi->handleRequest(req);
       return true;
     }
     else if (aUri=="log") {
@@ -426,7 +502,7 @@ int main(int argc, char **argv)
   SETLOGLEVEL(LOG_EMERG);
   SETERRLEVEL(LOG_EMERG, false); // messages, if any, go to stderr
   // create app with current mainloop
-  static LEthD application;
+  static P44FeatureD application;
   // pass control
   return application.main(argc, argv);
 }

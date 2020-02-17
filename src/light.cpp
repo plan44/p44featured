@@ -1,9 +1,9 @@
 //
-//  Copyright (c) 2016-2017 plan44.ch / Lukas Zeller, Zurich, Switzerland
+//  Copyright (c) 2016-2020 plan44.ch / Lukas Zeller, Zurich, Switzerland
 //
 //  Author: Ueli Wahlen <ueli@hotmail.com>
 //
-//  This file is part of lethd.
+//  This file is part of p44featured.
 //
 //  pixelboardd is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ ErrorPtr Light::processRequest(ApiRequestPtr aRequest)
 {
   JsonObjectPtr o = aRequest->getRequest()->get("cmd");
   if (!o) {
-    return LethdApiError::err("missing 'cmd'");
+    return FeatureApiError::err("missing 'cmd'");
   }
   string cmd = o->stringValue();
   if (cmd=="fade") {

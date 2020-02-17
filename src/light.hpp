@@ -1,9 +1,9 @@
 //
-//  Copyright (c) 2016-2017 plan44.ch / Lukas Zeller, Zurich, Switzerland
+//  Copyright (c) 2016-2020 plan44.ch / Lukas Zeller, Zurich, Switzerland
 //
 //  Author: Ueli Wahlen <ueli@hotmail.com>
 //
-//  This file is part of lethd.
+//  This file is part of p44featured.
 //
 //  pixelboardd is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 //  along with pixelboardd. If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef __lethd_light_hpp__
-#define __lethd_light_hpp__
+#ifndef __p44featured_light_hpp__
+#define __p44featured_light_hpp__
 
 #include "analogio.hpp"
 
@@ -88,4 +88,4 @@ namespace p44 {
 
 
 
-#endif /* __lethd_light_hpp__ */
+#endif /* __p44featured_light_hpp__ */

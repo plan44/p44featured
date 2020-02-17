@@ -11,5 +11,12 @@
 #ifndef ENABLE_P44LRGRAPHICS
   #define ENABLE_P44LRGRAPHICS 1 // p44lrgraphics support in some of the p44utils components
 #endif
+#ifndef ENABLE_UBUS
+  #if P44_BUILD_OW
+    #define ENABLE_UBUS 1 // ubus enabled on OpenWrt
+  #endif
+#endif
+
+
 
 #endif // __p44utils__config__

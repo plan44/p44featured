@@ -292,7 +292,7 @@ ErrorPtr DispMatrix::initialize(JsonObjectPtr aInitData)
   LOG(LOG_NOTICE, "initializing dispmatrix");
   reset();
   if (!aInitData->isType(json_type_array)) {
-    return LethdApiError::err("init data must be array of panel specs");
+    return FeatureApiError::err("init data must be array of panel specs");
   }
   for (int i = 0; i<aInitData->arrayLength(); ++i) {
     JsonObjectPtr panelCfg = aInitData->arrayGet(i);
@@ -326,7 +326,7 @@ ErrorPtr DispMatrix::initialize(JsonObjectPtr aInitData)
     }
     // now create panel
     if (usedPanels>=numChains) {
-      return LethdApiError::err("cannot create more than %d display panels", numChains);
+      return FeatureApiError::err("cannot create more than %d display panels", numChains);
     }
     int cols = visiblecols+borderLeft+borderRight;
     panels[usedPanels] = DispPanelPtr(new DispPanel(chainNames[usedPanels], offsetX, rows, cols, borderLeft, borderRight, orientation));

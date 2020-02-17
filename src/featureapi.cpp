@@ -1,9 +1,9 @@
 //
-//  Copyright (c) 2016-2017 plan44.ch / Lukas Zeller, Zurich, Switzerland
+//  Copyright (c) 2016-2020 plan44.ch / Lukas Zeller, Zurich, Switzerland
 //
 //  Authors: Ueli Wahlen <ueli@hotmail.com>, Lukas Zeller <luz@plan44.ch>
 //
-//  This file is part of lethd.
+//  This file is part of p44featured.
 //
 //  pixelboardd is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -28,21 +28,21 @@
 using namespace p44;
 
 
-// MARK: ===== LethdApiRequest
+// MARK: ===== FeatureApiRequest
 
-LethdApiRequest::LethdApiRequest(JsonObjectPtr aRequest, JsonCommPtr aConnection) :
+FeatureApiRequest::FeatureApiRequest(JsonObjectPtr aRequest, JsonCommPtr aConnection) :
   inherited(aRequest),
   connection(aConnection)
 {
 }
 
 
-LethdApiRequest::~LethdApiRequest()
+FeatureApiRequest::~FeatureApiRequest()
 {
 }
 
 
-void LethdApiRequest::sendResponse(JsonObjectPtr aResponse, ErrorPtr aError)
+void FeatureApiRequest::sendResponse(JsonObjectPtr aResponse, ErrorPtr aError)
 {
   if (!Error::isOK(aError)) {
     aResponse = JsonObject::newObj();
@@ -51,6 +51,7 @@ void LethdApiRequest::sendResponse(JsonObjectPtr aResponse, ErrorPtr aError)
   if (connection) connection->sendMessage(aResponse);
   LOG(LOG_INFO,"API answer: %s", aResponse->c_strValue());
 }
+
 
 
 // MARK: ===== InternalRequest
@@ -74,33 +75,51 @@ void InternalRequest::sendResponse(JsonObjectPtr aResponse, ErrorPtr aError)
 
 
 
-// MARK: ===== LethdApi
+// MARK: ===== APICallbackRequest
 
-
-static LethdApiPtr lethdApi;
-
-
-LethdApiPtr LethdApi::sharedApi()
+APICallbackRequest::APICallbackRequest(JsonObjectPtr aRequest, RequestDoneCB aRequestDoneCB) :
+  inherited(aRequest),
+  requestDoneCB(aRequestDoneCB)
 {
-  if (!lethdApi) {
-    lethdApi = LethdApiPtr(new LethdApi);
+}
+
+
+APICallbackRequest::~APICallbackRequest()
+{
+}
+
+
+void APICallbackRequest::sendResponse(JsonObjectPtr aResponse, ErrorPtr aError)
+{
+  if (requestDoneCB) requestDoneCB(aResponse, aError);
+}
+
+
+
+// MARK: ===== FeatureApi
+
+static FeatureApiPtr featureApi;
+
+FeatureApiPtr FeatureApi::sharedApi()
+{
+  if (!featureApi) {
+    featureApi = FeatureApiPtr(new FeatureApi);
   }
-  return lethdApi;
+  return featureApi;
 }
 
 
-
-LethdApi::LethdApi()
+FeatureApi::FeatureApi()
 {
 }
 
 
-LethdApi::~LethdApi()
+FeatureApi::~FeatureApi()
 {
 }
 
 
-ErrorPtr LethdApi::runJsonFile(const string aScriptPath, SimpleCB aFinishedCallback, ScriptContextPtr* aContextP, SubstitutionMap* aSubstitutionsP)
+ErrorPtr FeatureApi::runJsonFile(const string aScriptPath, SimpleCB aFinishedCallback, ScriptContextPtr* aContextP, SubstitutionMap* aSubstitutionsP)
 {
   ErrorPtr err;
   string jsonText;
@@ -120,7 +139,7 @@ ErrorPtr LethdApi::runJsonFile(const string aScriptPath, SimpleCB aFinishedCallb
 }
 
 
-ErrorPtr LethdApi::runJsonString(string aJsonString, SimpleCB aFinishedCallback, ScriptContextPtr* aContextP, SubstitutionMap* aSubstitutionsP)
+ErrorPtr FeatureApi::runJsonString(string aJsonString, SimpleCB aFinishedCallback, ScriptContextPtr* aContextP, SubstitutionMap* aSubstitutionsP)
 {
   ErrorPtr err;
   if (aSubstitutionsP) {
@@ -148,7 +167,7 @@ ErrorPtr LethdApi::runJsonString(string aJsonString, SimpleCB aFinishedCallback,
   if (Error::isOK(err)) {
     JsonObjectPtr script = JsonObject::objFromText(aJsonString.c_str(), -1, &err);
     if (Error::isOK(err) && script) {
-      err = lethdApi->executeJson(script, aFinishedCallback, aContextP);
+      err = featureApi->executeJson(script, aFinishedCallback, aContextP);
     }
   }
   if (!Error::isOK(err)) { LOG(LOG_WARNING, "Script execution error: %s", Error::text(err)); }
@@ -156,7 +175,7 @@ ErrorPtr LethdApi::runJsonString(string aJsonString, SimpleCB aFinishedCallback,
 }
 
 
-ErrorPtr LethdApi::executeJson(JsonObjectPtr aJsonCmds, SimpleCB aFinishedCallback, ScriptContextPtr* aContextP)
+ErrorPtr FeatureApi::executeJson(JsonObjectPtr aJsonCmds, SimpleCB aFinishedCallback, ScriptContextPtr* aContextP)
 {
   JsonObjectPtr cmds;
   if (!aJsonCmds->isType(json_type_array)) {
@@ -180,7 +199,7 @@ ErrorPtr LethdApi::executeJson(JsonObjectPtr aJsonCmds, SimpleCB aFinishedCallba
 }
 
 
-void LethdApi::executeNextCmd(JsonObjectPtr aCmds, int aIndex, ScriptContextPtr aContext, SimpleCB aFinishedCallback)
+void FeatureApi::executeNextCmd(JsonObjectPtr aCmds, int aIndex, ScriptContextPtr aContext, SimpleCB aFinishedCallback)
 {
   if (!aCmds || aIndex>=aCmds->arrayLength()) {
     // done
@@ -196,16 +215,16 @@ void LethdApi::executeNextCmd(JsonObjectPtr aCmds, int aIndex, ScriptContextPtr 
     delay = o->doubleValue()*MilliSecond;
   }
   // now execute
-  aContext->scriptTicket.executeOnce(boost::bind(&LethdApi::runCmd, this, aCmds, aIndex, aContext, aFinishedCallback), delay);
+  aContext->scriptTicket.executeOnce(boost::bind(&FeatureApi::runCmd, this, aCmds, aIndex, aContext, aFinishedCallback), delay);
 }
 
 
-void LethdApi::runCmd(JsonObjectPtr aCmds, int aIndex, ScriptContextPtr aContext, SimpleCB aFinishedCallback)
+void FeatureApi::runCmd(JsonObjectPtr aCmds, int aIndex, ScriptContextPtr aContext, SimpleCB aFinishedCallback)
 {
   JsonObjectPtr cmd = aCmds->arrayGet(aIndex);
   JsonObjectPtr o = cmd->get("callscript");
   if (o) {
-    runJsonFile(o->stringValue(), boost::bind(&LethdApi::executeNextCmd, this, aCmds, aIndex+1, aContext, aFinishedCallback), &aContext);
+    runJsonFile(o->stringValue(), boost::bind(&FeatureApi::executeNextCmd, this, aCmds, aIndex+1, aContext, aFinishedCallback), &aContext);
     return;
   }
   ApiRequestPtr req = ApiRequestPtr(new InternalRequest(cmd));
@@ -214,7 +233,7 @@ void LethdApi::runCmd(JsonObjectPtr aCmds, int aIndex, ScriptContextPtr aContext
 }
 
 
-FeaturePtr LethdApi::getFeature(const string aFeatureName)
+FeaturePtr FeatureApi::getFeature(const string aFeatureName)
 {
   FeatureMap::iterator pos = featureMap.find(aFeatureName);
   if (pos==featureMap.end()) return FeaturePtr();
@@ -224,16 +243,16 @@ FeaturePtr LethdApi::getFeature(const string aFeatureName)
 
 
 
-void LethdApi::addFeature(FeaturePtr aFeature)
+void FeatureApi::addFeature(FeaturePtr aFeature)
 {
   featureMap[aFeature->getName()] = aFeature;
 }
 
 
-SocketCommPtr LethdApi::apiConnectionHandler(SocketCommPtr aServerSocketComm)
+SocketCommPtr FeatureApi::apiConnectionHandler(SocketCommPtr aServerSocketComm)
 {
   JsonCommPtr conn = JsonCommPtr(new JsonComm(MainLoop::currentMainLoop()));
-  conn->setMessageHandler(boost::bind(&LethdApi::apiRequestHandler, this, conn, _1, _2));
+  conn->setMessageHandler(boost::bind(&FeatureApi::apiRequestHandler, this, conn, _1, _2));
   conn->setClearHandlersAtClose(); // close must break retain cycles so this object won't cause a mem leak
 
   connection = conn;
@@ -241,11 +260,11 @@ SocketCommPtr LethdApi::apiConnectionHandler(SocketCommPtr aServerSocketComm)
 }
 
 
-void LethdApi::apiRequestHandler(JsonCommPtr aConnection, ErrorPtr aError, JsonObjectPtr aRequest)
+void FeatureApi::apiRequestHandler(JsonCommPtr aConnection, ErrorPtr aError, JsonObjectPtr aRequest)
 {
   if (Error::isOK(aError)) {
     LOG(LOG_INFO,"API request: %s", aRequest->c_strValue());
-    ApiRequestPtr req = ApiRequestPtr(new LethdApiRequest(aRequest, aConnection));
+    ApiRequestPtr req = ApiRequestPtr(new FeatureApiRequest(aRequest, aConnection));
     aError = processRequest(req);
   }
   if (!Error::isOK(aError)) {
@@ -258,7 +277,7 @@ void LethdApi::apiRequestHandler(JsonCommPtr aConnection, ErrorPtr aError, JsonO
 }
 
 
-void LethdApi::handleRequest(ApiRequestPtr aRequest)
+void FeatureApi::handleRequest(ApiRequestPtr aRequest)
 {
   ErrorPtr err = processRequest(aRequest);
   if (err) {
@@ -269,22 +288,22 @@ void LethdApi::handleRequest(ApiRequestPtr aRequest)
 
 
 
-ErrorPtr LethdApi::processRequest(ApiRequestPtr aRequest)
+ErrorPtr FeatureApi::processRequest(ApiRequestPtr aRequest)
 {
   JsonObjectPtr reqData = aRequest->getRequest();
   JsonObjectPtr o;
   // first check for feature selector
   if (reqData->get("feature", o, true)) {
     if (!o->isType(json_type_string)) {
-      return LethdApiError::err("'feature' attribute must be a string");
+      return FeatureApiError::err("'feature' attribute must be a string");
     }
     string featurename = o->stringValue();
     FeatureMap::iterator f = featureMap.find(featurename);
     if (f==featureMap.end()) {
-      return LethdApiError::err("unknown feature '%s'", featurename.c_str());
+      return FeatureApiError::err("unknown feature '%s'", featurename.c_str());
     }
     if (!f->second->isInitialized()) {
-      return LethdApiError::err("feature '%s' is not yet initialized", featurename.c_str());
+      return FeatureApiError::err("feature '%s' is not yet initialized", featurename.c_str());
     }
     // let feature handle it
     ErrorPtr err = f->second->processRequest(aRequest);
@@ -296,7 +315,7 @@ ErrorPtr LethdApi::processRequest(ApiRequestPtr aRequest)
   else {
     // must be global command
     if (!reqData->get("cmd", o, true)) {
-      return LethdApiError::err("missing 'feature' or 'cmd' attribute");
+      return FeatureApiError::err("missing 'feature' or 'cmd' attribute");
     }
     string cmd = o->stringValue();
     if (cmd=="nop") {
@@ -322,18 +341,18 @@ ErrorPtr LethdApi::processRequest(ApiRequestPtr aRequest)
       return ping(aRequest);
     }
     else {
-      return LethdApiError::err("unknown global command '%s'", cmd.c_str());
+      return FeatureApiError::err("unknown global command '%s'", cmd.c_str());
     }
   }
 }
 
 
-ErrorPtr LethdApi::call(ApiRequestPtr aRequest)
+ErrorPtr FeatureApi::call(ApiRequestPtr aRequest)
 {
   JsonObjectPtr reqData = aRequest->getRequest();
   JsonObjectPtr o;
   // check for subsititutions
-  LethdApi::SubstitutionMap subst;
+  FeatureApi::SubstitutionMap subst;
   o = reqData->get("substitutions");
   if (o) {
     string var;
@@ -363,11 +382,11 @@ ErrorPtr LethdApi::call(ApiRequestPtr aRequest)
     if (Error::isOK(err)) return Error::ok();
     return err;
   }
-  return LethdApiError::err("missing 'script', 'scripttext' or 'json' attribute");
+  return FeatureApiError::err("missing 'script', 'scripttext' or 'json' attribute");
 }
 
 
-ErrorPtr LethdApi::reset(ApiRequestPtr aRequest)
+ErrorPtr FeatureApi::reset(ApiRequestPtr aRequest)
 {
   bool featureFound = false;
   for (FeatureMap::iterator f = featureMap.begin(); f!=featureMap.end(); ++f) {
@@ -378,14 +397,14 @@ ErrorPtr LethdApi::reset(ApiRequestPtr aRequest)
     }
   }
   if (!featureFound) {
-    return LethdApiError::err("reset does not address any known features");
+    return FeatureApiError::err("reset does not address any known features");
   }
   return Error::ok(); // cause empty response
 }
 
 
 
-ErrorPtr LethdApi::init(ApiRequestPtr aRequest)
+ErrorPtr FeatureApi::init(ApiRequestPtr aRequest)
 {
   bool featureFound = false;
   ErrorPtr err;
@@ -406,13 +425,13 @@ ErrorPtr LethdApi::init(ApiRequestPtr aRequest)
     }
   }
   if (!featureFound) {
-    return LethdApiError::err("init does not address any known features");
+    return FeatureApiError::err("init does not address any known features");
   }
   return Error::ok(); // cause empty response
 }
 
 
-ErrorPtr LethdApi::now(ApiRequestPtr aRequest)
+ErrorPtr FeatureApi::now(ApiRequestPtr aRequest)
 {
   JsonObjectPtr answer = JsonObject::newObj();
   answer->add("now", JsonObject::newInt64(MainLoop::unixtime()/MilliSecond));
@@ -421,7 +440,7 @@ ErrorPtr LethdApi::now(ApiRequestPtr aRequest)
 }
 
 
-ErrorPtr LethdApi::status(ApiRequestPtr aRequest)
+ErrorPtr FeatureApi::status(ApiRequestPtr aRequest)
 {
   JsonObjectPtr answer = JsonObject::newObj();
   // - list initialized features
@@ -443,7 +462,7 @@ ErrorPtr LethdApi::status(ApiRequestPtr aRequest)
 }
 
 
-ErrorPtr LethdApi::ping(ApiRequestPtr aRequest)
+ErrorPtr FeatureApi::ping(ApiRequestPtr aRequest)
 {
   JsonObjectPtr answer = JsonObject::newObj();
   answer->add("pong", JsonObject::newBool(true));
@@ -452,26 +471,26 @@ ErrorPtr LethdApi::ping(ApiRequestPtr aRequest)
 }
 
 
-void LethdApi::start(const string aApiPort)
+void FeatureApi::start(const string aApiPort)
 {
   apiServer = SocketCommPtr(new SocketComm(MainLoop::currentMainLoop()));
   apiServer->setConnectionParams(NULL, aApiPort.c_str(), SOCK_STREAM, AF_INET6);
   apiServer->setAllowNonlocalConnections(true);
-  apiServer->startServer(boost::bind(&LethdApi::apiConnectionHandler, this, _1), 10);
-  LOG(LOG_INFO, "LEthDApi listening on %s", aApiPort.c_str());
+  apiServer->startServer(boost::bind(&FeatureApi::apiConnectionHandler, this, _1), 10);
+  LOG(LOG_INFO, "FeatureApi listening on %s", aApiPort.c_str());
 }
 
 
-ErrorPtr LethdApi::sendMessage(JsonObjectPtr aMessage)
+ErrorPtr FeatureApi::sendMessage(JsonObjectPtr aMessage)
 {
   if (!connection) return TextError::err("No API connection exists, cannot send message");
   return connection->sendMessage(aMessage);
 }
 
 
-ErrorPtr LethdApiError::err(const char *aFmt, ...)
+ErrorPtr FeatureApiError::err(const char *aFmt, ...)
 {
-  Error *errP = new LethdApiError();
+  Error *errP = new FeatureApiError();
   va_list args;
   va_start(args, aFmt);
   errP->setFormattedMessage(aFmt, args);

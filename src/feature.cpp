@@ -1,9 +1,9 @@
 //
-//  Copyright (c) 2016-2017 plan44.ch / Lukas Zeller, Zurich, Switzerland
+//  Copyright (c) 2016-2020 plan44.ch / Lukas Zeller, Zurich, Switzerland
 //
 //  Author: Ueli Wahlen <ueli@hotmail.com>
 //
-//  This file is part of lethd.
+//  This file is part of p44featured.
 //
 //  pixelboardd is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -47,9 +47,9 @@ ErrorPtr Feature::processRequest(ApiRequestPtr aRequest)
       aRequest->sendResponse(status(), ErrorPtr());
       return ErrorPtr();
     }
-    return LethdApiError::err("Feature '%s': unknown cmd '%s'", getName().c_str(), cmd.c_str());
+    return FeatureApiError::err("Feature '%s': unknown cmd '%s'", getName().c_str(), cmd.c_str());
   }
-  return LethdApiError::err("Feature '%s': cannot understand request (no cmd)", getName().c_str());
+  return FeatureApiError::err("Feature '%s': cannot understand request (no cmd)", getName().c_str());
 }
 
 

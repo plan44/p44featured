@@ -1,9 +1,9 @@
 //
-//  Copyright (c) 2016-2017 plan44.ch / Lukas Zeller, Zurich, Switzerland
+//  Copyright (c) 2016-2020 plan44.ch / Lukas Zeller, Zurich, Switzerland
 //
 //  Author: Ueli Wahlen <ueli@hotmail.com>
 //
-//  This file is part of lethd.
+//  This file is part of p44featured.
 //
 //  pixelboardd is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -59,19 +59,19 @@ ErrorPtr Neuron::initialize(JsonObjectPtr aInitData)
   initOperation();
   JsonObjectPtr o;
   if (!aInitData->get("movingAverageCount", o, true)) {
-    return LethdApiError::err("missing 'movingAverageCount'");
+    return FeatureApiError::err("missing 'movingAverageCount'");
   }
   double movingAverageCount = o->doubleValue();
   if (!aInitData->get("threshold", o, true)) {
-    return LethdApiError::err("missing 'threshold'");
+    return FeatureApiError::err("missing 'threshold'");
   }
   double threshold = o->doubleValue();
   if (!aInitData->get("numAxonLeds", o, true)) {
-    return LethdApiError::err("missing 'numAxonLeds'");
+    return FeatureApiError::err("missing 'numAxonLeds'");
   }
   double numAxonLeds = o->int32Value();
   if (!aInitData->get("numBodyLeds", o, true)) {
-    return LethdApiError::err("missing 'numBodyLeds'");
+    return FeatureApiError::err("missing 'numBodyLeds'");
   }
   double numBodyLeds = o->int32Value();
   // start
@@ -85,7 +85,7 @@ ErrorPtr Neuron::processRequest(ApiRequestPtr aRequest)
 {
   JsonObjectPtr o = aRequest->getRequest()->get("cmd");
   if (!o) {
-    return LethdApiError::err("missing 'cmd'");
+    return FeatureApiError::err("missing 'cmd'");
   }
   string cmd = o->stringValue();
   if (cmd=="fire") {
@@ -133,7 +133,7 @@ ErrorPtr Neuron::mute(ApiRequestPtr aRequest)
 {
   JsonObjectPtr o = aRequest->getRequest()->get("on");
   if (!o) {
-    return LethdApiError::err("missing 'on'");
+    return FeatureApiError::err("missing 'on'");
   }
   isMuted = o->boolValue();
   return Error::ok();
@@ -228,7 +228,7 @@ void Neuron::animateBody(MLTimer &aTimer)
 void Neuron::neuronSpike(double aValue) {
   JsonObjectPtr message = JsonObject::newObj();
   message->add("sensor", JsonObject::newDouble(aValue));
-  LethdApi::sharedApi()->sendMessage(message);
+  FeatureApi::sharedApi()->sendMessage(message);
 }
 
 

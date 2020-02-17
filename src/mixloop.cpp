@@ -1,20 +1,20 @@
 //
 //  Copyright (c) 2018 plan44.ch / Lukas Zeller, Zurich, Switzerland
 //
-//  This file is part of lethd/hermeld
+//  This file is part of p44featured
 //
-//  lethd/hermeld is free software: you can redistribute it and/or modify
+//  p44featured is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 //
-//  lethd/hermeld is distributed in the hope that it will be useful,
+//  p44featured is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details.
 //
 //  You should have received a copy of the GNU General Public License
-//  along with lethd/hermeld. If not, see <http://www.gnu.org/licenses/>.
+//  along with p44featured. If not, see <http://www.gnu.org/licenses/>.
 //
 
 // File scope debugging options
@@ -321,7 +321,7 @@ void MixLoop::accelMeasure()
       accelStart = now;
       hitDetectorActive = true;
       LOG(LOG_NOTICE, "Hit detector activated with integral = %.0f", accelIntegral);
-      LethdApi::sharedApi()->runJsonFile("scripts/game.json", NULL, &scriptContext);
+      FeatureApi::sharedApi()->runJsonFile("scripts/game.json", NULL, &scriptContext);
     }
   }
   // show
@@ -360,7 +360,7 @@ void MixLoop::showHit()
   }
   showTicket.executeOnce(boost::bind(&MixLoop::showHitEnd, this), hitFlashTime);
   // disp
-  LethdApi::sharedApi()->runJsonFile("scripts/hit.json", NULL, &scriptContext);
+  FeatureApi::sharedApi()->runJsonFile("scripts/hit.json", NULL, &scriptContext);
 }
 
 
@@ -373,5 +373,5 @@ void MixLoop::showHitEnd()
 void MixLoop::dispNormal()
 {
   dispTicket.cancel();
-  LethdApi::sharedApi()->runJsonFile("scripts/normal.json", NULL, &scriptContext);
+  FeatureApi::sharedApi()->runJsonFile("scripts/normal.json", NULL, &scriptContext);
 }

@@ -1,20 +1,20 @@
 //
 //  Copyright (c) 2018 plan44.ch / Lukas Zeller, Zurich, Switzerland
 //
-//  This file is part of lethd/hermeld
+//  This file is part of p44featured/hermeld
 //
-//  lethd/hermeld is free software: you can redistribute it and/or modify
+//  p44featured is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 //
-//  lethd/hermeld is distributed in the hope that it will be useful,
+//  p44featured is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details.
 //
 //  You should have received a copy of the GNU General Public License
-//  along with lethd/hermeld. If not, see <http://www.gnu.org/licenses/>.
+//  along with p44featured. If not, see <http://www.gnu.org/licenses/>.
 //
 
 // File scope debugging options
@@ -724,7 +724,7 @@ void WifiTrack::initOperation()
   LOG(LOG_NOTICE, "initializing wifitrack");
   // display
   if (directDisplay) {
-    disp = boost::dynamic_pointer_cast<DispMatrix>(LethdApi::sharedApi()->getFeature("text"));
+    disp = boost::dynamic_pointer_cast<DispMatrix>(FeatureApi::sharedApi()->getFeature("text"));
     if (disp) {
       disp->setNeedContentHandler(boost::bind(&WifiTrack::needContentHandler, this));
     }
@@ -1164,7 +1164,7 @@ void WifiTrack::displayEncounter(string aIntro, int aImageIndex, PixelColor aCol
         LOG(LOG_WARNING, "Scrolling de-synchronized (actual content out of view) -> reset scrolling");
         disp->resetScroll();
       }
-      LethdApi::SubstitutionMap subst;
+      FeatureApi::SubstitutionMap subst;
       subst["HASINTRO"] = aIntro.size()>0 ? "1" : "0";
       subst["INTRO"] = aIntro;
       subst["IMGIDX"] = string_format("%d", aImageIndex);
@@ -1176,7 +1176,7 @@ void WifiTrack::displayEncounter(string aIntro, int aImageIndex, PixelColor aCol
       subst["HASTARGET"] = aTarget.size()>0 ? "1" : "0";
       subst["TARGET"] = aTarget;
       loadingContent = false; // because calling script will terminate previous script without callback, make sure loading is not kept in progress (would never get out)
-      LethdApi::sharedApi()->runJsonFile("scripts/showssid.json", NULL, &scriptContext, &subst);
+      FeatureApi::sharedApi()->runJsonFile("scripts/showssid.json", NULL, &scriptContext, &subst);
     }
     else {
       LOG(LOG_WARNING, "Cannot push to scroll text (scroll delay would be > %.1f Seconds)", (double)maxDisplayDelay/Second);
@@ -1196,7 +1196,7 @@ void WifiTrack::displayEncounter(string aIntro, int aImageIndex, PixelColor aCol
     personinfo->add("HASTARGET", JsonObject::newString(aTarget.size()>0 ? "1" : "0"));
     personinfo->add("TARGET", JsonObject::newString(aTarget));
     message->add("wifitrackshow", personinfo);
-    LethdApi::sharedApi()->sendMessage(message);
+    FeatureApi::sharedApi()->sendMessage(message);
   }
 }
 
@@ -1206,7 +1206,7 @@ bool WifiTrack::needContentHandler()
   if (!loadingContent) {
     loadingContent = true;
     FOCUSLOG("Display needs content - calling wifipause script");
-    ErrorPtr err = LethdApi::sharedApi()->runJsonFile("scripts/wifipause.json", boost::bind(&WifiTrack::contentLoaded, this), &scriptContext, NULL);
+    ErrorPtr err = FeatureApi::sharedApi()->runJsonFile("scripts/wifipause.json", boost::bind(&WifiTrack::contentLoaded, this), &scriptContext, NULL);
     if (!Error::isOK(err)) {
       loadingContent = false;
       LOG(LOG_WARNING, "wifipause script could not be run: %s", Error::text(err));

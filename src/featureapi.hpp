@@ -1,9 +1,9 @@
 //
-//  Copyright (c) 2016-2017 plan44.ch / Lukas Zeller, Zurich, Switzerland
+//  Copyright (c) 2016-2020 plan44.ch / Lukas Zeller, Zurich, Switzerland
 //
 //  Author: Ueli Wahlen <ueli@hotmail.com>
 //
-//  This file is part of lethd.
+//  This file is part of p44featured.
 //
 //  pixelboardd is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 //  along with pixelboardd. If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef __lethd_lethdapi_hpp__
-#define __lethd_lethdapi_hpp__
+#ifndef __p44featured_featureapi_hpp__
+#define __p44featured_featureapi_hpp__
 
 #include "p44utils_common.hpp"
 
@@ -34,13 +34,14 @@ namespace p44 {
   class ApiRequest;
   typedef boost::intrusive_ptr<ApiRequest> ApiRequestPtr;
 
-  class LethdApi;
-  typedef boost::intrusive_ptr<LethdApi> LethdApiPtr;
+  class FeatureApi;
+  typedef boost::intrusive_ptr<FeatureApi> FeatureApiPtr;
 
   class Feature;
   typedef boost::intrusive_ptr<Feature> FeaturePtr;
 
 
+  /// abstract API request base class
   class ApiRequest : public P44Obj
   {
 
@@ -62,15 +63,16 @@ namespace p44 {
   };
 
 
-  class LethdApiRequest : public ApiRequest
+  /// direct TCP API request
+  class FeatureApiRequest : public ApiRequest
   {
     typedef ApiRequest inherited;
     JsonCommPtr connection;
 
   public:
 
-    LethdApiRequest(JsonObjectPtr aRequest, JsonCommPtr aConnection);
-    virtual ~LethdApiRequest();
+    FeatureApiRequest(JsonObjectPtr aRequest, JsonCommPtr aConnection);
+    virtual ~FeatureApiRequest();
 
     /// send response
     /// @param aResponse JSON response to send
@@ -80,6 +82,7 @@ namespace p44 {
   };
 
 
+  /// internal request
   class InternalRequest : public ApiRequest
   {
     typedef ApiRequest inherited;
@@ -96,10 +99,29 @@ namespace p44 {
   };
 
 
+  typedef boost::function<void (JsonObjectPtr aResult, ErrorPtr aError)> RequestDoneCB;
+
+  /// API request with callback for sending result (for embedding in other APIs)
+  class APICallbackRequest : public ApiRequest
+  {
+    typedef ApiRequest inherited;
+
+    RequestDoneCB requestDoneCB;
+
+  public:
+
+    APICallbackRequest(JsonObjectPtr aRequest, RequestDoneCB aRequestDoneCB);
+    virtual ~APICallbackRequest();
+
+    void sendResponse(JsonObjectPtr aResponse, ErrorPtr aError) override;
+  };
+
+
+
 
   class ScriptContext : public P44Obj
   {
-    friend class LethdApi;
+    friend class FeatureApi;
 
     MLTicket scriptTicket;
 
@@ -111,9 +133,9 @@ namespace p44 {
 
 
 
-  class LethdApi : public P44Obj
+  class FeatureApi : public P44Obj
   {
-    friend class LethdApiRequest;
+    friend class FeatureApiRequest;
 
     SocketCommPtr apiServer;
     JsonCommPtr connection;
@@ -127,11 +149,11 @@ namespace p44 {
 
   public:
 
-    LethdApi();
-    virtual ~LethdApi();
+    FeatureApi();
+    virtual ~FeatureApi();
 
     /// singleton
-    static LethdApiPtr sharedApi();
+    static FeatureApiPtr sharedApi();
 
     /// add a feature
     /// @param aFeature the to add
@@ -193,7 +215,7 @@ namespace p44 {
     ErrorPtr call(ApiRequestPtr aRequest);
 
     /// send response via main API connection.
-    /// @note: only for LethdApiRequest
+    /// @note: only for FeatureApiRequest
     void sendResponse(JsonObjectPtr aResponse);
 
     void executeNextCmd(JsonObjectPtr aCmds, int aIndex, ScriptContextPtr aContext, SimpleCB aFinishedCallback);
@@ -202,12 +224,12 @@ namespace p44 {
   };
 
 
-  class LethdApiError : public Error
+  class FeatureApiError : public Error
   {
   public:
     static const char *domain() { return "LehtdApiError"; }
-    virtual const char *getErrorDomain() const { return LethdApiError::domain(); };
-    LethdApiError() : Error(Error::NotOK) {};
+    virtual const char *getErrorDomain() const { return FeatureApiError::domain(); };
+    FeatureApiError() : Error(Error::NotOK) {};
 
     /// factory method to create string error fprint style
     static ErrorPtr err(const char *aFmt, ...) __printflike(1,2);
@@ -217,4 +239,4 @@ namespace p44 {
 
 
 
-#endif /* __lethd_lethdapi_hpp__ */
+#endif /* __p44featured_featureapi_hpp__ */

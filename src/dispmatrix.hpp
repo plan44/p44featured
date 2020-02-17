@@ -19,8 +19,8 @@
 //  along with pixelboardd. If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef __lethd_dispmatrix_hpp__
-#define __lethd_dispmatrix_hpp__
+#ifndef __p44featured_dispmatrix_hpp__
+#define __p44featured_dispmatrix_hpp__
 
 #include "ledchaincomm.hpp"
 
@@ -133,4 +133,4 @@ namespace p44 {
 
 } // namespace p44
 
-#endif /* __lethd_dispmatrix_hpp__ */
+#endif /* __p44featured_dispmatrix_hpp__ */
