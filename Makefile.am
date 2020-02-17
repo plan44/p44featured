@@ -1,28 +1,28 @@
 AUTOMAKE_OPTIONS = subdir-objects
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
-bin_PROGRAMS = lethd
+bin_PROGRAMS = p44featured
 
-# lethd
+# p44featured
 
 if DEBUG
-lethd_DEBUG = -D DEBUG=1
+p44featured_DEBUG = -D DEBUG=1
 else
-lethd_DEBUG =
+p44featured_DEBUG =
 endif
 
 if P44_BUILD_OW
-lethd_PLATFORM = -D P44_BUILD_OW=1
+p44featured_PLATFORM = -D P44_BUILD_OW=1
 else
-lethd_PLATFORM = -D DISABLE_I2C=1
+p44featured_PLATFORM = -D DISABLE_I2C=1
 endif
 
 
 
-lethd_LDADD = $(JSONC_LIBS) $(PTHREAD_LIBS) $(SQLITE3_LIBS) $(PNG_LIBS)
+p44featured_LDADD = $(JSONC_LIBS) $(PTHREAD_LIBS) $(SQLITE3_LIBS) $(PNG_LIBS)
 
 
-lethd_CXXFLAGS = \
+p44featured_CXXFLAGS = \
   -I ${srcdir}/src/p44utils \
   -I ${srcdir}/src/p44lrgraphic \
   -I ${srcdir}/src/p44utils/thirdparty/civetweb \
@@ -35,10 +35,10 @@ lethd_CXXFLAGS = \
   ${PTHREAD_CFLAGS} \
   ${SQLITE3_CFLAGS} \
   ${PNG_CFLAGS} \
-  ${lethd_PLATFORM} \
-  ${lethd_DEBUG}
+  ${p44featured_PLATFORM} \
+  ${p44featured_DEBUG}
 
-lethd_SOURCES = \
+p44featured_SOURCES = \
   src/p44utils/analogio.cpp \
   src/p44utils/analogio.hpp \
   src/p44utils/application.cpp \
@@ -53,6 +53,8 @@ lethd_SOURCES = \
   src/p44utils/digitalio.hpp \
   src/p44utils/error.cpp \
   src/p44utils/error.hpp \
+  src/p44utils/expressions.cpp \
+  src/p44utils/expressions.hpp \
   src/p44utils/fdcomm.cpp \
   src/p44utils/fdcomm.hpp \
   src/p44utils/fnv.cpp \
@@ -106,6 +108,10 @@ lethd_SOURCES = \
   src/p44utils/sqlite3persistence.hpp \
   src/p44utils/ssdpsearch.cpp \
   src/p44utils/ssdpsearch.hpp \
+  src/p44utils/timeutils.cpp \
+  src/p44utils/timeutils.hpp \
+  src/p44utils/ubus.cpp \
+  src/p44utils/ubus.hpp \
   src/p44utils/utils.cpp \
   src/p44utils/utils.hpp \
   src/p44utils/thirdparty/slre/slre.c \
@@ -122,24 +128,31 @@ lethd_SOURCES = \
   src/p44utils/thirdparty/civetweb/hostcheck.inl \
   src/p44utils/thirdparty/civetweb/openssl_hostname_validation.inl \
   src/p44utils/p44utils_common.hpp \
-  src/p44lrgraphics/p44viewfactory.cpp \
-  src/p44lrgraphics/p44viewfactory.hpp \
+  src/p44lrgraphics/coloreffectview.cpp \
+  src/p44lrgraphics/coloreffectview.hpp \
+  src/p44lrgraphics/imageview.cpp \
+  src/p44lrgraphics/imageview.hpp \
   src/p44lrgraphics/lifeview.cpp \
   src/p44lrgraphics/lifeview.hpp \
+  src/p44lrgraphics/lightspotview.cpp \
+  src/p44lrgraphics/lightspotview.hpp \
   src/p44lrgraphics/p44view.cpp \
   src/p44lrgraphics/p44view.hpp \
   src/p44lrgraphics/textview.cpp \
   src/p44lrgraphics/textview.hpp \
-  src/p44lrgraphics/imageview.cpp \
-  src/p44lrgraphics/imageview.hpp \
+  src/p44lrgraphics/torchview.cpp \
+  src/p44lrgraphics/torchview.hpp \
+  src/p44lrgraphics/viewanimator.cpp \
+  src/p44lrgraphics/viewanimator.hpp \
+  src/p44lrgraphics/viewfactory.cpp \
+  src/p44lrgraphics/viewfactory.hpp \
   src/p44lrgraphics/viewscroller.cpp \
   src/p44lrgraphics/viewscroller.hpp \
   src/p44lrgraphics/viewstack.cpp \
   src/p44lrgraphics/viewstack.hpp \
-  src/p44lrgraphics/viewanimator.cpp \
-  src/p44lrgraphics/viewanimator.hpp \
-  src/lethdapi.cpp \
-  src/lethdapi.hpp \
+  src/p44utils_config.hpp \
+  src/featureapi.cpp \
+  src/featureapi.hpp \
   src/light.cpp \
   src/light.hpp \
   src/hermel.cpp \
@@ -154,4 +167,4 @@ lethd_SOURCES = \
   src/dispmatrix.hpp \
   src/feature.cpp \
   src/feature.hpp \
-  src/lethd_main.cpp
+  src/p44featured_main.cpp

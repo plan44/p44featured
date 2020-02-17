@@ -230,7 +230,7 @@ ErrorPtr DispPanel::reconfigure(const string aViewLabel, JsonObjectPtr aConfig)
 {
   ErrorPtr err;
   if (dispView) {
-    ViewPtr view = dispView->getView(aViewLabel);
+    P44ViewPtr view = dispView->getView(aViewLabel);
     if (view) {
       view->configureView(aConfig);
     }
@@ -484,7 +484,7 @@ JsonObjectPtr DispMatrix::status()
   if (answer->isType(json_type_object)) {
     if (usedPanels>0) {
       DispPanelPtr p = panels[0];
-      ViewPtr contents = p->contents;
+      P44ViewPtr contents = p->contents;
       if (contents) {
         answer->add("backgroundcolor", JsonObject::newString(pixelToWebColor(contents->getBackgroundColor())));
         answer->add("color", JsonObject::newString(pixelToWebColor(contents->getForegroundColor())));

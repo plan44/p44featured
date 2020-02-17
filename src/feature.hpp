@@ -24,7 +24,7 @@
 
 #include "p44utils_common.hpp"
 
-#include "lethdapi.hpp"
+#include "featureapi.hpp"
 
 namespace p44 {
 

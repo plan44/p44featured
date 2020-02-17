@@ -45,7 +45,7 @@ namespace p44 {
     int orientation; ///< orientation of content
 
     ViewScrollerPtr dispView; ///< the scroll view showing part of the contents
-    ViewPtr contents; ///< the view containing the contents
+    P44ViewPtr contents; ///< the view containing the contents
 
     MLMicroSeconds lastUpdate;
 

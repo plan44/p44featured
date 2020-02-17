@@ -19,7 +19,7 @@
 //  along with pixelboardd. If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "lethdapi.hpp"
+#include "featureapi.hpp"
 
 #include "feature.hpp"
 #include "macaddress.hpp"

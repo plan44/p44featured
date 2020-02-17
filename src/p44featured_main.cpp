@@ -25,7 +25,7 @@
 #include "jsoncomm.hpp"
 #include "ledchaincomm.hpp"
 
-#include "lethdapi.hpp"
+#include "featureapi.hpp"
 
 #include "light.hpp"
 #include "neuron.hpp"
