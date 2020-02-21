@@ -96,6 +96,8 @@ p44featured_SOURCES = \
   src/p44utils/persistentparams.hpp \
   src/p44utils/regexp.cpp \
   src/p44utils/regexp.hpp \
+  src/p44utils/rfid.cpp \
+  src/p44utils/rfid.hpp \
   src/p44utils/serialcomm.cpp \
   src/p44utils/serialcomm.hpp \
   src/p44utils/serialqueue.cpp \
@@ -159,6 +161,10 @@ p44featured_SOURCES = \
   src/p44features/hermel.hpp \
   src/p44features/mixloop.cpp \
   src/p44features/mixloop.hpp \
+  src/p44features/rfids.cpp \
+  src/p44features/rfids.hpp \
+  src/p44features/ledbars.cpp \
+  src/p44features/ledbars.hpp \
   src/p44features/wifitrack.cpp \
   src/p44features/wifitrack.hpp \
   src/p44features/neuron.cpp \

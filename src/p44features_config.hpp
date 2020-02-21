@@ -23,19 +23,12 @@
 #ifndef __p44features__config__
 #define __p44features__config__
 
-// NOTE: This is a default (template) config file only
-//                 ******************
-//       Usually, copy this file into a location where is is found BEFORE this
-//       default file is found, and modify the copied version according to
-//       your needs.
-//       DO NOT MODIFY THE ORIGINAL IN the p44utils directory/git submodule!
-
 // Features:
 // - generic use
-#define ENABLE_FEATURE_LIGHT 0
-#define ENABLE_FEATURE_DISPMATRIX 0
-#define ENABLE_FEATURE_RFIDS 0
-#define ENABLE_FEATURE_LEDBARS 0
+#define ENABLE_FEATURE_LIGHT 1
+#define ENABLE_FEATURE_DISPMATRIX 1
+#define ENABLE_FEATURE_RFIDS 1
+#define ENABLE_FEATURE_LEDBARS 1
 // - specific application
 #define ENABLE_FEATURE_WIFITRACK 0
 // - very specific hardware related stuff

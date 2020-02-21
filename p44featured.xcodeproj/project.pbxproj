@@ -24,6 +24,9 @@
 		ED3FE48C24000E9100700449 /* dispmatrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED3FE48424000E9000700449 /* dispmatrix.cpp */; };
 		ED3FE48D24000E9100700449 /* feature.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED3FE48524000E9000700449 /* feature.cpp */; };
 		ED3FE48E24000E9100700449 /* featureapi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED3FE48724000E9000700449 /* featureapi.cpp */; };
+		ED3FE4932400915100700449 /* rfid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED3FE4922400915100700449 /* rfid.cpp */; };
+		ED3FE4992400984C00700449 /* rfids.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED3FE4962400984C00700449 /* rfids.cpp */; };
+		ED3FE49A2400984C00700449 /* ledbars.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED3FE4972400984C00700449 /* ledbars.cpp */; };
 		ED53729B1DFC2CBE0066FF5A /* application.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED5372671DFC2CBE0066FF5A /* application.cpp */; };
 		ED53729C1DFC2CBE0066FF5A /* colorutils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED5372691DFC2CBE0066FF5A /* colorutils.cpp */; };
 		ED53729D1DFC2CBE0066FF5A /* consolekey.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED53726B1DFC2CBE0066FF5A /* consolekey.cpp */; };
@@ -129,6 +132,13 @@
 		ED3FE48724000E9000700449 /* featureapi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = featureapi.cpp; sourceTree = "<group>"; };
 		ED3FE48F240074CC00700449 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		ED3FE490240074CC00700449 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		ED3FE4912400915100700449 /* rfid.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = rfid.hpp; sourceTree = "<group>"; };
+		ED3FE4922400915100700449 /* rfid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rfid.cpp; sourceTree = "<group>"; };
+		ED3FE4942400972400700449 /* p44features_config.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = p44features_config.hpp; sourceTree = "<group>"; };
+		ED3FE4952400984C00700449 /* rfids.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = rfids.hpp; sourceTree = "<group>"; };
+		ED3FE4962400984C00700449 /* rfids.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rfids.cpp; sourceTree = "<group>"; };
+		ED3FE4972400984C00700449 /* ledbars.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ledbars.cpp; sourceTree = "<group>"; };
+		ED3FE4982400984C00700449 /* ledbars.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ledbars.hpp; sourceTree = "<group>"; };
 		ED53725C1DFC28D00066FF5A /* p44featured */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = p44featured; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED5372671DFC2CBE0066FF5A /* application.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = application.cpp; sourceTree = "<group>"; };
 		ED5372681DFC2CBE0066FF5A /* application.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = application.hpp; sourceTree = "<group>"; };
@@ -257,10 +267,14 @@
 				ED3FE47724000E9000700449 /* hermel.hpp */,
 				ED3FE47D24000E9000700449 /* light.cpp */,
 				ED3FE48024000E9000700449 /* light.hpp */,
+				ED3FE4972400984C00700449 /* ledbars.cpp */,
+				ED3FE4982400984C00700449 /* ledbars.hpp */,
 				ED3FE47F24000E9000700449 /* mixloop.cpp */,
 				ED3FE47C24000E9000700449 /* mixloop.hpp */,
 				ED3FE47624000E9000700449 /* neuron.cpp */,
 				ED3FE48224000E9000700449 /* neuron.hpp */,
+				ED3FE4962400984C00700449 /* rfids.cpp */,
+				ED3FE4952400984C00700449 /* rfids.hpp */,
 				EDBD84C1219F2B0000FAEE5C /* wifitrack.cpp */,
 				EDBD84C0219F2B0000FAEE5C /* wifitrack.hpp */,
 				ED3FE48124000E9000700449 /* p44features_common.hpp */,
@@ -296,6 +310,7 @@
 				EDDFE39F22FF2711001F6A5E /* p44lrgraphics */,
 				ED3FE47524000E9000700449 /* p44features */,
 				ED19DD0720F793030012DE7E /* p44featured_main.cpp */,
+				ED3FE4942400972400700449 /* p44features_config.hpp */,
 				ED3FE45F23FADC3A00700449 /* p44lrg_config.hpp */,
 				ED3FE45E23FADB1600700449 /* p44utils_config.hpp */,
 			);
@@ -356,6 +371,8 @@
 				ED53728E1DFC2CBE0066FF5A /* persistentparams.hpp */,
 				ED19DD1620F7C3B60012DE7E /* pwm.cpp */,
 				ED19DD1520F7C3B60012DE7E /* pwm.hpp */,
+				ED3FE4922400915100700449 /* rfid.cpp */,
+				ED3FE4912400915100700449 /* rfid.hpp */,
 				EDBD84C3219F3A4200FAEE5C /* regexp.cpp */,
 				EDBD84C4219F3A4200FAEE5C /* regexp.hpp */,
 				ED53728F1DFC2CBE0066FF5A /* serialcomm.cpp */,
@@ -523,9 +540,11 @@
 				ED3FE46723FAE11800700449 /* ubus.cpp in Sources */,
 				ED3FE48B24000E9100700449 /* hermel.cpp in Sources */,
 				ED3FE47323FAE1DE00700449 /* torchview.cpp in Sources */,
+				ED3FE49A2400984C00700449 /* ledbars.cpp in Sources */,
 				ED5372B21DFC2CBE0066FF5A /* sqlite3persistence.cpp in Sources */,
 				ED5372D61DFC9FC60066FF5A /* sqlite3ppext.cpp in Sources */,
 				ED19DD1820F7C3B60012DE7E /* pwm.cpp in Sources */,
+				ED3FE4932400915100700449 /* rfid.cpp in Sources */,
 				EDDFE3B122FF2711001F6A5E /* viewfactory.cpp in Sources */,
 				ED5372A61DFC2CBE0066FF5A /* jsonobject.cpp in Sources */,
 				ED57A13322FF2A08008E554D /* p44view.cpp in Sources */,
@@ -553,6 +572,7 @@
 				ED3FE47223FAE1DE00700449 /* coloreffectview.cpp in Sources */,
 				ED5372A01DFC2CBE0066FF5A /* fdcomm.cpp in Sources */,
 				ED53729D1DFC2CBE0066FF5A /* consolekey.cpp in Sources */,
+				ED3FE4992400984C00700449 /* rfids.cpp in Sources */,
 				ED53729E1DFC2CBE0066FF5A /* digitalio.cpp in Sources */,
 				ED3FE47123FAE1DE00700449 /* lightspotview.cpp in Sources */,
 				EDBD84C5219F3A4200FAEE5C /* regexp.cpp in Sources */,
