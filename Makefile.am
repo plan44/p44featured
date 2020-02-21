@@ -150,21 +150,24 @@ p44featured_SOURCES = \
   src/p44lrgraphics/viewscroller.hpp \
   src/p44lrgraphics/viewstack.cpp \
   src/p44lrgraphics/viewstack.hpp \
+  src/p44lrgraphics/p44lrg_common.hpp \
+  src/p44features/featureapi.cpp \
+  src/p44features/featureapi.hpp \
+  src/p44features/light.cpp \
+  src/p44features/light.hpp \
+  src/p44features/hermel.cpp \
+  src/p44features/hermel.hpp \
+  src/p44features/mixloop.cpp \
+  src/p44features/mixloop.hpp \
+  src/p44features/wifitrack.cpp \
+  src/p44features/wifitrack.hpp \
+  src/p44features/neuron.cpp \
+  src/p44features/neuron.hpp \
+  src/p44features/dispmatrix.cpp \
+  src/p44features/dispmatrix.hpp \
+  src/p44features/feature.cpp \
+  src/p44features/feature.hpp \
+  src/p44features/p44features_common.hpp \
+  src/p44features_config.hpp \
   src/p44utils_config.hpp \
-  src/featureapi.cpp \
-  src/featureapi.hpp \
-  src/light.cpp \
-  src/light.hpp \
-  src/hermel.cpp \
-  src/hermel.hpp \
-  src/mixloop.cpp \
-  src/mixloop.hpp \
-  src/wifitrack.cpp \
-  src/wifitrack.hpp \
-  src/neuron.cpp \
-  src/neuron.hpp \
-  src/dispmatrix.cpp \
-  src/dispmatrix.hpp \
-  src/feature.cpp \
-  src/feature.hpp \
   src/p44featured_main.cpp

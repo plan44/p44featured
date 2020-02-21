@@ -11,16 +11,19 @@
 		ED19DD1220F797DA0012DE7E /* civetweb.c in Sources */ = {isa = PBXBuildFile; fileRef = ED19DD0E20F797DA0012DE7E /* civetweb.c */; };
 		ED19DD1720F7C3B60012DE7E /* analogio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED19DD1420F7C3B50012DE7E /* analogio.cpp */; };
 		ED19DD1820F7C3B60012DE7E /* pwm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED19DD1620F7C3B60012DE7E /* pwm.cpp */; };
-		ED34E4032125598B006F286C /* feature.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED34E3FC2125598B006F286C /* feature.cpp */; };
-		ED34E4042125598B006F286C /* neuron.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED34E3FE2125598B006F286C /* neuron.cpp */; };
-		ED34E4052125598B006F286C /* featureapi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED34E4012125598B006F286C /* featureapi.cpp */; };
-		ED34E40821255A71006F286C /* dispmatrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED34E40621255A70006F286C /* dispmatrix.cpp */; };
 		ED3FE46723FAE11800700449 /* ubus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED3FE46123FAE11800700449 /* ubus.cpp */; };
 		ED3FE46823FAE11800700449 /* timeutils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED3FE46423FAE11800700449 /* timeutils.cpp */; };
 		ED3FE46923FAE11800700449 /* expressions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED3FE46623FAE11800700449 /* expressions.cpp */; };
 		ED3FE47123FAE1DE00700449 /* lightspotview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED3FE46B23FAE1DE00700449 /* lightspotview.cpp */; };
 		ED3FE47223FAE1DE00700449 /* coloreffectview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED3FE46E23FAE1DE00700449 /* coloreffectview.cpp */; };
 		ED3FE47323FAE1DE00700449 /* torchview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED3FE46F23FAE1DE00700449 /* torchview.cpp */; };
+		ED3FE48824000E9100700449 /* neuron.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED3FE47624000E9000700449 /* neuron.cpp */; };
+		ED3FE48924000E9100700449 /* light.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED3FE47D24000E9000700449 /* light.cpp */; };
+		ED3FE48A24000E9100700449 /* mixloop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED3FE47F24000E9000700449 /* mixloop.cpp */; };
+		ED3FE48B24000E9100700449 /* hermel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED3FE48324000E9000700449 /* hermel.cpp */; };
+		ED3FE48C24000E9100700449 /* dispmatrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED3FE48424000E9000700449 /* dispmatrix.cpp */; };
+		ED3FE48D24000E9100700449 /* feature.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED3FE48524000E9000700449 /* feature.cpp */; };
+		ED3FE48E24000E9100700449 /* featureapi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED3FE48724000E9000700449 /* featureapi.cpp */; };
 		ED53729B1DFC2CBE0066FF5A /* application.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED5372671DFC2CBE0066FF5A /* application.cpp */; };
 		ED53729C1DFC2CBE0066FF5A /* colorutils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED5372691DFC2CBE0066FF5A /* colorutils.cpp */; };
 		ED53729D1DFC2CBE0066FF5A /* consolekey.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED53726B1DFC2CBE0066FF5A /* consolekey.cpp */; };
@@ -51,8 +54,6 @@
 		ED5372DA1DFCA0CC0066FF5A /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = ED5372D91DFCA0CC0066FF5A /* libsqlite3.tbd */; };
 		ED5372DD1DFCA1FF0066FF5A /* ledchaincomm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED5372DB1DFCA1FF0066FF5A /* ledchaincomm.cpp */; };
 		ED57A13322FF2A08008E554D /* p44view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED57A13222FF2A08008E554D /* p44view.cpp */; };
-		ED5D1F2621653573001F0332 /* hermel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED5D1F2421653572001F0332 /* hermel.cpp */; };
-		EDAF7FEC2135348B007C3467 /* light.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDAF7FEA2135348B007C3467 /* light.cpp */; };
 		EDBD84C2219F2B0000FAEE5C /* wifitrack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDBD84C1219F2B0000FAEE5C /* wifitrack.cpp */; };
 		EDBD84C5219F3A4200FAEE5C /* regexp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDBD84C3219F3A4200FAEE5C /* regexp.cpp */; };
 		EDBD84C9219F3A5700FAEE5C /* slre.c in Sources */ = {isa = PBXBuildFile; fileRef = EDBD84C7219F3A5700FAEE5C /* slre.c */; };
@@ -64,7 +65,6 @@
 		EDDFE3B422FF2711001F6A5E /* viewanimator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDDFE3AD22FF2711001F6A5E /* viewanimator.cpp */; };
 		EDDFE3B722FF2980001F6A5E /* imageview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDDFE3B522FF2980001F6A5E /* imageview.cpp */; };
 		EDEEF1C52128377F0042FC98 /* macaddress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDEEF1C32128377F0042FC98 /* macaddress.cpp */; };
-		EDFA943121875344002469DD /* mixloop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDFA942F21875344002469DD /* mixloop.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -93,14 +93,6 @@
 		ED19DD1520F7C3B60012DE7E /* pwm.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = pwm.hpp; sourceTree = "<group>"; };
 		ED19DD1620F7C3B60012DE7E /* pwm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pwm.cpp; sourceTree = "<group>"; };
 		ED19DD1A20F8AEA00012DE7E /* configure.ac */ = {isa = PBXFileReference; lastKnownFileType = text; path = configure.ac; sourceTree = "<group>"; };
-		ED34E3FC2125598B006F286C /* feature.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = feature.cpp; sourceTree = "<group>"; };
-		ED34E3FD2125598B006F286C /* featureapi.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = featureapi.hpp; sourceTree = "<group>"; };
-		ED34E3FE2125598B006F286C /* neuron.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = neuron.cpp; sourceTree = "<group>"; };
-		ED34E3FF2125598B006F286C /* neuron.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = neuron.hpp; sourceTree = "<group>"; };
-		ED34E4002125598B006F286C /* feature.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = feature.hpp; sourceTree = "<group>"; };
-		ED34E4012125598B006F286C /* featureapi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = featureapi.cpp; sourceTree = "<group>"; };
-		ED34E40621255A70006F286C /* dispmatrix.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = dispmatrix.cpp; sourceTree = "<group>"; };
-		ED34E40721255A71006F286C /* dispmatrix.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = dispmatrix.hpp; sourceTree = "<group>"; };
 		ED3FE45E23FADB1600700449 /* p44utils_config.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = p44utils_config.hpp; sourceTree = "<group>"; };
 		ED3FE45F23FADC3A00700449 /* p44lrg_config.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = p44lrg_config.hpp; sourceTree = "<group>"; };
 		ED3FE46023FADD2F00700449 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
@@ -117,6 +109,26 @@
 		ED3FE46E23FAE1DE00700449 /* coloreffectview.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = coloreffectview.cpp; sourceTree = "<group>"; };
 		ED3FE46F23FAE1DE00700449 /* torchview.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = torchview.cpp; sourceTree = "<group>"; };
 		ED3FE47023FAE1DE00700449 /* lightspotview.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = lightspotview.hpp; sourceTree = "<group>"; };
+		ED3FE47624000E9000700449 /* neuron.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = neuron.cpp; sourceTree = "<group>"; };
+		ED3FE47724000E9000700449 /* hermel.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hermel.hpp; sourceTree = "<group>"; };
+		ED3FE47824000E9000700449 /* dispmatrix.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = dispmatrix.hpp; sourceTree = "<group>"; };
+		ED3FE47924000E9000700449 /* feature.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = feature.hpp; sourceTree = "<group>"; };
+		ED3FE47A24000E9000700449 /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		ED3FE47B24000E9000700449 /* featureapi.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = featureapi.hpp; sourceTree = "<group>"; };
+		ED3FE47C24000E9000700449 /* mixloop.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = mixloop.hpp; sourceTree = "<group>"; };
+		ED3FE47D24000E9000700449 /* light.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = light.cpp; sourceTree = "<group>"; };
+		ED3FE47E24000E9000700449 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		ED3FE47F24000E9000700449 /* mixloop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = mixloop.cpp; sourceTree = "<group>"; };
+		ED3FE48024000E9000700449 /* light.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = light.hpp; sourceTree = "<group>"; };
+		ED3FE48124000E9000700449 /* p44features_common.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = p44features_common.hpp; sourceTree = "<group>"; };
+		ED3FE48224000E9000700449 /* neuron.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = neuron.hpp; sourceTree = "<group>"; };
+		ED3FE48324000E9000700449 /* hermel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hermel.cpp; sourceTree = "<group>"; };
+		ED3FE48424000E9000700449 /* dispmatrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dispmatrix.cpp; sourceTree = "<group>"; };
+		ED3FE48524000E9000700449 /* feature.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = feature.cpp; sourceTree = "<group>"; };
+		ED3FE48624000E9000700449 /* p44features_config_TEMPLATE.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = p44features_config_TEMPLATE.hpp; sourceTree = "<group>"; };
+		ED3FE48724000E9000700449 /* featureapi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = featureapi.cpp; sourceTree = "<group>"; };
+		ED3FE48F240074CC00700449 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		ED3FE490240074CC00700449 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		ED53725C1DFC28D00066FF5A /* p44featured */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = p44featured; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED5372671DFC2CBE0066FF5A /* application.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = application.cpp; sourceTree = "<group>"; };
 		ED5372681DFC2CBE0066FF5A /* application.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = application.hpp; sourceTree = "<group>"; };
@@ -179,10 +191,6 @@
 		ED5372DC1DFCA1FF0066FF5A /* ledchaincomm.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ledchaincomm.hpp; sourceTree = "<group>"; };
 		ED57A13122FF2A08008E554D /* p44view.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = p44view.hpp; sourceTree = "<group>"; };
 		ED57A13222FF2A08008E554D /* p44view.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = p44view.cpp; sourceTree = "<group>"; };
-		ED5D1F2421653572001F0332 /* hermel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hermel.cpp; sourceTree = "<group>"; };
-		ED5D1F2521653573001F0332 /* hermel.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hermel.hpp; sourceTree = "<group>"; };
-		EDAF7FEA2135348B007C3467 /* light.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = light.cpp; sourceTree = "<group>"; };
-		EDAF7FEB2135348B007C3467 /* light.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = light.hpp; sourceTree = "<group>"; };
 		EDBB9DAB1F435BD600765F95 /* Makefile.am */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
 		EDBD84C0219F2B0000FAEE5C /* wifitrack.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = wifitrack.hpp; sourceTree = "<group>"; };
 		EDBD84C1219F2B0000FAEE5C /* wifitrack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = wifitrack.cpp; sourceTree = "<group>"; };
@@ -206,8 +214,6 @@
 		EDDFE3B622FF2980001F6A5E /* imageview.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = imageview.hpp; sourceTree = "<group>"; };
 		EDEEF1C32128377F0042FC98 /* macaddress.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = macaddress.cpp; sourceTree = "<group>"; };
 		EDEEF1C42128377F0042FC98 /* macaddress.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = macaddress.hpp; sourceTree = "<group>"; };
-		EDFA942F21875344002469DD /* mixloop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = mixloop.cpp; sourceTree = "<group>"; };
-		EDFA943021875344002469DD /* mixloop.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = mixloop.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -236,6 +242,33 @@
 			path = civetweb;
 			sourceTree = "<group>";
 		};
+		ED3FE47524000E9000700449 /* p44features */ = {
+			isa = PBXGroup;
+			children = (
+				ED3FE47E24000E9000700449 /* README.md */,
+				ED3FE47A24000E9000700449 /* LICENSE */,
+				ED3FE48424000E9000700449 /* dispmatrix.cpp */,
+				ED3FE47824000E9000700449 /* dispmatrix.hpp */,
+				ED3FE48524000E9000700449 /* feature.cpp */,
+				ED3FE47924000E9000700449 /* feature.hpp */,
+				ED3FE48724000E9000700449 /* featureapi.cpp */,
+				ED3FE47B24000E9000700449 /* featureapi.hpp */,
+				ED3FE48324000E9000700449 /* hermel.cpp */,
+				ED3FE47724000E9000700449 /* hermel.hpp */,
+				ED3FE47D24000E9000700449 /* light.cpp */,
+				ED3FE48024000E9000700449 /* light.hpp */,
+				ED3FE47F24000E9000700449 /* mixloop.cpp */,
+				ED3FE47C24000E9000700449 /* mixloop.hpp */,
+				ED3FE47624000E9000700449 /* neuron.cpp */,
+				ED3FE48224000E9000700449 /* neuron.hpp */,
+				EDBD84C1219F2B0000FAEE5C /* wifitrack.cpp */,
+				EDBD84C0219F2B0000FAEE5C /* wifitrack.hpp */,
+				ED3FE48124000E9000700449 /* p44features_common.hpp */,
+				ED3FE48624000E9000700449 /* p44features_config_TEMPLATE.hpp */,
+			);
+			path = p44features;
+			sourceTree = "<group>";
+		};
 		ED5372531DFC28D00066FF5A = {
 			isa = PBXGroup;
 			children = (
@@ -261,22 +294,7 @@
 			children = (
 				ED5372661DFC2C6D0066FF5A /* p44utils */,
 				EDDFE39F22FF2711001F6A5E /* p44lrgraphics */,
-				EDBD84C1219F2B0000FAEE5C /* wifitrack.cpp */,
-				EDBD84C0219F2B0000FAEE5C /* wifitrack.hpp */,
-				EDFA942F21875344002469DD /* mixloop.cpp */,
-				EDFA943021875344002469DD /* mixloop.hpp */,
-				ED5D1F2421653572001F0332 /* hermel.cpp */,
-				ED5D1F2521653573001F0332 /* hermel.hpp */,
-				EDAF7FEA2135348B007C3467 /* light.cpp */,
-				EDAF7FEB2135348B007C3467 /* light.hpp */,
-				ED34E3FC2125598B006F286C /* feature.cpp */,
-				ED34E4002125598B006F286C /* feature.hpp */,
-				ED34E3FE2125598B006F286C /* neuron.cpp */,
-				ED34E3FF2125598B006F286C /* neuron.hpp */,
-				ED34E40621255A70006F286C /* dispmatrix.cpp */,
-				ED34E40721255A71006F286C /* dispmatrix.hpp */,
-				ED34E4012125598B006F286C /* featureapi.cpp */,
-				ED34E3FD2125598B006F286C /* featureapi.hpp */,
+				ED3FE47524000E9000700449 /* p44features */,
 				ED19DD0720F793030012DE7E /* p44featured_main.cpp */,
 				ED3FE45F23FADC3A00700449 /* p44lrg_config.hpp */,
 				ED3FE45E23FADB1600700449 /* p44utils_config.hpp */,
@@ -401,6 +419,8 @@
 		EDDFE39F22FF2711001F6A5E /* p44lrgraphics */ = {
 			isa = PBXGroup;
 			children = (
+				ED3FE490240074CC00700449 /* README.md */,
+				ED3FE48F240074CC00700449 /* LICENSE */,
 				ED3FE46D23FAE1DE00700449 /* p44lrg_common.hpp */,
 				ED3FE46E23FAE1DE00700449 /* coloreffectview.cpp */,
 				ED3FE46A23FAE1DE00700449 /* coloreffectview.hpp */,
@@ -486,7 +506,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				ED34E4052125598B006F286C /* featureapi.cpp in Sources */,
 				ED5372A81DFC2CBE0066FF5A /* jsonwebclient.cpp in Sources */,
 				EDBD84C9219F3A5700FAEE5C /* slre.c in Sources */,
 				EDEEF1C52128377F0042FC98 /* macaddress.cpp in Sources */,
@@ -499,20 +518,17 @@
 				ED5372AC1DFC2CBE0066FF5A /* p44obj.cpp in Sources */,
 				ED5372B31DFC2CBE0066FF5A /* utils.cpp in Sources */,
 				ED5372AB1DFC2CBE0066FF5A /* operationqueue.cpp in Sources */,
-				ED34E4042125598B006F286C /* neuron.cpp in Sources */,
 				ED53729C1DFC2CBE0066FF5A /* colorutils.cpp in Sources */,
 				ED53729F1DFC2CBE0066FF5A /* error.cpp in Sources */,
 				ED3FE46723FAE11800700449 /* ubus.cpp in Sources */,
+				ED3FE48B24000E9100700449 /* hermel.cpp in Sources */,
 				ED3FE47323FAE1DE00700449 /* torchview.cpp in Sources */,
 				ED5372B21DFC2CBE0066FF5A /* sqlite3persistence.cpp in Sources */,
 				ED5372D61DFC9FC60066FF5A /* sqlite3ppext.cpp in Sources */,
 				ED19DD1820F7C3B60012DE7E /* pwm.cpp in Sources */,
 				EDDFE3B122FF2711001F6A5E /* viewfactory.cpp in Sources */,
 				ED5372A61DFC2CBE0066FF5A /* jsonobject.cpp in Sources */,
-				EDFA943121875344002469DD /* mixloop.cpp in Sources */,
-				ED34E40821255A71006F286C /* dispmatrix.cpp in Sources */,
 				ED57A13322FF2A08008E554D /* p44view.cpp in Sources */,
-				EDAF7FEC2135348B007C3467 /* light.cpp in Sources */,
 				ED5372B01DFC2CBE0066FF5A /* socketcomm.cpp in Sources */,
 				ED19DD0820F793030012DE7E /* p44featured_main.cpp in Sources */,
 				ED5372A41DFC2CBE0066FF5A /* iopin.cpp in Sources */,
@@ -522,6 +538,9 @@
 				ED5372A71DFC2CBE0066FF5A /* jsonrpccomm.cpp in Sources */,
 				ED5372A21DFC2CBE0066FF5A /* httpcomm.cpp in Sources */,
 				ED5372AA1DFC2CBE0066FF5A /* mainloop.cpp in Sources */,
+				ED3FE48E24000E9100700449 /* featureapi.cpp in Sources */,
+				ED3FE48824000E9100700449 /* neuron.cpp in Sources */,
+				ED3FE48D24000E9100700449 /* feature.cpp in Sources */,
 				ED5372A51DFC2CBE0066FF5A /* jsoncomm.cpp in Sources */,
 				ED5372D71DFC9FC90066FF5A /* sqlite3pp.cpp in Sources */,
 				ED5372A91DFC2CBE0066FF5A /* logger.cpp in Sources */,
@@ -530,9 +549,9 @@
 				ED5372AF1DFC2CBE0066FF5A /* serialqueue.cpp in Sources */,
 				ED5372DD1DFCA1FF0066FF5A /* ledchaincomm.cpp in Sources */,
 				ED5372A31DFC2CBE0066FF5A /* i2c.cpp in Sources */,
+				ED3FE48C24000E9100700449 /* dispmatrix.cpp in Sources */,
 				ED3FE47223FAE1DE00700449 /* coloreffectview.cpp in Sources */,
 				ED5372A01DFC2CBE0066FF5A /* fdcomm.cpp in Sources */,
-				ED5D1F2621653573001F0332 /* hermel.cpp in Sources */,
 				ED53729D1DFC2CBE0066FF5A /* consolekey.cpp in Sources */,
 				ED53729E1DFC2CBE0066FF5A /* digitalio.cpp in Sources */,
 				ED3FE47123FAE1DE00700449 /* lightspotview.cpp in Sources */,
@@ -541,8 +560,9 @@
 				ED3FE46923FAE11800700449 /* expressions.cpp in Sources */,
 				ED3FE46823FAE11800700449 /* timeutils.cpp in Sources */,
 				EDDFE3B022FF2711001F6A5E /* viewstack.cpp in Sources */,
+				ED3FE48A24000E9100700449 /* mixloop.cpp in Sources */,
+				ED3FE48924000E9100700449 /* light.cpp in Sources */,
 				EDDFE3B422FF2711001F6A5E /* viewanimator.cpp in Sources */,
-				ED34E4032125598B006F286C /* feature.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
