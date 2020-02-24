@@ -18,13 +18,20 @@ p44featured_PLATFORM = -D DISABLE_I2C=1
 endif
 
 
+# ubus support via libubus
+if ENABLE_UBUS
+UBUS_FLAGS = -D ENABLE_UBUS=1
+else
+UBUS_FLAGS = -D ENABLE_UBUS=0
+endif
 
-p44featured_LDADD = $(JSONC_LIBS) $(PTHREAD_LIBS) $(SQLITE3_LIBS) $(PNG_LIBS)
 
+p44featured_LDADD = ${JSONC_LIBS} ${PTHREAD_LIBS} ${SQLITE3_LIBS} $(PNG_LIBS) ${UBUS_LIBS}
 
 p44featured_CXXFLAGS = \
   -I ${srcdir}/src/p44utils \
-  -I ${srcdir}/src/p44lrgraphic \
+  -I ${srcdir}/src/p44lrgraphics \
+  -I ${srcdir}/src/p44features \
   -I ${srcdir}/src/p44utils/thirdparty/civetweb \
   -I ${srcdir}/src/p44utils/thirdparty \
   -I ${srcdir}/src \
@@ -34,6 +41,7 @@ p44featured_CXXFLAGS = \
   ${JSONC_CFLAGS} \
   ${PTHREAD_CFLAGS} \
   ${SQLITE3_CFLAGS} \
+  ${UBUS_FLAGS} \
   ${PNG_CFLAGS} \
   ${p44featured_PLATFORM} \
   ${p44featured_DEBUG}
