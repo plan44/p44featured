@@ -25,8 +25,6 @@
 #include "jsoncomm.hpp"
 #include "ledchaincomm.hpp"
 
-#include "featureapi.hpp"
-
 #include "light.hpp"
 #include "neuron.hpp"
 #include "hermel.hpp"
@@ -182,35 +180,47 @@ public:
       // create API
       featureApi = FeatureApi::sharedApi();
       // add features
+      #if ENABLE_FEATURE_LIGHT
       // - light
       featureApi->addFeature(FeaturePtr(new Light(
         pwmDimmer
       )));
+      #endif
+      #if ENABLE_FEATURE_HERMEL
       // - hermel
       featureApi->addFeature(FeaturePtr(new HermelShoot(
         pwmLeft, pwmRight
       )));
+      #endif
+      #if ENABLE_FEATURE_MIXLOOP
       // - mixloop
       featureApi->addFeature(FeaturePtr(new MixLoop(
         getOption("ledchain2","/dev/null"),
         getOption("ledchain3","/dev/null")
       )));
+      #endif
+      #if ENABLE_FEATURE_WIFITRACK
       // - wifitrack
       featureApi->addFeature(FeaturePtr(new WifiTrack(
         getOption("wifimonif","")
       )));
+      #endif
+      #if ENABLE_FEATURE_NEURON
       // - neuron
       featureApi->addFeature(FeaturePtr(new Neuron(
         getOption("ledchain1","/dev/null"),
         getOption("ledchain2","/dev/null"),
         sensor0
       )));
+      #endif
+      #if ENABLE_FEATURE_DISPMATRIX
       // - dispmatrix
       featureApi->addFeature(FeaturePtr(new DispMatrix(
         getOption("ledchain1","/dev/null"),
         getOption("ledchain2","/dev/null"),
         getOption("ledchain3","/dev/null")
       )));
+      #endif
 
       // use feature tools, if specified
       string featuretool;
@@ -280,7 +290,7 @@ public:
   void initUbusApi()
   {
     ubusApiServer = UbusServerPtr(new UbusServer(MainLoop::currentMainLoop()));
-    UbusObjectPtr u = new UbusObject("p44featured", boost::bind(&P44mbcd::ubusApiRequestHandler, this, _1, _2, _3));
+    UbusObjectPtr u = new UbusObject("p44featured", boost::bind(&P44FeatureD::ubusApiRequestHandler, this, _1, _2, _3));
     u->addMethod("log", logapi_policy);
     u->addMethod("featureapi", p44featureapi_policy);
     u->addMethod("quit");
@@ -317,12 +327,12 @@ public:
         LOG(LOG_INFO,"ubus feature API request: %s", aJsonRequest->c_strValue());
         ApiRequestPtr req = ApiRequestPtr(new APICallbackRequest(aJsonRequest, boost::bind(&P44FeatureD::ubusFeatureApiRequestDone, this, aUbusRequest, _1, _2)));
         featureApi->handleRequest(req);
-        return true;
+        return;
       }
       else {
         err = TextError::err("missing API command object");
       }
-      ubusFeatureApiRequestDone(aUbusRequest, JsonObjectPtr, err);
+      ubusFeatureApiRequestDone(aUbusRequest, result, err);
     }
     else {
       // no other methods implemented yet
@@ -334,7 +344,7 @@ public:
   {
     JsonObjectPtr response = JsonObject::newObj();
     if (aResult) response->add("result", aResult);
-    if (aError) response->add("error", JsonObject::newString(err->description()));
+    if (aError) response->add("error", JsonObject::newString(aError->description()));
     LOG(LOG_INFO,"ubus feature API answer: %s", response->c_strValue());
     aUbusRequest->sendResponse(response);
   }
