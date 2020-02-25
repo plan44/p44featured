@@ -66,7 +66,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--featuretool wifitrack"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "&quot;.* (-?\\d+)dBm signal antenna 0.*SA:([0123456789abcdef:]+).*Probe Request \\((.*)\\).*&quot;"
@@ -74,11 +74,11 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--resourcepath /Volumes/CaseSens/openwrt/feeds/plan44/hermel-config/files/resources"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--resourcepath /Volumes/CaseSens/openwrt/feeds/plan44/leth-config/files/resources"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--datapath /Users/luz/Documents/plan44/Projekte/wifitrack"
@@ -93,11 +93,11 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--lethdapiport 11200"
+            argument = "--featureapiport 11200"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--ledchain1 /tmp/ledchainsim"
+            argument = "--ledchain WS2813:/tmp/ledchainsim:518:0:72:0:7:1:2:A"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
@@ -109,8 +109,8 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--dispmatrix 74,7"
-            isEnabled = "NO">
+            argument = "--dispmatrix &quot;{}&quot;"
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--wifitrack"
@@ -122,7 +122,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--initjson initcmds.json"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--light"
