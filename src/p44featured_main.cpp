@@ -202,6 +202,16 @@ public:
       greenLed = IndicatorOutputPtr(new IndicatorOutput(getOption("greenled","missing")));
       redLed = IndicatorOutputPtr(new IndicatorOutput(getOption("redled","missing")));
 
+      #if ENABLE_LEDARRANGEMENT
+      if (ledChainArrangement) {
+        // led chain arrangement options
+        int maxOutValue;
+        if (getIntOption("ledchainmax", maxOutValue)) {
+          ledChainArrangement->setMaxOutValue(maxOutValue);
+        }
+      }
+      #endif
+
       // create API
       featureApi = FeatureApi::sharedApi();
       // add features
@@ -246,6 +256,7 @@ public:
       // - dispmatrix
       featureApi->addFeature(FeaturePtr(new DispMatrix(ledChainArrangement)));
       #endif
+
 
       // use feature tools, if specified
       string featuretool;
