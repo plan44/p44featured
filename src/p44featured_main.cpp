@@ -55,7 +55,6 @@ static const struct blobmsg_policy p44featureapi_policy[] = {
 #endif
 
 
-
 // MARK: ==== Application
 
 #define MKSTR(s) _MKSTR(s)
@@ -75,20 +74,28 @@ class P44FeatureD : public CmdLineApp
   UbusServerPtr ubusApiServer;
   #endif
 
+  #if ENABLE_LEDARRANGEMENT
+  LEDChainArrangementPtr ledChainArrangement;
+  #endif
 
   // LED+Button
   ButtonInputPtr button;
   IndicatorOutputPtr greenLed;
   IndicatorOutputPtr redLed;
 
+  #if ENABLE_FEATURE_NEURON
   AnalogIoPtr sensor0;
   AnalogIoPtr sensor1;
+  #endif
+  #if ENABLE_FEATURE_LIGHT
   AnalogIoPtr pwmDimmer;
+  #endif
+  #if ENABLE_FEATURE_HERMEL
   AnalogIoPtr pwmLeft;
   AnalogIoPtr pwmRight;
+  #endif
 
   FeatureApiPtr featureApi;
-
 
 public:
 
@@ -97,28 +104,61 @@ public:
   {
   }
 
+  virtual bool processOption(const CmdLineOptionDescriptor &aOptionDescriptor, const char *aOptionValue)
+  {
+    #if ENABLE_LEDARRANGEMENT
+    if (strcmp(aOptionDescriptor.longOptionName,"ledchain")==0) {
+      LEDChainArrangement::addLEDChain(ledChainArrangement, aOptionValue);
+    }
+    else
+    #endif
+    {
+      return inherited::processOption(aOptionDescriptor, aOptionValue);
+    }
+    return true;
+  }
+
+
   virtual int main(int argc, char **argv)
   {
     const char *usageText =
       "Usage: %1$s [options]\n";
     const CmdLineOptionDescriptor options[] = {
-      { 0  , "pwmdimmer",      true,  "pinspec;PWM dimmer output pin" },
-      { 0  , "pwmleft",        true,  "pinspec;PWM left bumper output pin" },
-      { 0  , "pwmright",       true,  "pinspec;PWM right bumper output pin" },
+      #if ENABLE_FEATURE_DISPMATRIX
+      { 0  , "dispmatrix",     true,  "numcols;start display matrix" },
+      #endif
+      #if ENABLE_FEATURE_NEURON
+      { 0  , "neuron",         true,  "mvgAvgCnt,threshold,nAxonLeds,nBodyLeds;start neuron" },
       { 0  , "sensor0",        true,  "pinspec;analog sensor0 input to use" },
       { 0  , "sensor1",        true,  "pinspec;analog sensor1 input to use" },
-      { 0  , "ledchain1",      true,  "devicepath;ledchain1 device to use" },
+      #endif
+      #if ENABLE_FEATURE_RFIDS
+      #endif
+      #if ENABLE_FEATURE_LEDBARS
+      #endif
+      #if ENABLE_LEDARRANGEMENT
+      CMDLINE_LEDCHAIN_OPTIONS,
+      #endif
+      #if ENABLE_FEATURE_HERMEL
+      { 0  , "pwmleft",        true,  "pinspec;PWM left bumper output pin" },
+      { 0  , "pwmright",       true,  "pinspec;PWM right bumper output pin" },
+      { 0  , "hermel",         false, "start hermel" },
+      #endif
+      #if ENABLE_FEATURE_MIXLOOP
+      { 0  , "mixloop",        false, "start mixloop" },
       { 0  , "ledchain2",      true,  "devicepath;ledchain2 device to use" },
       { 0  , "ledchain3",      true,  "devicepath;ledchain3 device to use" },
+      #endif
+      #if ENABLE_FEATURE_LIGHT
+      { 0  , "light",          false, "start light" },
+      { 0  , "pwmdimmer",      true,  "pinspec;PWM dimmer output pin" },
+      #endif
+      #if ENABLE_FEATURE_WIFITRACK
+      { 0  , "wifitrack",      false, "start wifitrack" },
       { 0  , "wifimonif",      true,  "interface;wifi monitoring interface to use" },
+      #endif
       { 0  , "featureapiport", true,  "port;server port number for Feature JSON API (default=none)" },
       { 0  , "initjson",       true,  "jsonfile;run the command(s) from the specified JSON text file." },
-      { 0  , "neuron",         true,  "mvgAvgCnt,threshold,nAxonLeds,nBodyLeds;start neuron" },
-      { 0  , "light",          false, "start light" },
-      { 0  , "hermel",         false, "start hermel" },
-      { 0  , "mixloop",        false, "start mixloop" },
-      { 0  , "wifitrack",      false, "start wifitrack" },
-      { 0  , "dispmatrix",     true,  "numcols;start display matrix" },
       { 0  , "featuretool",    true,  "feature;start a feature's command line tool" },
       { 0  , "jsonapiport",    true,  "port;server port number for management/web JSON API (default=none)" },
       #if ENABLE_UBUS
@@ -129,14 +169,9 @@ public:
       { 0  , "button",         true,  "input pinspec;device button" },
       { 0  , "greenled",       true,  "output pinspec;green device LED" },
       { 0  , "redled",         true,  "output pinspec;red device LED" },
-      { 'l', "loglevel",       true,  "level;set max level of log message detail to show on stdout" },
-      { 0  , "errlevel",       true,  "level;set max level for log messages to go to stderr as well" },
-      { 0  , "dontlogerrors",  false, "don't duplicate error messages (see --errlevel) on stdout" },
-      { 0  , "deltatstamps",   false, "show timestamp delta between log lines" },
-      { 'r', "resourcepath",   true,  "path;path to the images and sounds folders" },
-      { 'd', "datapath",       true,  "path;path to the r/w persistent data" },
-      { 'h', "help",           false, "show this text" },
-      { 'V', "version",        false, "show version" },
+      DAEMON_APPLICATION_LOGOPTIONS,
+      CMDLINE_APPLICATION_PATHOPTIONS,
+      CMDLINE_APPLICATION_STDOPTIONS,
       { 0, NULL } // list terminator
     };
 
@@ -167,27 +202,20 @@ public:
       greenLed = IndicatorOutputPtr(new IndicatorOutput(getOption("greenled","missing")));
       redLed = IndicatorOutputPtr(new IndicatorOutput(getOption("redled","missing")));
 
-      // create sensor input(s)
-      sensor0 =  AnalogIoPtr(new AnalogIo(getOption("sensor0","missing"), false, 0));
-      sensor1 =  AnalogIoPtr(new AnalogIo(getOption("sensor1","missing"), false, 0));
-      // create PWM output for light
-      pwmDimmer = AnalogIoPtr(new AnalogIo(getOption("pwmdimmer","missing"), true, 0)); // off to begin with
-
-      // create PWM outputs for bumpers
-      pwmLeft = AnalogIoPtr(new AnalogIo(getOption("pwmleft","missing"), true, 0)); // off to begin with
-      pwmRight = AnalogIoPtr(new AnalogIo(getOption("pwmright","missing"), true, 0)); // off to begin with
-
       // create API
       featureApi = FeatureApi::sharedApi();
       // add features
       #if ENABLE_FEATURE_LIGHT
       // - light
+      pwmDimmer = AnalogIoPtr(new AnalogIo(getOption("pwmdimmer","missing"), true, 0)); // off to begin with
       featureApi->addFeature(FeaturePtr(new Light(
         pwmDimmer
       )));
       #endif
       #if ENABLE_FEATURE_HERMEL
       // - hermel
+      pwmLeft = AnalogIoPtr(new AnalogIo(getOption("pwmleft","missing"), true, 0)); // off to begin with
+      pwmRight = AnalogIoPtr(new AnalogIo(getOption("pwmright","missing"), true, 0)); // off to begin with
       featureApi->addFeature(FeaturePtr(new HermelShoot(
         pwmLeft, pwmRight
       )));
@@ -207,6 +235,7 @@ public:
       #endif
       #if ENABLE_FEATURE_NEURON
       // - neuron
+      sensor0 =  AnalogIoPtr(new AnalogIo(getOption("sensor0","missing"), false, 0));
       featureApi->addFeature(FeaturePtr(new Neuron(
         getOption("ledchain1","/dev/null"),
         getOption("ledchain2","/dev/null"),
@@ -215,11 +244,7 @@ public:
       #endif
       #if ENABLE_FEATURE_DISPMATRIX
       // - dispmatrix
-      featureApi->addFeature(FeaturePtr(new DispMatrix(
-        getOption("ledchain1","/dev/null"),
-        getOption("ledchain2","/dev/null"),
-        getOption("ledchain3","/dev/null")
-      )));
+      featureApi->addFeature(FeaturePtr(new DispMatrix(ledChainArrangement)));
       #endif
 
       // use feature tools, if specified
