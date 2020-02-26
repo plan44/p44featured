@@ -171,8 +171,8 @@ p44featured_SOURCES = \
   src/p44features/mixloop.hpp \
   src/p44features/rfids.cpp \
   src/p44features/rfids.hpp \
-  src/p44features/ledbars.cpp \
-  src/p44features/ledbars.hpp \
+  src/p44features/indicators.cpp \
+  src/p44features/indicators.hpp \
   src/p44features/wifitrack.cpp \
   src/p44features/wifitrack.hpp \
   src/p44features/neuron.cpp \

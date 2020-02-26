@@ -31,6 +31,7 @@
 #include "mixloop.hpp"
 #include "wifitrack.hpp"
 #include "dispmatrix.hpp"
+#include "indicators.hpp"
 
 #if ENABLE_UBUS
   #include "ubus.hpp"
@@ -134,7 +135,7 @@ public:
       #endif
       #if ENABLE_FEATURE_RFIDS
       #endif
-      #if ENABLE_FEATURE_LEDBARS
+      #if ENABLE_FEATURE_INDICATORS
       #endif
       #if ENABLE_LEDARRANGEMENT
       CMDLINE_LEDCHAIN_OPTIONS,
