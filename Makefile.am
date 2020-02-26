@@ -124,6 +124,8 @@ p44featured_SOURCES = \
   src/p44utils/ubus.hpp \
   src/p44utils/utils.cpp \
   src/p44utils/utils.hpp \
+  src/p44utils/valueanimator.cpp \
+  src/p44utils/valueanimator.hpp \
   src/p44utils/thirdparty/slre/slre.c \
   src/p44utils/thirdparty/slre/slre.h \
   src/p44utils/thirdparty/sqlite3pp/sqlite3pp.cpp \
