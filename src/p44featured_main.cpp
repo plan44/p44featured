@@ -257,6 +257,10 @@ public:
       // - dispmatrix
       featureApi->addFeature(FeaturePtr(new DispMatrix(ledChainArrangement)));
       #endif
+      #if ENABLE_FEATURE_DISPMATRIX
+      // - dispmatrix
+      featureApi->addFeature(FeaturePtr(new Indicators(ledChainArrangement)));
+      #endif
 
 
       // use feature tools, if specified
