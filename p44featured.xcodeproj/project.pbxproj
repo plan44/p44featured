@@ -203,6 +203,7 @@
 		ED54E4C424067A80006ED4A4 /* valueanimator.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = valueanimator.cpp; sourceTree = "<group>"; };
 		ED54E4C524067A80006ED4A4 /* valueanimator.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = valueanimator.hpp; sourceTree = "<group>"; };
 		ED54E4C724067D2A006ED4A4 /* p44lrg_config_TEMPLATE.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = p44lrg_config_TEMPLATE.hpp; sourceTree = "<group>"; };
+		ED54E4C82407BE62006ED4A4 /* p44utils_config_TEMPLATE.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = p44utils_config_TEMPLATE.hpp; sourceTree = "<group>"; };
 		ED57A13122FF2A08008E554D /* p44view.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = p44view.hpp; sourceTree = "<group>"; };
 		ED57A13222FF2A08008E554D /* p44view.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = p44view.cpp; sourceTree = "<group>"; };
 		EDBB9DAB1F435BD600765F95 /* Makefile.am */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
@@ -397,6 +398,7 @@
 				ED53729A1DFC2CBE0066FF5A /* utils.hpp */,
 				ED54E4C424067A80006ED4A4 /* valueanimator.cpp */,
 				ED54E4C524067A80006ED4A4 /* valueanimator.hpp */,
+				ED54E4C82407BE62006ED4A4 /* p44utils_config_TEMPLATE.hpp */,
 			);
 			path = p44utils;
 			sourceTree = "<group>";
