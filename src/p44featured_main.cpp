@@ -32,6 +32,7 @@
 #include "wifitrack.hpp"
 #include "dispmatrix.hpp"
 #include "indicators.hpp"
+#include "rfids.hpp"
 
 #if ENABLE_UBUS
   #include "ubus.hpp"
@@ -95,6 +96,11 @@ class P44FeatureD : public CmdLineApp
   AnalogIoPtr pwmLeft;
   AnalogIoPtr pwmRight;
   #endif
+  #if ENABLE_FEATURE_RFIDS
+  static const int maxRfidSelectorOutputs = 5;
+  DigitalIoPtr rfidSelectorOutputs[maxRfidSelectorOutputs];
+  int numRfidSelectorOutputs;
+  #endif
 
   FeatureApiPtr featureApi;
 
@@ -134,6 +140,10 @@ public:
       { 0  , "sensor1",        true,  "pinspec;analog sensor1 input to use" },
       #endif
       #if ENABLE_FEATURE_RFIDS
+      { 0  , "rfidspibus",     true,  "spi_bus;SPI bus specification (10s=bus number, 1s=CS number)" },
+      { 0  , "rfidselectgpios",true,  "gpioNr[,gpioNr...];List of GPIO numbers driving the CS selector multiplexer, LSBit first" },
+      { 0  , "rfidreset",      true,  "pinspec;RFID hardware reset signal (assuming noninverted connection to RFID readers)" },
+      { 0  , "rfidirq",        true,  "pinspec;RFID hardware IRQ signal (assuming noninverted connection to RFID readers)" },
       #endif
       #if ENABLE_FEATURE_INDICATORS
       #endif
@@ -162,11 +172,11 @@ public:
       { 0  , "initjson",       true,  "jsonfile;run the command(s) from the specified JSON text file." },
       { 0  , "featuretool",    true,  "feature;start a feature's command line tool" },
       { 0  , "jsonapiport",    true,  "port;server port number for management/web JSON API (default=none)" },
+      { 0  , "jsonapinonlocal",false, "allow JSON API from non-local clients" },
+      { 0  , "jsonapiipv6",    false, "JSON API on IPv6" },
       #if ENABLE_UBUS
       { 0  , "ubusapi",        false, "enable ubus API for management/web" },
       #endif
-      { 0  , "jsonapinonlocal",false, "allow JSON API from non-local clients" },
-      { 0  , "jsonapiipv6",    false, "JSON API on IPv6" },
       { 0  , "button",         true,  "input pinspec;device button" },
       { 0  , "greenled",       true,  "output pinspec;green device LED" },
       { 0  , "redled",         true,  "output pinspec;red device LED" },
@@ -260,10 +270,41 @@ public:
       // - dispmatrix
       featureApi->addFeature(FeaturePtr(new DispMatrix(ledChainArrangement)));
       #endif
-      #if ENABLE_FEATURE_DISPMATRIX
-      // - dispmatrix
+      #if ENABLE_FEATURE_INDICATORS
+      // - indicators
       featureApi->addFeature(FeaturePtr(new Indicators(ledChainArrangement)));
       #endif
+      #if ENABLE_FEATURE_RFIDS
+      // - RFIDs
+      int spibusno;
+      if (getIntOption("rfidspibus", spibusno)) {
+        // bus device
+        SPIDevicePtr spiBusDevice = SPIManager::sharedManager().getDevice(spibusno, "generic@0");
+        // reset
+        DigitalIoPtr resetPin = DigitalIoPtr(new DigitalIo(getOption("rfidreset","missing"), true, false)); // ResetN active to start with
+        DigitalIoPtr irqPin = DigitalIoPtr(new DigitalIo(getOption("rfidirq","missing"), false, true)); // assume high (open drain)
+        // selector
+        numRfidSelectorOutputs = 0;
+        string s;
+        if (getStringOption("rfidselectgpios", s)) {
+          // collect GPIOs for RFID selector
+          const char *p = s.c_str();
+          string num;
+          while (nextPart(p, num, ',') && numRfidSelectorOutputs<maxRfidSelectorOutputs) {
+            int gpionum = atoi(num.c_str());
+            string pinspec = string_format("gpio.%d", gpionum);
+            rfidSelectorOutputs[numRfidSelectorOutputs++] = DigitalIoPtr(new DigitalIo(pinspec.c_str(), true, false));
+          }
+        }
+        // add
+        featureApi->addFeature(FeaturePtr(new RFIDs(
+          spiBusDevice,
+          boost::bind(&P44FeatureD::rfidSelector, this, _1),
+          resetPin,
+          irqPin
+        )));
+      }
+      #endif // ENABLE_FEATURE_RFIDS
 
 
       // use feature tools, if specified
@@ -297,6 +338,7 @@ public:
           p44mgmtApiServer->setConnectionParams(NULL, apiport.c_str(), SOCK_STREAM, getOption("jsonapiipv6") ? AF_INET6 : AF_INET);
           p44mgmtApiServer->setAllowNonlocalConnections(getOption("jsonapinonlocal"));
           p44mgmtApiServer->startServer(boost::bind(&P44FeatureD::apiConnectionHandler, this, _1), 3);
+          LOG(LOG_INFO, "p44 json API listening on port %s", apiport.c_str())
         }
         #if ENABLE_UBUS
         // - create and start UBUS API server for web interface on OpenWrt
@@ -310,11 +352,17 @@ public:
     return run();
   }
 
-
   virtual void initialize()
   {
     LOG(LOG_NOTICE, "p44featured initialize()");
-  }
+    #if ENABLE_UBUS
+    // start ubus API, if we have it
+    if (ubusApiServer) {
+      ubusApiServer->startServer();
+      LOG(LOG_INFO, "ubus server started");
+    }
+    #endif
+}
 
 
   // MARK: ==== Button
@@ -325,6 +373,20 @@ public:
     LOG(LOG_INFO, "Button state now %d%s", aState, aHasChanged ? " (changed)" : " (same)");
   }
 
+
+  #if ENABLE_FEATURE_RFIDS
+
+  void rfidSelector(int aReaderIndex)
+  {
+    if (aReaderIndex==RFID522::Deselect) {
+      aReaderIndex = (1<<maxRfidSelectorOutputs)-1; // all 1
+    }
+    for (int i=0; i<numRfidSelectorOutputs; ++i) {
+      rfidSelectorOutputs[i]->set(aReaderIndex & (1<<i));
+    }
+  }
+
+  #endif
 
 
   // MARK: - ubus API

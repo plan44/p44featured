@@ -393,8 +393,8 @@
             filePath = "src/p44features/indicators.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "232"
-            endingLineNumber = "232"
+            startingLineNumber = "236"
+            endingLineNumber = "236"
             landmarkName = "Indicators::effectDone(aEffect)"
             landmarkType = "7">
          </BreakpointContent>
@@ -425,8 +425,8 @@
             filePath = "src/p44features/indicators.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "111"
-            endingLineNumber = "111"
+            startingLineNumber = "113"
+            endingLineNumber = "113"
             landmarkName = "Indicators::processRequest(aRequest)"
             landmarkType = "7">
          </BreakpointContent>
@@ -441,8 +441,8 @@
             filePath = "src/p44features/indicators.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "138"
-            endingLineNumber = "138"
+            startingLineNumber = "140"
+            endingLineNumber = "140"
             landmarkName = "Indicators::processRequest(aRequest)"
             landmarkType = "7">
          </BreakpointContent>
@@ -457,8 +457,8 @@
             filePath = "src/p44features/indicators.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "235"
-            endingLineNumber = "235"
+            startingLineNumber = "239"
+            endingLineNumber = "239"
             landmarkName = "Indicators::effectDone(aEffect)"
             landmarkType = "7">
          </BreakpointContent>

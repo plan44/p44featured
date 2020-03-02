@@ -154,8 +154,8 @@ p44featured_SOURCES = \
   src/p44lrgraphics/textview.hpp \
   src/p44lrgraphics/torchview.cpp \
   src/p44lrgraphics/torchview.hpp \
-  src/p44lrgraphics/viewanimator.cpp \
-  src/p44lrgraphics/viewanimator.hpp \
+  src/p44lrgraphics/viewsequencer.cpp \
+  src/p44lrgraphics/viewsequencer.hpp \
   src/p44lrgraphics/viewfactory.cpp \
   src/p44lrgraphics/viewfactory.hpp \
   src/p44lrgraphics/viewscroller.cpp \
