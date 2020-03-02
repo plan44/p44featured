@@ -393,8 +393,8 @@
             filePath = "src/p44features/indicators.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "220"
-            endingLineNumber = "220"
+            startingLineNumber = "232"
+            endingLineNumber = "232"
             landmarkName = "Indicators::effectDone(aEffect)"
             landmarkType = "7">
          </BreakpointContent>
@@ -409,8 +409,8 @@
             filePath = "src/p44lrgraphics/lightspotview.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "91"
-            endingLineNumber = "91"
+            startingLineNumber = "63"
+            endingLineNumber = "63"
             landmarkName = "LightSpotView::contentColorAt(aPt)"
             landmarkType = "7">
          </BreakpointContent>
@@ -418,32 +418,32 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "F9DAD11A-1370-406C-A2A3-3DDA3742D74A"
+            uuid = "02DB110B-64F0-4521-A781-7534E9D41F33"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "src/p44lrgraphics/lightspotview.cpp"
+            filePath = "src/p44features/indicators.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "46"
-            endingLineNumber = "46"
-            landmarkName = "LightSpotView::setRelativeContentOriginX(aRelX)"
+            startingLineNumber = "111"
+            endingLineNumber = "111"
+            landmarkName = "Indicators::processRequest(aRequest)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "6C7CAB7D-E3B1-4682-8AE9-F03BAFABCA1F"
-            shouldBeEnabled = "Yes"
+            uuid = "629CD6B6-2C3F-4C50-80DA-4E536ED75751"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "src/p44lrgraphics/p44view.cpp"
+            filePath = "src/p44features/indicators.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "241"
-            endingLineNumber = "241"
-            landmarkName = "P44View::setRelativeContentOriginX(aRelX)"
+            startingLineNumber = "138"
+            endingLineNumber = "138"
+            landmarkName = "Indicators::processRequest(aRequest)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
