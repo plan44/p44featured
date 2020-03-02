@@ -101,6 +101,10 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "--ledpowerlimit 50000"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "--sensor0 spi0.MCP3002@0.0"
             isEnabled = "NO">
          </CommandLineArgument>
@@ -146,11 +150,11 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-l 6"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-l 7"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
    </LaunchAction>

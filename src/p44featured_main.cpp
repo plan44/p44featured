@@ -206,9 +206,12 @@ public:
       #if ENABLE_LEDARRANGEMENT
       if (ledChainArrangement) {
         // led chain arrangement options
-        int maxOutValue;
-        if (getIntOption("ledchainmax", maxOutValue)) {
-          ledChainArrangement->setMaxOutValue(maxOutValue);
+        int v;
+        if (getIntOption("ledchainmax", v)) {
+          ledChainArrangement->setMaxOutValue(v);
+        }
+        if (getIntOption("ledpowerlimit", v)) {
+          ledChainArrangement->setPowerLimit(v);
         }
       }
       #endif
