@@ -100,6 +100,7 @@ class P44FeatureD : public CmdLineApp
   static const int maxRfidSelectorOutputs = 5;
   DigitalIoPtr rfidSelectorOutputs[maxRfidSelectorOutputs];
   int numRfidSelectorOutputs;
+  int selectedReader;
   #endif
 
   FeatureApiPtr featureApi;
@@ -107,7 +108,8 @@ class P44FeatureD : public CmdLineApp
 public:
 
   P44FeatureD() :
-    requestsPending(0)
+    requestsPending(0),
+    selectedReader(RFID522::Deselect)
   {
   }
 
@@ -293,7 +295,7 @@ public:
           while (nextPart(p, num, ',') && numRfidSelectorOutputs<maxRfidSelectorOutputs) {
             int gpionum = atoi(num.c_str());
             string pinspec = string_format("gpio.%d", gpionum);
-            rfidSelectorOutputs[numRfidSelectorOutputs++] = DigitalIoPtr(new DigitalIo(pinspec.c_str(), true, false));
+            rfidSelectorOutputs[numRfidSelectorOutputs++] = DigitalIoPtr(new DigitalIo(pinspec.c_str(), true, true)); // all 1 initially -> none selected
           }
         }
         // add
@@ -374,15 +376,22 @@ public:
   }
 
 
+  // MARK: ==== RFID selector
+
+
   #if ENABLE_FEATURE_RFIDS
 
   void rfidSelector(int aReaderIndex)
   {
-    if (aReaderIndex==RFID522::Deselect) {
-      aReaderIndex = (1<<maxRfidSelectorOutputs)-1; // all 1
-    }
-    for (int i=0; i<numRfidSelectorOutputs; ++i) {
-      rfidSelectorOutputs[i]->set(aReaderIndex & (1<<i));
+    if (aReaderIndex!=selectedReader) {
+      // actually changed
+      selectedReader = aReaderIndex;
+      if (aReaderIndex==RFID522::Deselect) {
+        aReaderIndex = (1<<maxRfidSelectorOutputs)-1; // all 1
+      }
+      for (int i=0; i<numRfidSelectorOutputs; ++i) {
+        rfidSelectorOutputs[i]->set(aReaderIndex & (1<<i));
+      }
     }
   }
 
