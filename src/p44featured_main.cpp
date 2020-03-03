@@ -565,6 +565,7 @@ public:
       // p44featured API wrapper
       if (!aIsAction) {
         aRequestDoneCB(JsonObjectPtr(), WebError::webErr(415, "p44featured API calls must be action-type (e.g. POST)"));
+        return true;
       }
       ApiRequestPtr req = ApiRequestPtr(new APICallbackRequest(aData, aRequestDoneCB));
       featureApi->handleRequest(req);
