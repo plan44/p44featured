@@ -29,6 +29,7 @@
 #define ENABLE_FEATURE_DISPMATRIX 1
 #define ENABLE_FEATURE_RFIDS 1
 #define ENABLE_FEATURE_INDICATORS 1
+#define ENABLE_FEATURE_INPUTS 1
 // - specific application
 #define ENABLE_FEATURE_WIFITRACK 1
 // - very specific hardware related stuff

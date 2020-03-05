@@ -57,6 +57,7 @@
 		ED5372DA1DFCA0CC0066FF5A /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = ED5372D91DFCA0CC0066FF5A /* libsqlite3.tbd */; };
 		ED5372DD1DFCA1FF0066FF5A /* ledchaincomm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED5372DB1DFCA1FF0066FF5A /* ledchaincomm.cpp */; };
 		ED54E4C624067A80006ED4A4 /* valueanimator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED54E4C424067A80006ED4A4 /* valueanimator.cpp */; };
+		ED54FDBE241157FD006A443D /* inputs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED54FDBC241157FB006A443D /* inputs.cpp */; };
 		ED57A13322FF2A08008E554D /* p44view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED57A13222FF2A08008E554D /* p44view.cpp */; };
 		EDBD84C2219F2B0000FAEE5C /* wifitrack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDBD84C1219F2B0000FAEE5C /* wifitrack.cpp */; };
 		EDBD84C5219F3A4200FAEE5C /* regexp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDBD84C3219F3A4200FAEE5C /* regexp.cpp */; };
@@ -204,6 +205,8 @@
 		ED54E4C524067A80006ED4A4 /* valueanimator.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = valueanimator.hpp; sourceTree = "<group>"; };
 		ED54E4C724067D2A006ED4A4 /* p44lrg_config_TEMPLATE.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = p44lrg_config_TEMPLATE.hpp; sourceTree = "<group>"; };
 		ED54E4C82407BE62006ED4A4 /* p44utils_config_TEMPLATE.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = p44utils_config_TEMPLATE.hpp; sourceTree = "<group>"; };
+		ED54FDBC241157FB006A443D /* inputs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = inputs.cpp; sourceTree = "<group>"; };
+		ED54FDBD241157FC006A443D /* inputs.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = inputs.hpp; sourceTree = "<group>"; };
 		ED57A13122FF2A08008E554D /* p44view.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = p44view.hpp; sourceTree = "<group>"; };
 		ED57A13222FF2A08008E554D /* p44view.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = p44view.cpp; sourceTree = "<group>"; };
 		EDBB9DAB1F435BD600765F95 /* Makefile.am */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
@@ -270,6 +273,8 @@
 				ED3FE47B24000E9000700449 /* featureapi.hpp */,
 				ED3FE48324000E9000700449 /* hermel.cpp */,
 				ED3FE47724000E9000700449 /* hermel.hpp */,
+				ED54FDBC241157FB006A443D /* inputs.cpp */,
+				ED54FDBD241157FC006A443D /* inputs.hpp */,
 				ED3FE47D24000E9000700449 /* light.cpp */,
 				ED3FE48024000E9000700449 /* light.hpp */,
 				ED3FE4972400984C00700449 /* indicators.cpp */,
@@ -544,6 +549,7 @@
 				ED5372AC1DFC2CBE0066FF5A /* p44obj.cpp in Sources */,
 				ED5372B31DFC2CBE0066FF5A /* utils.cpp in Sources */,
 				ED5372AB1DFC2CBE0066FF5A /* operationqueue.cpp in Sources */,
+				ED54FDBE241157FD006A443D /* inputs.cpp in Sources */,
 				ED53729C1DFC2CBE0066FF5A /* colorutils.cpp in Sources */,
 				ED53729F1DFC2CBE0066FF5A /* error.cpp in Sources */,
 				ED3FE46723FAE11800700449 /* ubus.cpp in Sources */,

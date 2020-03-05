@@ -175,6 +175,8 @@ p44featured_SOURCES = \
   src/p44features/rfids.hpp \
   src/p44features/indicators.cpp \
   src/p44features/indicators.hpp \
+  src/p44features/inputs.cpp \
+  src/p44features/inputs.hpp \
   src/p44features/wifitrack.cpp \
   src/p44features/wifitrack.hpp \
   src/p44features/neuron.cpp \

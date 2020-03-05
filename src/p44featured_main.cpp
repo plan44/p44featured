@@ -26,6 +26,7 @@
 #include "ledchaincomm.hpp"
 
 #include "light.hpp"
+#include "inputs.hpp"
 #include "neuron.hpp"
 #include "hermel.hpp"
 #include "mixloop.hpp"
@@ -166,6 +167,9 @@ public:
       { 0  , "light",          false, "start light" },
       { 0  , "pwmdimmer",      true,  "pinspec;PWM dimmer output pin" },
       #endif
+      #if ENABLE_FEATURE_INPUTS
+      { 0  , "inputs",         false, "enable generic inputs" },
+      #endif
       #if ENABLE_FEATURE_WIFITRACK
       { 0  , "wifitrack",      false, "start wifitrack" },
       { 0  , "wifimonif",      true,  "interface;wifi monitoring interface to use" },
@@ -237,6 +241,12 @@ public:
       featureApi->addFeature(FeaturePtr(new Light(
         pwmDimmer
       )));
+      #endif
+      #if ENABLE_FEATURE_INPUTS
+      // - inputs (instantiate only with command line option, as it allows free use of GPIOs etc.)
+      if (getOption("inputs")) {
+        featureApi->addFeature(FeaturePtr(new Inputs));
+      }
       #endif
       #if ENABLE_FEATURE_HERMEL
       // - hermel
