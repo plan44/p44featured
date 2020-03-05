@@ -20,6 +20,7 @@
 //
 
 #include "application.hpp"
+#include "extutils.hpp"
 #include "digitalio.hpp"
 #include "analogio.hpp"
 #include "jsoncomm.hpp"
@@ -175,7 +176,12 @@ public:
       { 0  , "wifimonif",      true,  "interface;wifi monitoring interface to use" },
       #endif
       { 0  , "featureapiport", true,  "port;server port number for Feature JSON API (default=none)" },
+      #if ENABLE_LEGACY_FEATURE_SCRIPTS
       { 0  , "initjson",       true,  "jsonfile;run the command(s) from the specified JSON text file." },
+      #endif
+      #if EXPRESSION_JSON_SUPPORT
+      { 0  , "initscript",     true,  "scriptfile;run the script from the specified text file." },
+      #endif
       { 0  , "featuretool",    true,  "feature;start a feature's command line tool" },
       { 0  , "jsonapiport",    true,  "port;server port number for management/web JSON API (default=none)" },
       { 0  , "jsonapinonlocal",false, "allow JSON API from non-local clients" },
@@ -317,8 +323,6 @@ public:
         )));
       }
       #endif // ENABLE_FEATURE_RFIDS
-
-
       // use feature tools, if specified
       string featuretool;
       if (getStringOption("featuretool", featuretool)) {
@@ -332,13 +336,26 @@ public:
       }
       if (!isTerminated()) {
         // run the initialisation command file
-        string initFile;
-        if (getStringOption("initjson", initFile)) {
-          ErrorPtr err = featureApi->runJsonFile(initFile);
+        #if ENABLE_LEGACY_FEATURE_SCRIPTS
+        string initJson;
+        if (getStringOption("initjson", initJson)) {
+          ErrorPtr err = featureApi->runJsonFile(initJson);
           if (!Error::isOK(err)) {
             terminateAppWith(err);
           }
         }
+        #endif
+        #if EXPRESSION_JSON_SUPPORT
+        string initScriptFn;
+        if (getStringOption("initscript", initScriptFn)) {
+          string initScript;
+          ErrorPtr err = string_fromfile(initScriptFn, initScript);
+          if (!Error::isOK(err)) {
+            terminateAppWith(err->withPrefix("cannot open initscript: "));
+          }
+          featureApi->queueScript(initScript);
+        }
+        #endif
         // start p44featured TCP API server
         string apiport;
         if (getStringOption("featureapiport", apiport)) {
