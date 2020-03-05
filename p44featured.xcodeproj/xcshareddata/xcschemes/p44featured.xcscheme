@@ -133,6 +133,10 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "--inputs"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "--button sim.button --redled sim.redled --greenled sim.greenled"
             isEnabled = "NO">
          </CommandLineArgument>

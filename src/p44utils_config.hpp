@@ -8,6 +8,9 @@
 #ifndef ENABLE_EXPRESSIONS
   #define ENABLE_EXPRESSIONS 1 // Expression/Script engine support in some of the p44utils components
 #endif
+#ifndef EXPRESSION_JSON_SUPPORT
+  #define EXPRESSION_JSON_SUPPORT 1 // structured JSON object support
+#endif
 #ifndef ENABLE_P44LRGRAPHICS
   #define ENABLE_P44LRGRAPHICS 1 // p44lrgraphics support in some of the p44utils components
 #endif

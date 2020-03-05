@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "p44::Indicators::processRequest(boost::intrusive_ptr&lt;p44::ApiRequest&gt;):indicators.cpp">
+      </ContextState>
+      <ContextState
+         contextName = "p44::EvaluationContext::resumeTerm():expressions.cpp">
+      </ContextState>
+      <ContextState
+         contextName = "p44::P44View::configureView(boost::intrusive_ptr&lt;p44::JsonObject&gt;):p44view.cpp">
+      </ContextState>
+      <ContextState
+         contextName = "p44::Indicators::runEffect(boost::intrusive_ptr&lt;p44::P44View&gt;, long long, boost::intrusive_ptr&lt;p44::JsonObject&gt;):indicators.cpp">
+      </ContextState>
+      <ContextState
+         contextName = "p44::LightSpotView::contentColorAt(p44::PixelPoint):lightspotview.cpp">
+      </ContextState>
+      <ContextState
+         contextName = "GLOBAL">
+         <PersistentStrings>
+            <PersistentString
+               value = "sp().pos">
+            </PersistentString>
+            <PersistentString
+               value = "sp()">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>
