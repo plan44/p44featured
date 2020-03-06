@@ -36,6 +36,10 @@
 #include "indicators.hpp"
 #include "rfids.hpp"
 
+#if ENABLE_LEDARRANGEMENT
+  #include "viewfactory.hpp"
+#endif
+
 #if ENABLE_UBUS
   #include "ubus.hpp"
 #endif
@@ -235,6 +239,10 @@ public:
         if (getIntOption("ledpowerlimit", v)) {
           ledChainArrangement->setPowerLimit(v);
         }
+        // we have lrgraphics in place, make lrgraphics functions available
+        ScriptGlobals::sharedScriptGlobals().registerFunctionHandler(
+          boost::bind(&p44::evaluateViewFunctions, _1, _2, _3, _4, ledChainArrangement->getRootView(), ValueLookupCB())
+        );
       }
       #endif
 
