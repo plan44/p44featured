@@ -14,7 +14,7 @@
 #endif
 
 #ifndef ENABLE_IMAGE_SUPPORT
-  #define ENABLE_IMAGE_SUPPORT 1
+  #define ENABLE_IMAGE_SUPPORT 0
 #endif
 
 
