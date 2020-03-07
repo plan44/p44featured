@@ -76,6 +76,7 @@ p44featured_SOURCES = \
   src/p44utils/httpcomm.hpp\
   src/p44utils/i2c.cpp \
   src/p44utils/i2c.hpp \
+  src/p44utils/i2c-dev-extensions.h \
   src/p44utils/igmp.cpp \
   src/p44utils/igmp.hpp \
   src/p44utils/iopin.cpp \

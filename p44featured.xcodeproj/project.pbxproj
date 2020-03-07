@@ -210,6 +210,7 @@
 		ED54FDBD241157FC006A443D /* inputs.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = inputs.hpp; sourceTree = "<group>"; };
 		ED54FDBF24118009006A443D /* extutils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = extutils.cpp; sourceTree = "<group>"; };
 		ED54FDC02411800A006A443D /* extutils.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = extutils.hpp; sourceTree = "<group>"; };
+		ED54FDCC241422F7006A443D /* i2c-dev-extensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "i2c-dev-extensions.h"; sourceTree = "<group>"; };
 		ED57A13122FF2A08008E554D /* p44view.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = p44view.hpp; sourceTree = "<group>"; };
 		ED57A13222FF2A08008E554D /* p44view.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = p44view.cpp; sourceTree = "<group>"; };
 		EDBB9DAB1F435BD600765F95 /* Makefile.am */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
@@ -357,6 +358,7 @@
 				ED5372771DFC2CBE0066FF5A /* httpcomm.hpp */,
 				ED5372781DFC2CBE0066FF5A /* i2c.cpp */,
 				ED5372791DFC2CBE0066FF5A /* i2c.hpp */,
+				ED54FDCC241422F7006A443D /* i2c-dev-extensions.h */,
 				ED53727A1DFC2CBE0066FF5A /* iopin.cpp */,
 				ED53727B1DFC2CBE0066FF5A /* iopin.hpp */,
 				ED53727C1DFC2CBE0066FF5A /* jsoncomm.cpp */,
