@@ -14,8 +14,12 @@ endif
 if P44_BUILD_OW
 p44featured_PLATFORM = -D P44_BUILD_OW=1
 else
+if P44_BUILD_RB
+p44featured_PLATFORM = -D P44_BUILD_RB=1
+else !P44_BUILD_RB
 p44featured_PLATFORM = -D DISABLE_I2C=1
-endif
+endif !P44_BUILD_RB
+endif !P44_BUILD_OW
 
 
 # ubus support via libubus
@@ -24,6 +28,35 @@ UBUS_FLAGS = -D ENABLE_UBUS=1
 else
 UBUS_FLAGS = -D ENABLE_UBUS=0
 endif
+
+
+# WS281x LED chain support on Raspberry Pi (direct PWM/PCM hardware access)
+if ENABLE_RPIWS281X
+
+RPIWS281X_SOURCES = \
+  src/p44utils/thirdparty/rpi_ws281x/clk.h \
+  src/p44utils/thirdparty/rpi_ws281x/gpio.h \
+  src/p44utils/thirdparty/rpi_ws281x/dma.h \
+  src/p44utils/thirdparty/rpi_ws281x/dma.c \
+  src/p44utils/thirdparty/rpi_ws281x/pcm.h \
+  src/p44utils/thirdparty/rpi_ws281x/pcm.c \
+  src/p44utils/thirdparty/rpi_ws281x/pwm.h \
+  src/p44utils/thirdparty/rpi_ws281x/pwm.c \
+  src/p44utils/thirdparty/rpi_ws281x/rpihw.h \
+  src/p44utils/thirdparty/rpi_ws281x/rpihw.c \
+  src/p44utils/thirdparty/rpi_ws281x/mailbox.h \
+  src/p44utils/thirdparty/rpi_ws281x/mailbox.c \
+  src/p44utils/thirdparty/rpi_ws281x/ws2811.h \
+  src/p44utils/thirdparty/rpi_ws281x/ws2811.c
+RPIWS281X_FLAGS = \
+  -D ENABLE_RPIWS281X=1 \
+  -I ${srcdir}/src/p44utils/thirdparty/rpi_ws281x
+
+else !ENABLE_RPIWS281X
+
+RPIWS281X_FLAGS = -D ENABLE_RPIWS281X=0
+
+endif !ENABLE_RPIWS281X
 
 
 p44featured_LDADD = ${JSONC_LIBS} ${PTHREAD_LIBS} ${SQLITE3_LIBS} $(PNG_LIBS) ${UBUS_LIBS}
@@ -43,10 +76,12 @@ p44featured_CXXFLAGS = \
   ${SQLITE3_CFLAGS} \
   ${UBUS_FLAGS} \
   ${PNG_CFLAGS} \
+  ${RPIWS281X_FLAGS} \
   ${p44featured_PLATFORM} \
   ${p44featured_DEBUG}
 
 p44featured_SOURCES = \
+  ${RPIWS281X_SOURCES} \
   src/p44utils/analogio.cpp \
   src/p44utils/analogio.hpp \
   src/p44utils/application.cpp \
