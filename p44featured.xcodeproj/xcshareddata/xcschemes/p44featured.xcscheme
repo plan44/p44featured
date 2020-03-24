@@ -74,6 +74,10 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--resourcepath /Volumes/CaseSens/openwrt/feeds/plan44/hermel-config/files/resources"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--resourcepath /Volumes/CaseSens/openwrt/feeds/plan44/hmt20-config/files/resources"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
@@ -98,6 +102,10 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--ledchain WS2813:/tmp/ledchainsim:518:0:72:0:7:1:2:A"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--ledchain WS2813:/tmp/ledchainsim:288"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
@@ -126,7 +134,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--initjson initcmds.json"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--light"
