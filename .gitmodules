@@ -1,8 +1,12 @@
-[submodule "lethd/src/p44utils"]
+[submodule "p44featured/src/p44utils"]
 	path = src/p44utils
 	url = ../p44utils.git
 	branch = leth
-[submodule "src/p44lrgraphics"]
+[submodule "p44featured/src/p44lrgraphics"]
 	path = src/p44lrgraphics
-	url = ssh://plan44@plan44.ch/home/plan44/sharedgit/p44lrgraphics.git
+	url = ../p44lrgraphics.git
 	branch = luz
+[submodule "p44featured/src/p44features"]
+	path = src/p44features
+	url = ../p44features.git
+	branch = master
