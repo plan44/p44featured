@@ -106,7 +106,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--ledchain WS2813:/tmp/ledchainsim:288"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--ledpowerlimit 50000"
@@ -142,6 +142,10 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--inputs"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--splitflapconn simulation"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

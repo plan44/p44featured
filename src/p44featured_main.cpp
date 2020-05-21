@@ -35,6 +35,7 @@
 #include "dispmatrix.hpp"
 #include "indicators.hpp"
 #include "rfids.hpp"
+#include "splitflaps.hpp"
 
 #if ENABLE_LEDARRANGEMENT
   #include "viewfactory.hpp"
@@ -48,6 +49,7 @@
 using namespace p44;
 
 #define DEFAULT_LOGLEVEL LOG_NOTICE
+#define DEFAULT_COMM_PORT 2101
 
 #if ENABLE_UBUS
 static const struct blobmsg_policy logapi_policy[] = {
@@ -178,6 +180,12 @@ public:
       #if ENABLE_FEATURE_WIFITRACK
       { 0  , "wifitrack",      false, "start wifitrack" },
       { 0  , "wifimonif",      true,  "interface;wifi monitoring interface to use" },
+      #endif
+      #if ENABLE_FEATURE_SPLITFLAPS
+      { 0  , "splitflapconn",  true,  "serial_if;RS485 serial interface where display is connected (/device or IP:port)" },
+      { 0  , "splitflaptxen",  true,  "pinspec;a digital output pin specification for TX driver enable or DTR or RTS" },
+      { 0  , "splitflaptxoff", true,  "delay;time to keep tx enabled after sending [ms], defaults to 0" },
+      { 0  , "splitflaprxen",  true,  "pinspec;a digital output pin specification for RX driver enable" },
       #endif
       { 0  , "featureapiport", true,  "port;server port number for Feature JSON API (default=none)" },
       #if ENABLE_LEGACY_FEATURE_SCRIPTS
@@ -331,6 +339,21 @@ public:
         )));
       }
       #endif // ENABLE_FEATURE_RFIDS
+      #if ENABLE_FEATURE_SPLITFLAPS
+      string s;
+      if (getStringOption("splitflapconn", s)) {
+        string tx,rx;
+        int txoffdelay = 0;
+        getStringOption("splitflaptxen", tx);
+        getStringOption("splitflaprxen", rx);
+        getIntOption("splitflaptxoff", txoffdelay);
+        // add
+        featureApi->addFeature(FeaturePtr(new Splitflaps(
+          s.c_str(), DEFAULT_COMM_PORT,
+          tx.c_str(), rx.c_str(), txoffdelay
+        )));
+      }
+      #endif // ENABLE_FEATURE_SPLITFLAPS
       // use feature tools, if specified
       string featuretool;
       if (getStringOption("featuretool", featuretool)) {
