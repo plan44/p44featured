@@ -662,6 +662,7 @@
 					"DEBUG=1",
 					"$(inherited)",
 					"P44_APPLICATION_VERSION=\\\"mac_XCode\\\"",
+					"USE_SSL_HEADERS=1",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;

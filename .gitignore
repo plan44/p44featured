@@ -4,6 +4,7 @@
 # XCode
 *.xcuserstate
 *.xcodeproj/project.xcworkspace/xcuserdata/*.xcuserdatad/UserInterfaceState.xcuserstate
+*.xcodeproj/project.xcworkspace/xcuserdata/*.xcuserdatad/IDEFindNavigatorScopes.plist
 *.xcodeproj/project.xcworkspace/xcshareddata/*.xcscmblueprint
 
 # VSCode

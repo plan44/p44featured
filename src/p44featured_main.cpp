@@ -240,13 +240,7 @@ public:
       #if ENABLE_LEDARRANGEMENT
       if (ledChainArrangement) {
         // led chain arrangement options
-        int v;
-        if (getIntOption("ledchainmax", v)) {
-          ledChainArrangement->setMaxOutValue(v);
-        }
-        if (getIntOption("ledpowerlimit", v)) {
-          ledChainArrangement->setPowerLimit(v);
-        }
+        ledChainArrangement->processCmdlineOptions();
         // we have lrgraphics in place, make lrgraphics functions available
         ScriptGlobals::sharedScriptGlobals().registerFunctionHandler(
           boost::bind(&p44::evaluateViewFunctions, _1, _2, _3, _4, ledChainArrangement->getRootView(), ValueLookupCB())
@@ -384,7 +378,7 @@ public:
           if (!Error::isOK(err)) {
             terminateAppWith(err->withPrefix("cannot open initscript: "));
           }
-          featureApi->queueScript(initScript);
+          featureApi->queueScript("initscript", initScript);
         }
         #endif
         // start p44featured TCP API server

@@ -26,8 +26,8 @@
          <BreakpointContent
             uuid = "A2FE2DF7-374D-4878-82AD-03B4B8ED3842"
             shouldBeEnabled = "No"
-            ignoreCount = "0"
             condition = "n&lt;0"
+            ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/viewanimator.cpp"
             timestampString = "569251214.874469"
@@ -137,8 +137,8 @@
          <BreakpointContent
             uuid = "8DA43F48-9A3F-402D-9840-A661E8AC013F"
             shouldBeEnabled = "No"
-            ignoreCount = "0"
             condition = "x-1==0 &amp;&amp; y==0"
+            ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/dispmatrix.cpp"
             timestampString = "569241691.384855"
@@ -313,8 +313,8 @@
             filePath = "src/p44features/wifitrack.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1232"
-            endingLineNumber = "1232"
+            startingLineNumber = "1231"
+            endingLineNumber = "1231"
             landmarkName = "WifiTrack::contentLoaded()"
             landmarkType = "7">
          </BreakpointContent>
@@ -377,8 +377,8 @@
             filePath = "src/p44utils/expressions.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1223"
-            endingLineNumber = "1223"
+            startingLineNumber = "1228"
+            endingLineNumber = "1228"
             landmarkName = "EvaluationContext::resumeExpression()"
             landmarkType = "7">
          </BreakpointContent>
@@ -393,8 +393,8 @@
             filePath = "src/p44utils/expressions.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1176"
-            endingLineNumber = "1176"
+            startingLineNumber = "1181"
+            endingLineNumber = "1181"
             landmarkName = "EvaluationContext::resumeExpression()"
             landmarkType = "7">
          </BreakpointContent>
@@ -409,8 +409,8 @@
             filePath = "src/p44utils/expressions.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1186"
-            endingLineNumber = "1186"
+            startingLineNumber = "1191"
+            endingLineNumber = "1191"
             landmarkName = "EvaluationContext::resumeExpression()"
             landmarkType = "7">
          </BreakpointContent>
@@ -489,8 +489,8 @@
             filePath = "src/p44features/indicators.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "239"
-            endingLineNumber = "239"
+            startingLineNumber = "238"
+            endingLineNumber = "238"
             landmarkName = "Indicators::effectDone(aEffect)"
             landmarkType = "7">
             <Actions>
@@ -508,8 +508,8 @@
          <BreakpointContent
             uuid = "53296BAE-40E5-4694-A7FD-60DD1EAE46CC"
             shouldBeEnabled = "No"
-            ignoreCount = "0"
             condition = "dirty==false"
+            ignoreCount = "0"
             continueAfterRunningActions = "Yes"
             filePath = "src/p44utils/ledchaincomm.cpp"
             startingColumnNumber = "9223372036854775807"
