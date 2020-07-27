@@ -475,7 +475,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "740"
             endingLineNumber = "740"
-            landmarkName = "LEDChainArrangement::step()"
+            landmarkName = "LEDChainArrangement::begin(aAutoStep)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

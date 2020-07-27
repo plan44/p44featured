@@ -242,9 +242,15 @@ public:
         // led chain arrangement options
         ledChainArrangement->processCmdlineOptions();
         // we have lrgraphics in place, make lrgraphics functions available
+        #if ENABLE_P44SCRIPT
+        P44Script::StandardScriptingDomain::sharedDomain().registerMemberLookup(
+          new p44::P44Script::P44lrgLookup(ledChainArrangement->getRootView())
+        );
+        #elif ENABLE_EXPRESSIONS
         ScriptGlobals::sharedScriptGlobals().registerFunctionHandler(
           boost::bind(&p44::evaluateViewFunctions, _1, _2, _3, _4, ledChainArrangement->getRootView(), ValueLookupCB())
         );
+        #endif
       }
       #endif
 

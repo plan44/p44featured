@@ -61,6 +61,8 @@
 		ED54FDBE241157FD006A443D /* inputs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED54FDBC241157FB006A443D /* inputs.cpp */; };
 		ED54FDC12411800A006A443D /* extutils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED54FDBF24118009006A443D /* extutils.cpp */; };
 		ED57A13322FF2A08008E554D /* p44view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED57A13222FF2A08008E554D /* p44view.cpp */; };
+		EDB8C87724CD901F005860CB /* dcmotor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDB8C87224CD901E005860CB /* dcmotor.cpp */; };
+		EDB8C87824CD901F005860CB /* p44script.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDB8C87324CD901E005860CB /* p44script.cpp */; };
 		EDBD84C2219F2B0000FAEE5C /* wifitrack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDBD84C1219F2B0000FAEE5C /* wifitrack.cpp */; };
 		EDBD84C5219F3A4200FAEE5C /* regexp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDBD84C3219F3A4200FAEE5C /* regexp.cpp */; };
 		EDBD84C9219F3A5700FAEE5C /* slre.c in Sources */ = {isa = PBXBuildFile; fileRef = EDBD84C7219F3A5700FAEE5C /* slre.c */; };
@@ -221,6 +223,20 @@
 		ED54FDCC241422F7006A443D /* i2c-dev-extensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "i2c-dev-extensions.h"; sourceTree = "<group>"; };
 		ED57A13122FF2A08008E554D /* p44view.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = p44view.hpp; sourceTree = "<group>"; };
 		ED57A13222FF2A08008E554D /* p44view.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = p44view.cpp; sourceTree = "<group>"; };
+		EDB8C87224CD901E005860CB /* dcmotor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dcmotor.cpp; sourceTree = "<group>"; };
+		EDB8C87324CD901E005860CB /* p44script.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = p44script.cpp; sourceTree = "<group>"; };
+		EDB8C87424CD901E005860CB /* p44utils_minimal.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = p44utils_minimal.hpp; sourceTree = "<group>"; };
+		EDB8C87524CD901F005860CB /* p44script.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = p44script.hpp; sourceTree = "<group>"; };
+		EDB8C87624CD901F005860CB /* dcmotor.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = dcmotor.hpp; sourceTree = "<group>"; };
+		EDB8C87C24CD911F005860CB /* test_macaddress.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = test_macaddress.cpp; sourceTree = "<group>"; };
+		EDB8C87D24CD911F005860CB /* test_timeutils.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = test_timeutils.cpp; sourceTree = "<group>"; };
+		EDB8C87E24CD911F005860CB /* test_utils.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = test_utils.cpp; sourceTree = "<group>"; };
+		EDB8C87F24CD911F005860CB /* test_mainloop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = test_mainloop.cpp; sourceTree = "<group>"; };
+		EDB8C88024CD911F005860CB /* test_p44script.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = test_p44script.cpp; sourceTree = "<group>"; };
+		EDB8C88124CD911F005860CB /* test_expressions.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = test_expressions.cpp; sourceTree = "<group>"; };
+		EDB8C88224CD911F005860CB /* catch.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = catch.hpp; sourceTree = "<group>"; };
+		EDB8C88324CD911F005860CB /* test_httpcomm.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = test_httpcomm.cpp; sourceTree = "<group>"; };
+		EDB8C88424CD911F005860CB /* p44utils_tester.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = p44utils_tester.cpp; sourceTree = "<group>"; };
 		EDBB9DAB1F435BD600765F95 /* Makefile.am */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
 		EDBD84C0219F2B0000FAEE5C /* wifitrack.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = wifitrack.hpp; sourceTree = "<group>"; };
 		EDBD84C1219F2B0000FAEE5C /* wifitrack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = wifitrack.cpp; sourceTree = "<group>"; };
@@ -346,9 +362,13 @@
 		ED5372661DFC2C6D0066FF5A /* p44utils */ = {
 			isa = PBXGroup;
 			children = (
+				EDB8C87B24CD90FE005860CB /* tests */,
 				ED3BDFE924548D1C00115B6C /* FUNDING.yml */,
 				ED3BDFE824548D1C00115B6C /* README.md */,
+				ED54E4C82407BE62006ED4A4 /* p44utils_config_TEMPLATE.hpp */,
 				ED5372B41DFC9F650066FF5A /* thirdparty */,
+				ED53728C1DFC2CBE0066FF5A /* p44utils_common.hpp */,
+				EDB8C87424CD901E005860CB /* p44utils_minimal.hpp */,
 				ED19DD1420F7C3B50012DE7E /* analogio.cpp */,
 				ED19DD1320F7C3B50012DE7E /* analogio.hpp */,
 				ED5372671DFC2CBE0066FF5A /* application.cpp */,
@@ -363,6 +383,8 @@
 				ED5372701DFC2CBE0066FF5A /* error.hpp */,
 				ED3FE46623FAE11800700449 /* expressions.cpp */,
 				ED3FE46323FAE11800700449 /* expressions.hpp */,
+				EDB8C87324CD901E005860CB /* p44script.cpp */,
+				EDB8C87524CD901F005860CB /* p44script.hpp */,
 				ED5372711DFC2CBE0066FF5A /* fdcomm.cpp */,
 				ED5372721DFC2CBE0066FF5A /* fdcomm.hpp */,
 				ED5372731DFC2CBE0066FF5A /* gpio.cpp */,
@@ -395,11 +417,12 @@
 				ED5372891DFC2CBE0066FF5A /* operationqueue.hpp */,
 				ED53728A1DFC2CBE0066FF5A /* p44obj.cpp */,
 				ED53728B1DFC2CBE0066FF5A /* p44obj.hpp */,
-				ED53728C1DFC2CBE0066FF5A /* p44utils_common.hpp */,
 				ED53728D1DFC2CBE0066FF5A /* persistentparams.cpp */,
 				ED53728E1DFC2CBE0066FF5A /* persistentparams.hpp */,
 				ED19DD1620F7C3B60012DE7E /* pwm.cpp */,
 				ED19DD1520F7C3B60012DE7E /* pwm.hpp */,
+				EDB8C87224CD901E005860CB /* dcmotor.cpp */,
+				EDB8C87624CD901F005860CB /* dcmotor.hpp */,
 				ED3FE4922400915100700449 /* rfid.cpp */,
 				ED3FE4912400915100700449 /* rfid.hpp */,
 				EDBD84C3219F3A4200FAEE5C /* regexp.cpp */,
@@ -424,7 +447,6 @@
 				ED54FDC02411800A006A443D /* extutils.hpp */,
 				ED54E4C424067A80006ED4A4 /* valueanimator.cpp */,
 				ED54E4C524067A80006ED4A4 /* valueanimator.hpp */,
-				ED54E4C82407BE62006ED4A4 /* p44utils_config_TEMPLATE.hpp */,
 			);
 			path = p44utils;
 			sourceTree = "<group>";
@@ -456,6 +478,22 @@
 				ED5372D91DFCA0CC0066FF5A /* libsqlite3.tbd */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		EDB8C87B24CD90FE005860CB /* tests */ = {
+			isa = PBXGroup;
+			children = (
+				EDB8C88224CD911F005860CB /* catch.hpp */,
+				EDB8C88424CD911F005860CB /* p44utils_tester.cpp */,
+				EDB8C88124CD911F005860CB /* test_expressions.cpp */,
+				EDB8C88324CD911F005860CB /* test_httpcomm.cpp */,
+				EDB8C87C24CD911F005860CB /* test_macaddress.cpp */,
+				EDB8C87F24CD911F005860CB /* test_mainloop.cpp */,
+				EDB8C88024CD911F005860CB /* test_p44script.cpp */,
+				EDB8C87D24CD911F005860CB /* test_timeutils.cpp */,
+				EDB8C87E24CD911F005860CB /* test_utils.cpp */,
+			);
+			path = tests;
 			sourceTree = "<group>";
 		};
 		EDBD84C6219F3A5700FAEE5C /* slre */ = {
@@ -609,10 +647,12 @@
 				ED5372DD1DFCA1FF0066FF5A /* ledchaincomm.cpp in Sources */,
 				ED5372A31DFC2CBE0066FF5A /* i2c.cpp in Sources */,
 				ED3FE48C24000E9100700449 /* dispmatrix.cpp in Sources */,
+				EDB8C87724CD901F005860CB /* dcmotor.cpp in Sources */,
 				ED3FE47223FAE1DE00700449 /* coloreffectview.cpp in Sources */,
 				ED5372A01DFC2CBE0066FF5A /* fdcomm.cpp in Sources */,
 				ED53729D1DFC2CBE0066FF5A /* consolekey.cpp in Sources */,
 				ED3FE4992400984C00700449 /* rfids.cpp in Sources */,
+				EDB8C87824CD901F005860CB /* p44script.cpp in Sources */,
 				ED53729E1DFC2CBE0066FF5A /* digitalio.cpp in Sources */,
 				ED3FE47123FAE1DE00700449 /* lightspotview.cpp in Sources */,
 				EDBD84C5219F3A4200FAEE5C /* regexp.cpp in Sources */,

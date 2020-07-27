@@ -5,11 +5,20 @@
 #ifndef __p44utils__config__
 #define __p44utils__config__
 
-#ifndef ENABLE_EXPRESSIONS
-  #define ENABLE_EXPRESSIONS 1 // Expression/Script engine support in some of the p44utils components
+#ifndef ENABLE_NAMED_ERRORS
+  #define ENABLE_NAMED_ERRORS P44_CPP11_FEATURE // Enable if compiler can do C++11
 #endif
-#ifndef EXPRESSION_JSON_SUPPORT
-  #define EXPRESSION_JSON_SUPPORT 1 // structured JSON object support
+#ifndef ENABLE_EXPRESSIONS
+  #define ENABLE_EXPRESSIONS 0 // "Expressions" is deprecated, use "p44Script" instead
+  #ifndef ENABLE_P44SCRIPT
+    #define ENABLE_P44SCRIPT 1 // Scripting support in some of the p44utils components
+  #endif
+#else
+  #ifdef ENABLE_P44SCRIPT
+    #warning "ENABLE_EXPRESSIONS is mutually exclusive with ENABLE_P44SCRIPT"
+  #else
+    #define ENABLE_P44SCRIPT 0
+  #endif
 #endif
 #ifndef ENABLE_P44LRGRAPHICS
   #define ENABLE_P44LRGRAPHICS 1 // p44lrgraphics support in some of the p44utils components

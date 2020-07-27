@@ -136,6 +136,8 @@ p44featured_SOURCES = \
   src/p44utils/operationqueue.hpp \
   src/p44utils/p44obj.cpp \
   src/p44utils/p44obj.hpp \
+  src/p44utils/p44script.cpp \
+  src/p44utils/p44script.hpp \
   src/p44utils/persistentparams.cpp \
   src/p44utils/persistentparams.hpp \
   src/p44utils/regexp.cpp \
