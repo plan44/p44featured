@@ -64,12 +64,12 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--resourcepath /Volumes/CaseSens/openwrt/feeds/plan44/hermel-config/files/resources"
-            isEnabled = "NO">
+            argument = "--resourcepath /Volumes/CaseSens/openwrt/feeds/plan44/p44sbb-config/files/resources"
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--resourcepath /Volumes/CaseSens/openwrt/feeds/plan44/hmt20-config/files/resources"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--resourcepath /Volumes/CaseSens/openwrt/feeds/plan44/leth-config/files/resources"
@@ -77,11 +77,15 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--datapath /Users/luz/Documents/plan44/Projekte/wifitrack"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--datapath /tmp/featured"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--datapath /tmp/lethd"
-            isEnabled = "NO">
+            argument = "--mainscript clock.txt"
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--jsonapiipv6"
@@ -121,10 +125,6 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--wifimonif moni0"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "--initjson initcmds.json"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument

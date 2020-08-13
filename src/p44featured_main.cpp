@@ -25,6 +25,8 @@
 #include "analogio.hpp"
 #include "jsoncomm.hpp"
 #include "ledchaincomm.hpp"
+#include "p44script.hpp"
+#include "expressions.hpp"
 
 #include "light.hpp"
 #include "inputs.hpp"
@@ -36,6 +38,10 @@
 #include "indicators.hpp"
 #include "rfids.hpp"
 #include "splitflaps.hpp"
+
+#if ENABLE_P44SCRIPT
+  #include "httpcomm.hpp"
+#endif
 
 #if ENABLE_LEDARRANGEMENT
   #include "viewfactory.hpp"
@@ -88,6 +94,12 @@ class P44FeatureD : public CmdLineApp
   LEDChainArrangementPtr ledChainArrangement;
   #endif
 
+  #if ENABLE_P44SCRIPT
+  string mainScriptFn; ///< filename for the main script
+  ScriptSource mainScript; ///< global main script
+  ScriptMainContextPtr mainScriptContext; ///< context for global vdc scripts
+  #endif
+
   // LED+Button
   ButtonInputPtr button;
   IndicatorOutputPtr greenLed;
@@ -116,9 +128,21 @@ class P44FeatureD : public CmdLineApp
 public:
 
   P44FeatureD() :
+    #if ENABLE_P44SCRIPT
+    mainScript(sourcecode+regular, "main"),
+    #endif
     requestsPending(0),
     selectedReader(RFID522::Deselect)
   {
+    #if ENABLE_P44SCRIPT
+    StandardScriptingDomain::sharedDomain().registerMemberLookup(new FeatureApiLookup);
+    mainScriptContext = StandardScriptingDomain::sharedDomain().newContext();
+    mainScript.setSharedMainContext(mainScriptContext);
+    // Add some extras
+    #if ENABLE_HTTP_SCRIPT_FUNCS
+    StandardScriptingDomain::sharedDomain().registerMemberLookup(new P44Script::HttpLookup);
+    #endif // ENABLE_HTTP_SCRIPT_FUNCS
+    #endif
   }
 
   virtual bool processOption(const CmdLineOptionDescriptor &aOptionDescriptor, const char *aOptionValue)
@@ -193,6 +217,9 @@ public:
       #endif
       #if EXPRESSION_JSON_SUPPORT
       { 0  , "initscript",     true,  "scriptfile;run the script from the specified text file." },
+      #endif
+      #if ENABLE_P44SCRIPT
+      { 0  , "mainscript",     true,  "p44scriptfile;the main script to run after startup" },
       #endif
       { 0  , "featuretool",    true,  "feature;start a feature's command line tool" },
       { 0  , "jsonapiport",    true,  "port;server port number for management/web JSON API (default=none)" },
@@ -384,7 +411,24 @@ public:
           if (!Error::isOK(err)) {
             terminateAppWith(err->withPrefix("cannot open initscript: "));
           }
-          featureApi->queueScript("initscript", initScript);
+          else {
+            featureApi->queueScript("initscript", initScript);
+          }
+        }
+        #endif
+        #if ENABLE_P44SCRIPT
+        if (getStringOption("mainscript", mainScriptFn)) {
+          string code;
+          ErrorPtr err = string_fromfile(dataPath(mainScriptFn), code);
+          if (Error::notOK(err)) {
+            ErrorPtr err = string_fromfile(resourcePath(mainScriptFn), code);
+            if (Error::notOK(err)) {
+              terminateAppWith(err->withPrefix("cannot open mainscript '%s': ", mainScriptFn.c_str()));
+            }
+          }
+          else {
+            mainScript.setSource(code);
+          }
         }
         #endif
         // start p44featured TCP API server
@@ -422,7 +466,26 @@ public:
       LOG(LOG_INFO, "ubus server started");
     }
     #endif
-}
+    #if ENABLE_P44SCRIPT
+    LOG(LOG_INFO, "starting main script");
+    mainScript.run(stopall, boost::bind(&P44FeatureD::mainScriptEndHandler, this, _1));
+    LOG(LOG_INFO, "main script started");
+    #endif
+  }
+
+
+  void mainScriptEndHandler(ScriptObjPtr aMainScriptExitCode)
+  {
+    if (aMainScriptExitCode->hasType(numeric)) {
+      // use it as exit code
+      int exitCode = aMainScriptExitCode->intValue();
+      LOG(LOG_NOTICE, "main script completes with explicit exit code %d -> terminating", exitCode);
+      terminateApp(exitCode);
+    }
+    else {
+      LOG(LOG_NOTICE, "main script completed w/o exit code");
+    }
+  }
 
 
   // MARK: ==== Button
@@ -592,8 +655,7 @@ public:
           // done, callback will send response and close connection
           return;
         }
-        requestsPending--;
-        LOG(LOG_INFO, "--- Request handled, remaining pending now %d", requestsPending);
+        LOG(LOG_INFO, "--- Request handled, remaining pending now %d", requestsPending-1);
         // request cannot be processed, return error
         aError = WebError::webErr(404, "No handler found for request to %s", uri.c_str());
         LOG(LOG_ERR,"mg44 API: %s", aError->description().c_str());
@@ -616,12 +678,37 @@ public:
       aResponse = JsonObject::newObj(); // empty response
     }
     if (!Error::isOK(aError)) {
-      aResponse->add("Error", JsonObject::newString(aError->description()));
+      aResponse->add("error", JsonObject::newString(aError->description()));
     }
     LOG(LOG_INFO,"mg44 API answer: %s", aResponse->c_strValue());
     aConnection->sendMessage(aResponse);
     aConnection->closeAfterSend();
   }
+
+
+  #if ENABLE_P44SCRIPT
+  void scriptExecHandler(RequestDoneCB aRequestDoneCB, ScriptObjPtr aResult)
+  {
+    JsonObjectPtr ans = JsonObject::newObj();
+    if (aResult) {
+      if (aResult->isErr()) {
+        ans->add("error", ans->newString(aResult->errorValue()->text()));
+      }
+      else {
+        ans->add("result", aResult->jsonValue());
+      }
+      ans->add("annotation", JsonObject::newString(aResult->getAnnotation()));
+      SourceCursor *cursorP = aResult->cursor();
+      if (cursorP) {
+        ans->add("sourceline", JsonObject::newString(cursorP->linetext()));
+        ans->add("at", JsonObject::newInt64(cursorP->textpos()));
+        ans->add("line", JsonObject::newInt64(cursorP->lineno()));
+        ans->add("char", JsonObject::newInt64(cursorP->charpos()));
+      }
+    }
+    aRequestDoneCB(ans, ErrorPtr());
+  }
+  #endif
 
 
   bool processRequest(string aUri, JsonObjectPtr aData, bool aIsAction, RequestDoneCB aRequestDoneCB)
@@ -649,6 +736,57 @@ public:
         }
       }
     }
+    #if ENABLE_P44SCRIPT
+    else if (aUri=="mainscript") {
+      if (aData->get("execcode", o)) {
+        // direct execution of a script command line in the common main/initscript context
+        ScriptSource src(sourcecode+regular+keepvars+concurrently+floatingGlobs, "execcode");
+        src.setSource(o->stringValue());
+        src.setSharedMainContext(mainScriptContext);
+        src.run(inherit, boost::bind(&P44FeatureD::scriptExecHandler, this, aRequestDoneCB, _1));
+        return true;
+      }
+      if (aData->get("stop", o) && o->boolValue()) {
+        // stop
+        mainScriptContext->abort(stopall);
+      }
+      if (aIsAction && aData->get("code", o)) {
+        // set new main script
+        mainScriptContext->abort(stopall);
+        mainScript.setSource(o->stringValue());
+        // always: check it
+        ScriptObjPtr res = mainScript.syntaxcheck();
+        ErrorPtr err;
+        if (!res || !res->isErr()) {
+          LOG(LOG_INFO, "Checked global main script: syntax OK");
+          if (aData->get("save", o) && o->boolValue()) {
+            // save the script
+            err = string_tofile(dataPath(mainScriptFn), mainScript.getSource());
+          }
+        }
+        else {
+          LOG(LOG_NOTICE, "Error in global main script: %s", res->errorValue()->text());
+          scriptExecHandler(aRequestDoneCB, res);
+          return true;
+        }
+        // checked ok
+        if (aData->get("run", o) && o->boolValue()) {
+          // run the script
+          LOG(LOG_NOTICE, "Re-starting global main script");
+          mainScript.run(stopall);
+        }
+        aRequestDoneCB(JsonObjectPtr(), err);
+        return true;
+      }
+      else {
+        // return current mainscript code
+        JsonObjectPtr codeResult = JsonObject::newObj();
+        codeResult->add("code", JsonObject::newString(mainScript.getSource()));
+        aRequestDoneCB(codeResult, ErrorPtr());
+        return true;
+      }
+    }
+    #endif
     return false;
   }
 
