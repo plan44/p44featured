@@ -84,7 +84,7 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--mainscript clock.txt"
+            argument = "--mainscript ungenauhr.txt"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

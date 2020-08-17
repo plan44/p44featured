@@ -71,6 +71,121 @@ static const struct blobmsg_policy p44featureapi_policy[] = {
 #endif
 
 
+#if ENABLE_P44SCRIPT
+
+// MARK: - ApiRequestObj
+
+class ApiRequestObj : public JsonValue
+{
+  typedef JsonValue inherited;
+
+  EventSource* mEventSource;
+  ApiRequestPtr mRequest;
+
+public:
+  ApiRequestObj(ApiRequestPtr aRequest, EventSource* aApiEventSource) :
+    inherited(aRequest ? aRequest->getRequest() : JsonObjectPtr()),
+    mRequest(aRequest),
+    mEventSource(aApiEventSource)
+  {
+  }
+
+  void sendResponse(JsonObjectPtr aResponse, ErrorPtr aError)
+  {
+    if (mRequest) mRequest->sendResponse(aResponse, aError);
+    mRequest.reset(); // done now
+  }
+
+  virtual string getAnnotation() const P44_OVERRIDE
+  {
+    return "API request";
+  }
+
+  virtual TypeInfo getTypeInfo() const P44_OVERRIDE
+  {
+    return inherited::getTypeInfo()|oneshot|keeporiginal; // returns the request only once, must keep the original
+  }
+
+  virtual EventSource *eventSource() const P44_OVERRIDE
+  {
+    return mEventSource;
+  }
+
+  virtual const ScriptObjPtr memberByName(const string aName, TypeInfo aMemberAccessFlags = none) P44_OVERRIDE;
+
+};
+
+// answer([answer value])        answer the request
+static const BuiltInArgDesc answer_args[] = { { any|optional } };
+static const size_t answer_numargs = sizeof(answer_args)/sizeof(BuiltInArgDesc);
+static void answer_func(BuiltinFunctionContextPtr f)
+{
+  ApiRequestObj* reqObj = dynamic_cast<ApiRequestObj *>(f->thisObj().get());
+  if (f->arg(0)->isErr()) {
+    reqObj->sendResponse(JsonObjectPtr(), f->arg(0)->errorValue());
+  }
+  else {
+    reqObj->sendResponse(f->arg(0)->jsonValue(), ErrorPtr());
+  }
+  f->finish();
+}
+static const BuiltinMemberDescriptor answer_desc =
+  { "answer", executable|any, answer_numargs, answer_args, &answer_func };
+
+
+const ScriptObjPtr ApiRequestObj::memberByName(const string aName, TypeInfo aMemberAccessFlags)
+{
+  ScriptObjPtr val;
+  if (uequals(aName, "answer")) {
+    val = new BuiltinFunctionObj(&answer_desc, this);
+  }
+  return val;
+}
+
+class ScriptApiLookup;
+
+static ScriptApiLookup* scriptApiLookupP; // FIXME: ugly
+
+// webrequest()        return latest unprocessed script (web) api request
+static const BuiltInArgDesc webrequest_args[] = { { json|structured|optional } };
+static const size_t webrequest_numargs = sizeof(webrequest_args)/sizeof(BuiltInArgDesc);
+static void webrequest_func(BuiltinFunctionContextPtr f);
+
+static const BuiltinMemberDescriptor scriptApiGlobals[] = {
+  { "webrequest", executable|json|null, webrequest_numargs, webrequest_args, &webrequest_func },
+  { NULL } // terminator
+};
+
+/// represents the global objects related to p44features
+class ScriptApiLookup : public BuiltInMemberLookup, public EventSource
+{
+  typedef BuiltInMemberLookup inherited;
+  friend class P44FeatureD;
+
+  ApiRequestPtr mPendingScriptApiRequest; ///< pending script API request
+
+public:
+  ScriptApiLookup() : inherited(scriptApiGlobals) {};
+
+  ApiRequestPtr pendingRequest()
+  {
+    ApiRequestPtr r = mPendingScriptApiRequest;
+    mPendingScriptApiRequest.reset();
+    return r;
+  }
+
+};
+
+
+static void webrequest_func(BuiltinFunctionContextPtr f)
+{
+  // return latest unprocessed API request
+  f->finish(new ApiRequestObj(scriptApiLookupP->pendingRequest(), scriptApiLookupP));
+}
+
+
+#endif // ENABLE_P44SCRIPT
+
 // MARK: ==== Application
 
 #define MKSTR(s) _MKSTR(s)
@@ -98,6 +213,7 @@ class P44FeatureD : public CmdLineApp
   string mainScriptFn; ///< filename for the main script
   ScriptSource mainScript; ///< global main script
   ScriptMainContextPtr mainScriptContext; ///< context for global vdc scripts
+  ScriptApiLookup scriptApiLookup; ///< lookup and event source for script API
   #endif
 
   // LED+Button
@@ -135,7 +251,10 @@ public:
     selectedReader(RFID522::Deselect)
   {
     #if ENABLE_P44SCRIPT
+    scriptApiLookup.isMemberVariable();
     StandardScriptingDomain::sharedDomain().registerMemberLookup(new FeatureApiLookup);
+    StandardScriptingDomain::sharedDomain().registerMemberLookup(&scriptApiLookup);
+    scriptApiLookupP = &scriptApiLookup; // FIXME: ugly static pointer
     mainScriptContext = StandardScriptingDomain::sharedDomain().newContext();
     mainScript.setSharedMainContext(mainScriptContext);
     // Add some extras
@@ -421,12 +540,12 @@ public:
           string code;
           ErrorPtr err = string_fromfile(dataPath(mainScriptFn), code);
           if (Error::notOK(err)) {
-            ErrorPtr err = string_fromfile(resourcePath(mainScriptFn), code);
+            err = string_fromfile(resourcePath(mainScriptFn), code);
             if (Error::notOK(err)) {
               terminateAppWith(err->withPrefix("cannot open mainscript '%s': ", mainScriptFn.c_str()));
             }
           }
-          else {
+          if (Error::isOK(err)) {
             mainScript.setSource(code);
           }
         }
@@ -786,6 +905,17 @@ public:
         return true;
       }
     }
+    else if (aUri=="scriptapi") {
+      // scripted parts of the (web) API
+      if (!scriptApiLookup.hasSinks()) {
+        // no script API active
+        aRequestDoneCB(JsonObjectPtr(), WebError::webErr(500, "script API not active"));
+        return true;
+      }
+      scriptApiLookup.mPendingScriptApiRequest = ApiRequestPtr(new APICallbackRequest(aData, aRequestDoneCB));
+      scriptApiLookup.sendEvent(new ApiRequestObj(scriptApiLookup.mPendingScriptApiRequest, &scriptApiLookup));
+      return true;
+    }
     #endif
     return false;
   }
@@ -813,8 +943,6 @@ public:
   }
 
 };
-
-
 
 
 
