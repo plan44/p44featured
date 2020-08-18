@@ -116,7 +116,7 @@ public:
 };
 
 // answer([answer value])        answer the request
-static const BuiltInArgDesc answer_args[] = { { any|optional } };
+static const BuiltInArgDesc answer_args[] = { { any|optionalarg } };
 static const size_t answer_numargs = sizeof(answer_args)/sizeof(BuiltInArgDesc);
 static void answer_func(BuiltinFunctionContextPtr f)
 {
@@ -147,7 +147,7 @@ class ScriptApiLookup;
 static ScriptApiLookup* scriptApiLookupP; // FIXME: ugly
 
 // webrequest()        return latest unprocessed script (web) api request
-static const BuiltInArgDesc webrequest_args[] = { { json|structured|optional } };
+static const BuiltInArgDesc webrequest_args[] = { { json|structured|optionalarg } };
 static const size_t webrequest_numargs = sizeof(webrequest_args)/sizeof(BuiltInArgDesc);
 static void webrequest_func(BuiltinFunctionContextPtr f);
 
