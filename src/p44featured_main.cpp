@@ -139,6 +139,9 @@ const ScriptObjPtr ApiRequestObj::memberByName(const string aName, TypeInfo aMem
   if (uequals(aName, "answer")) {
     val = new BuiltinFunctionObj(&answer_desc, this);
   }
+  else {
+    val = inherited::memberByName(aName, aMemberAccessFlags);
+  }
   return val;
 }
 
@@ -865,6 +868,7 @@ public:
         src.run(inherit, boost::bind(&P44FeatureD::scriptExecHandler, this, aRequestDoneCB, _1));
         return true;
       }
+      bool newCode = false;
       if (aData->get("stop", o) && o->boolValue()) {
         // stop
         mainScriptContext->abort(stopall);
@@ -888,22 +892,24 @@ public:
           scriptExecHandler(aRequestDoneCB, res);
           return true;
         }
+        newCode = true;
         // checked ok
-        if (aData->get("run", o) && o->boolValue()) {
-          // run the script
-          LOG(LOG_NOTICE, "Re-starting global main script");
-          mainScript.run(stopall);
-        }
-        aRequestDoneCB(JsonObjectPtr(), err);
-        return true;
       }
-      else {
+      if (aData->get("run", o) && o->boolValue()) {
+        // run the script
+        LOG(LOG_NOTICE, "Re-starting global main script");
+        mainScript.run(stopall);
+      }
+      else if (!newCode) {
         // return current mainscript code
         JsonObjectPtr codeResult = JsonObject::newObj();
         codeResult->add("code", JsonObject::newString(mainScript.getSource()));
         aRequestDoneCB(codeResult, ErrorPtr());
         return true;
       }
+      // ok w/o result
+      aRequestDoneCB(JsonObjectPtr(), err);
+      return true;
     }
     else if (aUri=="scriptapi") {
       // scripted parts of the (web) API

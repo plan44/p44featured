@@ -538,8 +538,8 @@
             filePath = "src/p44utils/p44script.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "969"
-            endingLineNumber = "969"
+            startingLineNumber = "999"
+            endingLineNumber = "999"
             landmarkName = "ScriptCodeContext::memberByName(aName, aMemberAccessFlags)"
             landmarkType = "7">
          </BreakpointContent>
@@ -554,8 +554,8 @@
             filePath = "src/p44utils/p44script.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1166"
-            endingLineNumber = "1166"
+            startingLineNumber = "1196"
+            endingLineNumber = "1196"
             landmarkName = "ScriptMainContext::memberByName(aName, aMemberAccessFlags)"
             landmarkType = "7">
          </BreakpointContent>
@@ -570,8 +570,8 @@
             filePath = "src/p44utils/p44script.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1173"
-            endingLineNumber = "1173"
+            startingLineNumber = "1203"
+            endingLineNumber = "1203"
             landmarkName = "ScriptMainContext::memberByName(aName, aMemberAccessFlags)"
             landmarkType = "7">
          </BreakpointContent>
@@ -586,8 +586,8 @@
             filePath = "src/p44utils/p44script.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1174"
-            endingLineNumber = "1174"
+            startingLineNumber = "1204"
+            endingLineNumber = "1204"
             landmarkName = "ScriptMainContext::memberByName(aName, aMemberAccessFlags)"
             landmarkType = "7">
          </BreakpointContent>
@@ -602,8 +602,8 @@
             filePath = "src/p44utils/p44script.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1230"
-            endingLineNumber = "1230"
+            startingLineNumber = "1260"
+            endingLineNumber = "1260"
             landmarkName = "BuiltInMemberLookup::memberByNameFrom(aThisObj, aName, aMemberAccessFlags)"
             landmarkType = "7">
          </BreakpointContent>
@@ -621,6 +621,22 @@
             startingLineNumber = "83"
             endingLineNumber = "83"
             landmarkName = "Inputs::inputChanged(aInput, aNewValue)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "9123FD0B-D883-4334-A60C-66383A8EEB0F"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "src/p44featured_main.cpp"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "143"
+            endingLineNumber = "143"
+            landmarkName = "ApiRequestObj::memberByName(aName, aMemberAccessFlags)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
