@@ -59,9 +59,11 @@ RPIWS281X_FLAGS = -D ENABLE_RPIWS281X=0
 endif !ENABLE_RPIWS281X
 
 
+# Note: no programmatic SSL lib loading in civetweb (NO_SSL_DL)
 p44featured_LDADD = ${JSONC_LIBS} ${PTHREAD_LIBS} ${SQLITE3_LIBS} $(PNG_LIBS) ${UBUS_LIBS}
+p44featured_EXTRACFLAGS = -D NO_SSL_DL=1
 
-p44featured_CXXFLAGS = \
+p44featured_CPPFLAGS = \
   -I ${srcdir}/src/p44utils \
   -I ${srcdir}/src/p44lrgraphics \
   -I ${srcdir}/src/p44features \
@@ -77,6 +79,7 @@ p44featured_CXXFLAGS = \
   ${UBUS_FLAGS} \
   ${PNG_CFLAGS} \
   ${RPIWS281X_FLAGS} \
+  ${p44featured_EXTRACFLAGS} \
   ${p44featured_PLATFORM} \
   ${p44featured_DEBUG}
 

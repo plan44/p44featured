@@ -2,6 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:/Users/luz/Documents/plan44/OpenSourceWork-github-plan44/lethd/lethd.xcodeproj">
+      location = "self:p44featured.xcodeproj">
    </FileRef>
 </Workspace>
