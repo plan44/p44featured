@@ -142,6 +142,8 @@
 		EDBD84C2219F2B0000FAEE5C /* wifitrack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDBD84C1219F2B0000FAEE5C /* wifitrack.cpp */; };
 		EDBD84C5219F3A4200FAEE5C /* regexp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDBD84C3219F3A4200FAEE5C /* regexp.cpp */; };
 		EDBD84C9219F3A5700FAEE5C /* slre.c in Sources */ = {isa = PBXBuildFile; fileRef = EDBD84C7219F3A5700FAEE5C /* slre.c */; };
+		EDDBD9A4250633890072FC36 /* epxview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDDBD9A3250633890072FC36 /* epxview.cpp */; };
+		EDDBD9A7250667000072FC36 /* canvasview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDDBD9A5250667000072FC36 /* canvasview.cpp */; };
 		EDDFE3AE22FF2711001F6A5E /* viewscroller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDDFE3A422FF2711001F6A5E /* viewscroller.cpp */; };
 		EDDFE3B022FF2711001F6A5E /* viewstack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDDFE3A722FF2711001F6A5E /* viewstack.cpp */; };
 		EDDFE3B122FF2711001F6A5E /* viewfactory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDDFE3A822FF2711001F6A5E /* viewfactory.cpp */; };
@@ -333,6 +335,10 @@
 		EDBD84C4219F3A4200FAEE5C /* regexp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = regexp.hpp; sourceTree = "<group>"; };
 		EDBD84C7219F3A5700FAEE5C /* slre.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = slre.c; sourceTree = "<group>"; };
 		EDBD84C8219F3A5700FAEE5C /* slre.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = slre.h; sourceTree = "<group>"; };
+		EDDBD9A2250633890072FC36 /* epxview.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = epxview.hpp; sourceTree = "<group>"; };
+		EDDBD9A3250633890072FC36 /* epxview.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = epxview.cpp; sourceTree = "<group>"; };
+		EDDBD9A5250667000072FC36 /* canvasview.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = canvasview.cpp; sourceTree = "<group>"; };
+		EDDBD9A6250667000072FC36 /* canvasview.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = canvasview.hpp; sourceTree = "<group>"; };
 		EDDFE3A022FF2711001F6A5E /* lifeview.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = lifeview.hpp; sourceTree = "<group>"; };
 		EDDFE3A122FF2711001F6A5E /* viewsequencer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = viewsequencer.hpp; sourceTree = "<group>"; };
 		EDDFE3A222FF2711001F6A5E /* viewstack.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = viewstack.hpp; sourceTree = "<group>"; };
@@ -637,6 +643,10 @@
 				ED3FE46A23FAE1DE00700449 /* coloreffectview.hpp */,
 				EDDFE3B522FF2980001F6A5E /* imageview.cpp */,
 				EDDFE3B622FF2980001F6A5E /* imageview.hpp */,
+				EDDBD9A5250667000072FC36 /* canvasview.cpp */,
+				EDDBD9A6250667000072FC36 /* canvasview.hpp */,
+				EDDBD9A3250633890072FC36 /* epxview.cpp */,
+				EDDBD9A2250633890072FC36 /* epxview.hpp */,
 				EDDFE3AC22FF2711001F6A5E /* lifeview.cpp */,
 				EDDFE3A022FF2711001F6A5E /* lifeview.hpp */,
 				ED3FE46B23FAE1DE00700449 /* lightspotview.cpp */,
@@ -821,11 +831,13 @@
 				EDBD84C9219F3A5700FAEE5C /* slre.c in Sources */,
 				EDEEF1C52128377F0042FC98 /* macaddress.cpp in Sources */,
 				EDDFE3B222FF2711001F6A5E /* textview.cpp in Sources */,
+				EDDBD9A4250633890072FC36 /* epxview.cpp in Sources */,
 				ED5372A11DFC2CBE0066FF5A /* gpio.cpp in Sources */,
 				ED19DD1220F797DA0012DE7E /* civetweb.c in Sources */,
 				EDBD84C2219F2B0000FAEE5C /* wifitrack.cpp in Sources */,
 				ED5372AE1DFC2CBE0066FF5A /* serialcomm.cpp in Sources */,
 				ED53729B1DFC2CBE0066FF5A /* application.cpp in Sources */,
+				EDDBD9A7250667000072FC36 /* canvasview.cpp in Sources */,
 				ED5372AC1DFC2CBE0066FF5A /* p44obj.cpp in Sources */,
 				ED5372B31DFC2CBE0066FF5A /* utils.cpp in Sources */,
 				ED5372AB1DFC2CBE0066FF5A /* operationqueue.cpp in Sources */,

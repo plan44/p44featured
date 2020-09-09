@@ -80,11 +80,15 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--datapath /tmp/featured"
+            argument = "--datapath &apos;/Users/luz/Documents/plan44/Projekte/p44featured - general stuff and resources/xcode-test-datadir&apos;"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--mainscript ungenauhr.txt"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--mainscript expressivepixels.txt"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
@@ -104,8 +108,12 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--ledpowerlimit 50000"
+            argument = "--ledchain WS2813:/tmp/ledchainsim:299:0:13:0:23"
             isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--ledpowerlimit 50000"
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--sensor0 spi0.MCP3002@0.0"
@@ -137,7 +145,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--splitflapconn simulation"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--button sim.button --redled sim.redled --greenled sim.greenled"

@@ -183,8 +183,12 @@ p44featured_SOURCES = \
   src/p44utils/thirdparty/civetweb/hostcheck.inl \
   src/p44utils/thirdparty/civetweb/openssl_hostname_validation.inl \
   src/p44utils/p44utils_common.hpp \
+  src/p44lrgraphics/canvasview.cpp \
+  src/p44lrgraphics/canvasview.hpp \
   src/p44lrgraphics/coloreffectview.cpp \
   src/p44lrgraphics/coloreffectview.hpp \
+  src/p44lrgraphics/epxview.cpp \
+  src/p44lrgraphics/epxview.hpp \
   src/p44lrgraphics/imageview.cpp \
   src/p44lrgraphics/imageview.hpp \
   src/p44lrgraphics/lifeview.cpp \

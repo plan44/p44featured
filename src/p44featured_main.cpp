@@ -390,12 +390,8 @@ public:
       if (ledChainArrangement) {
         // led chain arrangement options
         ledChainArrangement->processCmdlineOptions();
-        // we have lrgraphics in place, make lrgraphics functions available
-        #if ENABLE_P44SCRIPT
-        P44Script::StandardScriptingDomain::sharedDomain().registerMemberLookup(
-          new p44::P44Script::P44lrgLookup(ledChainArrangement->getRootView())
-        );
-        #elif ENABLE_EXPRESSIONS
+        #if ENABLE_EXPRESSIONS
+        // Note: for P44Script, registering lrg functions is done at addLEDChain()
         ScriptGlobals::sharedScriptGlobals().registerFunctionHandler(
           boost::bind(&p44::evaluateViewFunctions, _1, _2, _3, _4, ledChainArrangement->getRootView(), ValueLookupCB())
         );
@@ -545,7 +541,7 @@ public:
           if (Error::notOK(err)) {
             err = string_fromfile(resourcePath(mainScriptFn), code);
             if (Error::notOK(err)) {
-              terminateAppWith(err->withPrefix("cannot open mainscript '%s': ", mainScriptFn.c_str()));
+              LOG(LOG_ERR,"cannot open mainscript '%s': %s", mainScriptFn.c_str(), err->text());
             }
           }
           if (Error::isOK(err)) {

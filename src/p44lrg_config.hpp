@@ -9,6 +9,10 @@
   #define ENABLE_VIEWCONFIG 1
 #endif
 
+#ifndef ENABLE_EPX_SUPPORT
+  #define ENABLE_EPX_SUPPORT 1
+#endif
+
 #ifndef ENABLE_ANIMATION
   #define ENABLE_ANIMATION 1
 #endif
