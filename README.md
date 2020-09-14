@@ -6,7 +6,7 @@
 
 Please refer to the [**p44features**](https://github.com/plan44/p44features) for more information about the growing list of features.
 
-The p44features concept was developed for the [ETH Digital Platform](https://plan44.ch/custom#leth) and subseqeuntly refined for various projects, some still in the making and thus unreleased.
+The p44features concept was developed for the [ETH Digital Platform](https://plan44.ch/custom#leth) and subsequently refined for various projects, some still in the making and thus unreleased.
 
 I usually run p44featured on OpenWrt (and macOS during development), but it can be compiled and run on any Linux platform.
 
