@@ -9,6 +9,10 @@
   #define ENABLE_VIEWCONFIG 1
 #endif
 
+#ifndef ENABLE_VIEWSTATUS
+  #define ENABLE_VIEWSTATUS ENABLE_VIEWCONFIG // by default, is enabled when JSON view config is enabled
+#endif
+
 #ifndef ENABLE_EPX_SUPPORT
   #define ENABLE_EPX_SUPPORT 1
 #endif
