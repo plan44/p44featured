@@ -137,7 +137,7 @@ const ScriptObjPtr ApiRequestObj::memberByName(const string aName, TypeInfo aMem
 {
   ScriptObjPtr val;
   if (uequals(aName, "answer")) {
-    val = new BuiltinFunctionObj(&answer_desc, this);
+    val = new BuiltinFunctionObj(&answer_desc, this, NULL);
   }
   else {
     val = inherited::memberByName(aName, aMemberAccessFlags);
@@ -150,12 +150,10 @@ class ScriptApiLookup;
 static ScriptApiLookup* scriptApiLookupP; // FIXME: ugly
 
 // webrequest()        return latest unprocessed script (web) api request
-static const BuiltInArgDesc webrequest_args[] = { { json|structured|optionalarg } };
-static const size_t webrequest_numargs = sizeof(webrequest_args)/sizeof(BuiltInArgDesc);
 static void webrequest_func(BuiltinFunctionContextPtr f);
 
 static const BuiltinMemberDescriptor scriptApiGlobals[] = {
-  { "webrequest", executable|json|null, webrequest_numargs, webrequest_args, &webrequest_func },
+  { "webrequest", executable|json|null, 0, NULL, &webrequest_func },
   { NULL } // terminator
 };
 
