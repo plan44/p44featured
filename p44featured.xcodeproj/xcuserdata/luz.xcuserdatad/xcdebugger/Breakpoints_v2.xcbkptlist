@@ -7,22 +7,6 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "70675980-268B-469A-9E02-DA534F9F60A8"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "src/p44features/wifitrack.cpp"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1231"
-            endingLineNumber = "1231"
-            landmarkName = "WifiTrack::contentLoaded()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
             uuid = "16443311-89EE-4AF3-9937-545061F19863"
             shouldBeEnabled = "No"
             ignoreCount = "0"
@@ -160,8 +144,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "861"
             endingLineNumber = "861"
-            landmarkName = "P44View::textToWrapMode(aWrapModeText)"
-            landmarkType = "7">
+            landmarkName = "unknown"
+            landmarkType = "0">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -176,8 +160,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "740"
             endingLineNumber = "740"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            landmarkName = "LEDChainArrangement::addLEDChain(aChainSpec)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -217,8 +201,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "705"
             endingLineNumber = "705"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            landmarkName = "LEDChainArrangement::addLEDChain(aChainSpec)"
+            landmarkType = "7">
             <Actions>
                <BreakpointActionProxy
                   ActionExtensionID = "Xcode.BreakpointAction.Sound">
@@ -255,8 +239,8 @@
             filePath = "src/p44utils/p44script.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1213"
-            endingLineNumber = "1213"
+            startingLineNumber = "1214"
+            endingLineNumber = "1214"
             landmarkName = "ScriptCodeContext::execute(aToExecute, aEvalFlags, aEvaluationCB, aMaxRunTime)"
             landmarkType = "7">
          </BreakpointContent>
@@ -271,8 +255,8 @@
             filePath = "src/p44utils/p44script.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1220"
-            endingLineNumber = "1220"
+            startingLineNumber = "1221"
+            endingLineNumber = "1221"
             landmarkName = "ScriptCodeContext::execute(aToExecute, aEvalFlags, aEvaluationCB, aMaxRunTime)"
             landmarkType = "7">
          </BreakpointContent>
@@ -287,8 +271,8 @@
             filePath = "src/p44utils/p44script.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1221"
-            endingLineNumber = "1221"
+            startingLineNumber = "1222"
+            endingLineNumber = "1222"
             landmarkName = "unknown"
             landmarkType = "0">
          </BreakpointContent>
@@ -303,8 +287,8 @@
             filePath = "src/p44utils/p44script.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1277"
-            endingLineNumber = "1277"
+            startingLineNumber = "1278"
+            endingLineNumber = "1278"
             landmarkName = "ScriptCodeContext::threadTerminated(aThread, aThreadEvalFlags)"
             landmarkType = "7">
          </BreakpointContent>
@@ -367,8 +351,8 @@
             filePath = "src/p44utils/p44script.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2686"
-            endingLineNumber = "2686"
+            startingLineNumber = "2687"
+            endingLineNumber = "2687"
             landmarkName = "SourceProcessor::s_exprFirstTerm()"
             landmarkType = "7">
          </BreakpointContent>
@@ -401,8 +385,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "465"
             endingLineNumber = "465"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            landmarkName = "LEDChainComm::getColorAtLedIndex(aLedIndex, aRed, aGreen, aBlue, aWhite)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -474,22 +458,6 @@
             startingLineNumber = "248"
             endingLineNumber = "248"
             landmarkName = "EpxView::renderFrame()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "511E3FFB-C2C5-4F1F-B94A-DC396CCBAF88"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "src/p44utils/ledchaincomm.cpp"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "775"
-            endingLineNumber = "775"
-            landmarkName = "LEDChainArrangement::updateDisplay()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

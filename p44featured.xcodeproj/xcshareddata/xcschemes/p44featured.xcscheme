@@ -104,12 +104,16 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "--ledchain WS2813:/tmp/ledchainsim:791:0:113:0:7:A"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "--ledchain WS2813:/tmp/ledchainsim:288"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--ledchain WS2813:/tmp/ledchainsim:299:0:13:0:23"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--ledpowerlimit 50000"

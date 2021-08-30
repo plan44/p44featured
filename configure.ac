@@ -1,4 +1,4 @@
-AC_INIT([p44featured], [1.2.2], [luz@plan44.ch], [p44featured], [https://plan44.ch/])
+AC_INIT([p44featured], [1.3.0], [luz@plan44.ch], [p44featured], [https://plan44.ch/])
 AC_PREREQ([2.59])
 
 AC_CONFIG_AUX_DIR(configure_aux)
@@ -10,7 +10,6 @@ AC_CONFIG_HEADERS([config.h])
 AC_PROG_CXX
 
 AC_CONFIG_FILES([Makefile])
-
 
 ##### OPTIONS
 
@@ -41,20 +40,33 @@ AM_CONDITIONAL([ENABLE_UBUS], [test "x$enable_ubus" = xyes])
 
 AC_ARG_ENABLE(
   [rpiws281x],
-  [AS_HELP_STRING([--enable-rpiws281x], [Enable RPI hardware support for WS281x LED chains])]
+  [AS_HELP_STRING([--enable-rpiws281x], [Enable WS281x Ledchain support on RaspberryPi])]
 )
 AM_CONDITIONAL([ENABLE_RPIWS281X], [test "x$enable_rpiws281x" = xyes])
 
+AC_ARG_ENABLE(
+  [png],
+  [AS_HELP_STRING([--enable-png], [Enable PNG image support for ledchains])]
+)
+AM_CONDITIONAL([ENABLE_PNG], [test "x$enable_png" = xyes])
+
+AC_ARG_ENABLE(
+  [uwsc],
+  [AS_HELP_STRING([--enable-uwsc], [Enable libuwsc usage for websockets])]
+)
+AM_CONDITIONAL([ENABLE_UWSC], [test "x$enable_uwsc" = xyes])
+
+AC_ARG_ENABLE(
+  [ev],
+  [AS_HELP_STRING([--enable-ev], [Enable libev usage for mainloop])]
+)
+AM_CONDITIONAL([ENABLE_EV], [test "x$enable_ev" = xyes])
 
 
-AC_CHECK_LIB(m, atan2, [], [AC_MSG_ERROR([Could not find math lib (m)])])
-AC_CHECK_LIB(rt, clock_gettime, [], [AC_MSG_ERROR([Could not find rt lib for clock_gettime])])
-AC_CHECK_LIB(dl, dlopen, [], [AC_MSG_ERROR([Could not find libdl])])
-AC_CHECK_LIB(json-c, json_tokener_get_error, [], [AC_MSG_ERROR([Could not find JSON-C / libjson0 with json_tokener_get_error supported (>=0.10)])])
-AC_CHECK_LIB(ssl, TLSv1_client_method, [], [AC_MSG_ERROR([Could not find libssl with TLSv1_client_method])])
-AC_CHECK_LIB(crypto, SHA1_Init, [], [AC_MSG_ERROR([Could not find libcrypto with SHA1_Init])])
-AC_CHECK_LIB(sqlite3, sqlite3_open, [], [AC_MSG_ERROR([Could not find sqlite3 with sqlite3_open])])
-AC_CHECK_LIB(png, png_image_begin_read_from_file, [], [AC_MSG_ERROR([Could not find libpng with png_image_begin_read_from_file supported (>=1.6)])])
+
+AC_CHECK_LIB(m, atan2, [], [AC_MSG_ERROR([Could not find math lib (m) with atan2])])
+AC_CHECK_LIB(rt, clock_gettime, [], [AC_MSG_ERROR([Could not find rt lib with clock_gettime])])
+AC_CHECK_LIB(dl, dlopen, [], [AC_MSG_ERROR([Could not find libdl with dlopen])])
 
 AM_COND_IF([ENABLE_UBUS], [
   AC_CHECK_LIB(ubus, ubus_connect_ctx, [], [AC_MSG_ERROR([Could not find libubus with ubus_connect_ctx])])
@@ -62,8 +74,22 @@ AM_COND_IF([ENABLE_UBUS], [
   AC_CHECK_LIB(blobmsg_json, blobmsg_add_object, [], [AC_MSG_ERROR([Could not find libblobmsg_json with blobmsg_add_object])])
 ], [])
 
-PKG_PROG_PKG_CONFIG
+AM_COND_IF([ENABLE_UWSC], [
+  AC_CHECK_LIB(uwsc, uwsc_init, [], [AC_MSG_ERROR([Could not find libuwsc with uwsc_init])])
+], [])
 
+AM_COND_IF([ENABLE_EV], [
+  AC_CHECK_LIB(ev, ev_time, [], [AC_MSG_ERROR([Could not find libuwsc with ev_time])])
+], [])
+
+
+AC_CHECK_LIB(json-c, json_tokener_get_error, [], [AC_MSG_ERROR([Could not find JSON-C / libjson0 with json_tokener_get_error supported (>=0.10)])])
+AC_CHECK_LIB(ssl, TLSv1_client_method, [], [AC_MSG_ERROR([Could not find libssl with TLSv1_client_method])])
+AC_CHECK_LIB(crypto, SHA1_Init, [], [AC_MSG_ERROR([Could not find libcrypto with SHA1_Init])])
+AC_CHECK_LIB(sqlite3, sqlite3_open, [], [AC_MSG_ERROR([Could not find sqlite3 with sqlite3_open])])
+
+
+PKG_PROG_PKG_CONFIG
 
 PKG_CHECK_MODULES([JSONC], [json-c >= 0.10 ], [], [
   AC_MSG_ERROR([$JSON_PKG_ERRORS])
@@ -73,9 +99,11 @@ PKG_CHECK_MODULES([SQLITE3], [sqlite3], [], [
   AC_MSG_ERROR([$SQLITE3_PKG_ERRORS])
 ])
 
-PKG_CHECK_MODULES([PNG], [libpng], [], [
-  AC_MSG_ERROR([$PNG_PKG_ERRORS])
-])
+AM_COND_IF([ENABLE_PNG], [
+  PKG_CHECK_MODULES([PNG], [libpng >= 1.6], [], [
+    AC_MSG_ERROR([$PNG_PKG_ERRORS])
+  ])
+], [])
 
 
 # Checks for header files.
@@ -84,21 +112,19 @@ AC_CHECK_HEADERS([arpa/inet.h fcntl.h inttypes.h limits.h netdb.h netinet/in.h s
 
 ASSUMED_BOOST_VER=146
 
-BOOST_REQUIRE([1.46],
-    [
-        unset boost_cv_version
-        unset boost_cv_inc_path
-        BOOST_REQUIRE([1.35],
-            [
-                AC_MSG_ERROR([could not find boost on your system])
-            ])
-        ASSUMED_BOOST_VER=135
-    ])
+BOOST_REQUIRE([1.46], [
+  unset boost_cv_version
+  unset boost_cv_inc_path
+  BOOST_REQUIRE([1.35], [
+    AC_MSG_ERROR([could not find boost on your system])
+  ])
+  ASSUMED_BOOST_VER=135
+])
 
 if test $ASSUMED_BOOST_VER -eq 135; then
-    AC_DEFINE([BOOST_VERSION_135], [1], [boost 1.35 or higher])
+  AC_DEFINE([BOOST_VERSION_135], [1], [boost 1.35 or higher])
 else
-    AC_DEFINE([BOOST_VERSION_146], [1], [boost 1.46 or higher])
+  AC_DEFINE([BOOST_VERSION_146], [1], [boost 1.46 or higher])
 fi
 
 BOOST_BIND
