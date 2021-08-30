@@ -174,8 +174,8 @@
             filePath = "src/p44features/indicators.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "238"
-            endingLineNumber = "238"
+            startingLineNumber = "250"
+            endingLineNumber = "250"
             landmarkName = "Indicators::effectDone(aEffect)"
             landmarkType = "7">
             <Actions>
